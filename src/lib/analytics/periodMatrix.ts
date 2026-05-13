@@ -15,9 +15,9 @@ import type { ParsedSession } from '../../schema/backup';
 import { METRICS, type Metric, type Period } from './periodCompare';
 
 export interface MatrixRow {
-  /** Negative week offset (0 = race week, -1 = one week before). */
+  /** Negative week offset (0 = target week, -1 = one week before). */
   weekOffset: number;
-  /** Display label, e.g. "-12w" or "race". */
+  /** Display label, e.g. "-12w" or "target". */
   label: string;
   /** Metric -> aggregated value for the week. */
   values: Record<Metric, number>;
@@ -85,7 +85,7 @@ export function buildPeriodMatrix(
     const b = buckets.get(i)!;
     rows.push({
       weekOffset: i,
-      label: i === 0 ? 'race' : `${i}w`,
+      label: i === 0 ? 'target' : `${i}w`,
       values: {
         sessions: b.sessions,
         trainingDays: b.trainingDays.size,

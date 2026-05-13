@@ -3,7 +3,7 @@
  *
  * Visual: each cell is a colored rectangle whose intensity scales with
  * the value's fraction of the column max. Hovering surfaces the exact
- * value; the race week is highlighted with a left border.
+ * value; the target week is highlighted with a left border.
  *
  * Why CSS grid instead of ECharts: this is a literal table with mixed
  * numeric and label cells. Hand-rolling the grid gives us perfect text

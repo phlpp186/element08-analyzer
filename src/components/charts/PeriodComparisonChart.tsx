@@ -1,6 +1,6 @@
 /**
  * PeriodComparisonChart — one line per period, all aligned to weeks-
- * before-anchor (week 0 = race week on the right edge).
+ * before-anchor (week 0 = target week on the right edge).
  *
  * The visual story: at a glance you can see whether this season's prep
  * had a stronger build, a sharper taper, or a different peak position
@@ -48,7 +48,7 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
             const v = typeof p.value === 'number' ? p.value.toFixed(1).replace(/\.0$/, '') : p.value;
             return `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>${v}</b> ${metric.unit}`;
           });
-        const wkLabel = wk === 0 ? 'race week' : `${wk}w before`;
+        const wkLabel = wk === 0 ? 'target week' : `${wk}w before`;
         return `<div style="font-weight:600;margin-bottom:4px">${wkLabel}</div>${lines.join('<br/>')}`;
       },
     },
@@ -62,7 +62,7 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
     },
     xAxis: {
       type: 'category',
-      data: xLabels.map((w) => (w === 0 ? 'race' : `${w}w`)),
+      data: xLabels.map((w) => (w === 0 ? 'target' : `${w}w`)),
       axisLine: { lineStyle: { color: '#262626' } },
       axisTick: { show: false },
       axisLabel: {
@@ -71,7 +71,7 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
         fontSize: 10,
         formatter: (val: string, idx: number) => {
           // Reduce density when the period is long.
-          if (xLabels.length > 16 && idx % 2 !== 0 && val !== 'race') return '';
+          if (xLabels.length > 16 && idx % 2 !== 0 && val !== 'target') return '';
           return val;
         },
       },

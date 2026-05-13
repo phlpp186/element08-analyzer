@@ -9,7 +9,7 @@
  *   anchor          = period.anchorDate
  *   weekOffset(s)   = floor((anchor.midnight - s.date.midnight) / 7 days)
  *
- * So week 0 = race week, week -1 = the week before, etc. Negative
+ * So week 0 = target week, week -1 = the week before, etc. Negative
  * numbering makes the chart x-axis read naturally left-to-right toward
  * the anchor on the right edge.
  *
@@ -23,7 +23,7 @@ export interface Period {
   label: string;
   /** Hex color for chart line + table swatch. */
   color: string;
-  /** ISO date string of the anchor (race day / end-of-period). */
+  /** ISO date string of the anchor (target day / end-of-period). */
   anchorDate: string;
   /** How many weeks BEFORE the anchor to include. */
   weeksBefore: number;

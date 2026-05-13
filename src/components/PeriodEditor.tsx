@@ -79,27 +79,16 @@ export function PeriodEditor() {
           or training block.
         </p>
       ) : (
-        <table className="w-full">
-          <thead>
-            <tr className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-              <th className="w-10 py-2 text-left"></th>
-              <th className="py-2 text-left">Label</th>
-              <th className="py-2 text-left">Anchor date</th>
-              <th className="py-2 text-left">Weeks</th>
-              <th className="w-10 py-2 text-left"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {periods.map((p) => (
-              <PeriodRow
-                key={p.id}
-                period={p}
-                onChange={(patch) => updatePeriod(p.id, patch)}
-                onRemove={() => removePeriod(p.id)}
-              />
-            ))}
-          </tbody>
-        </table>
+        <ul className="space-y-3">
+          {periods.map((p) => (
+            <PeriodRow
+              key={p.id}
+              period={p}
+              onChange={(patch) => updatePeriod(p.id, patch)}
+              onRemove={() => removePeriod(p.id)}
+            />
+          ))}
+        </ul>
       )}
     </section>
   );
@@ -124,35 +113,53 @@ function PeriodRow({
     onChange({ color: next });
   }
 
+  // Two-row card per period: label (wide) on top, date + weeks underneath.
+  // Tabular layout cramped the label into ~50px on narrow side panels.
   return (
-    <tr className="border-t border-border">
-      <td className="py-2">
+    <li className="space-y-2 rounded-md border border-border bg-deep p-3">
+      <div className="flex items-center gap-2">
         <button
           onClick={cycleColor}
           aria-label="Cycle color"
-          className="inline-block h-4 w-4 rounded-full border border-border hover:scale-110"
+          className="h-4 w-4 shrink-0 rounded-full border border-border hover:scale-110"
           style={{ backgroundColor: period.color }}
         />
-      </td>
-      <td className="py-2 pr-3">
         <input
           id={labelId}
           type="text"
           value={period.label}
           onChange={(e) => onChange({ label: e.target.value })}
-          className="w-full rounded-md border border-border bg-deep px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
+          placeholder="Label"
+          className="min-w-0 flex-1 rounded-md border border-border bg-panel px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
         />
-      </td>
-      <td className="py-2 pr-3">
+        <button
+          onClick={onRemove}
+          aria-label="Remove period"
+          className="shrink-0 px-2 font-mono text-sm text-textDim hover:text-red"
+        >
+          ×
+        </button>
+      </div>
+      <div className="flex items-center gap-2 pl-6">
+        <label
+          htmlFor={dateId}
+          className="font-mono text-[10px] uppercase tracking-widest text-textDim"
+        >
+          Anchor
+        </label>
         <input
           id={dateId}
           type="date"
           value={period.anchorDate}
           onChange={(e) => onChange({ anchorDate: e.target.value })}
-          className="rounded-md border border-border bg-deep px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
+          className="flex-1 rounded-md border border-border bg-panel px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
         />
-      </td>
-      <td className="py-2 pr-3">
+        <label
+          htmlFor={weeksId}
+          className="font-mono text-[10px] uppercase tracking-widest text-textDim"
+        >
+          Weeks
+        </label>
         <input
           id={weeksId}
           type="number"
@@ -163,18 +170,9 @@ function PeriodRow({
             const v = parseInt(e.target.value, 10);
             if (Number.isFinite(v) && v >= 1 && v <= 104) onChange({ weeksBefore: v });
           }}
-          className="w-20 rounded-md border border-border bg-deep px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
+          className="w-16 rounded-md border border-border bg-panel px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
         />
-      </td>
-      <td className="py-2">
-        <button
-          onClick={onRemove}
-          aria-label="Remove period"
-          className="px-2 font-mono text-sm text-textDim hover:text-red"
-        >
-          ×
-        </button>
-      </td>
-    </tr>
+      </div>
+    </li>
   );
 }
