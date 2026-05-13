@@ -162,8 +162,12 @@ function BlockStrip({
   endT: number;
 }) {
   const total = Math.max(endT - startT, 1);
+  // The strip is offset by the chart grid's left axis (56px) + right
+  // padding (16px) so that block boundaries line up vertically with the
+  // shaded markAreas in the SpO2 and HR charts above. The values mirror
+  // `GRID` at the top of this file — keep them in sync.
   return (
-    <div className="rounded-md border border-border bg-panel p-3">
+    <div className="rounded-md border border-border bg-panel py-3" style={{ paddingLeft: 56, paddingRight: 16 }}>
       <div className="flex h-8 overflow-hidden rounded">
         {blocks.map((b, i) => {
           const pct = ((b.endT - b.startT) / total) * 100;
@@ -249,8 +253,11 @@ function buildLineOption(p: LineOptionParams) {
           ? {
               silent: true,
               itemStyle: { opacity: 1 },
+              // No name — the dedicated block strip below the charts is the
+              // source of truth for block labels. Letting ECharts render a
+              // name here clips against the chart's tight top padding.
               data: p.bands.map((b) => [
-                { xAxis: b.startT, itemStyle: { color: b.color }, name: 'Hold' },
+                { xAxis: b.startT, itemStyle: { color: b.color } },
                 { xAxis: b.endT },
               ]),
             }
