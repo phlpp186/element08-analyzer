@@ -28,6 +28,11 @@ jobs:
       - run: npm ci
       - run: npm run build
       - uses: actions/configure-pages@v5
+        with:
+          # Auto-enable Pages on first run so the repo is self-bootstrapping —
+          # no manual Settings → Pages clicks needed when this repo (or a fork)
+          # is freshly created.
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
