@@ -117,16 +117,21 @@ function Td({ children }: { children: React.ReactNode }) {
   );
 }
 
+type ModeKey = 'dry' | 'depth' | 'pool';
+
 function ModeMixBar({ mix }: { mix: { dry: number; depth: number; pool: number } }) {
   const total = mix.dry + mix.depth + mix.pool;
   if (total === 0) {
     return <span className="font-mono text-xs text-textDim">—</span>;
   }
-  const parts: { key: 'dry' | 'depth' | 'pool'; pct: number }[] = [
+  // Explicit array literal with the narrow union — TS widens the inferred
+  // literal type to `string` after `.filter()`, so we declare it up front.
+  const all: { key: ModeKey; pct: number }[] = [
     { key: 'dry',   pct: (mix.dry   / total) * 100 },
     { key: 'depth', pct: (mix.depth / total) * 100 },
     { key: 'pool',  pct: (mix.pool  / total) * 100 },
-  ].filter((p) => p.pct > 0);
+  ];
+  const parts = all.filter((p) => p.pct > 0);
 
   return (
     <div>
