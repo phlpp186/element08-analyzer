@@ -9,6 +9,7 @@ import { Insights } from './routes/Insights';
 import { DepthDivePlayer } from './routes/DepthDivePlayer';
 import { PoolDivePlayer } from './routes/PoolDivePlayer';
 import { DrySessionPlayer } from './routes/DrySessionPlayer';
+import { Compare } from './routes/Compare';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -21,6 +22,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/session/:sessionId/pool/:diveIdx" element={<PoolDivePlayer />} />
         <Route path="/session/:sessionId/dry" element={<DrySessionPlayer />} />
         <Route path="/insights" element={<Insights />} />
+        <Route path="/compare" element={<Compare />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
