@@ -78,12 +78,20 @@ export function SessionList() {
             <p className="mt-1 font-mono text-xs text-textDim">{filename}</p>
           )}
         </div>
-        <button
-          onClick={loadDifferent}
-          className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
-        >
-          ← load different file
-        </button>
+        <div className="flex items-center gap-5">
+          <Link
+            to="/insights"
+            className="font-mono text-xs uppercase tracking-widest text-accent hover:underline"
+          >
+            insights →
+          </Link>
+          <button
+            onClick={loadDifferent}
+            className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
+          >
+            ← load different file
+          </button>
+        </div>
       </header>
 
       {/* Filter pills */}
