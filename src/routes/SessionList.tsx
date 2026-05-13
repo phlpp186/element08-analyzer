@@ -91,6 +91,12 @@ export function SessionList() {
           >
             compare →
           </Link>
+          <Link
+            to="/playground"
+            className="font-mono text-xs uppercase tracking-widest text-accent hover:underline"
+          >
+            playground →
+          </Link>
           <button
             onClick={loadDifferent}
             className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
