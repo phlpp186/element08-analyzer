@@ -7,6 +7,8 @@ import { SessionList } from './routes/SessionList';
 import { SessionDetail } from './routes/SessionDetail';
 import { Insights } from './routes/Insights';
 import { DepthDivePlayer } from './routes/DepthDivePlayer';
+import { PoolDivePlayer } from './routes/PoolDivePlayer';
+import { DrySessionPlayer } from './routes/DrySessionPlayer';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -16,6 +18,8 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/sessions" element={<SessionList />} />
         <Route path="/session/:id" element={<SessionDetail />} />
         <Route path="/session/:sessionId/dive/:diveIdx" element={<DepthDivePlayer />} />
+        <Route path="/session/:sessionId/pool/:diveIdx" element={<PoolDivePlayer />} />
+        <Route path="/session/:sessionId/dry" element={<DrySessionPlayer />} />
         <Route path="/insights" element={<Insights />} />
       </Routes>
     </BrowserRouter>
