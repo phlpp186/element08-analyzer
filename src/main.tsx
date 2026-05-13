@@ -6,6 +6,7 @@ import { Landing } from './routes/Landing';
 import { SessionList } from './routes/SessionList';
 import { SessionDetail } from './routes/SessionDetail';
 import { Insights } from './routes/Insights';
+import { DepthDivePlayer } from './routes/DepthDivePlayer';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -14,6 +15,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/" element={<Landing />} />
         <Route path="/sessions" element={<SessionList />} />
         <Route path="/session/:id" element={<SessionDetail />} />
+        <Route path="/session/:sessionId/dive/:diveIdx" element={<DepthDivePlayer />} />
         <Route path="/insights" element={<Insights />} />
       </Routes>
     </BrowserRouter>
