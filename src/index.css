@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Brand-level baseline. Tailwind tokens defined in tailwind.config.js. */
+html,
+body,
+#root {
+  background: theme('colors.deep');
+  color: theme('colors.text');
+  font-family: theme('fontFamily.body');
+  min-height: 100vh;
+  margin: 0;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Hero / section headings borrow the app's condensed display face. */
+h1,
+h2,
+h3 {
+  font-family: theme('fontFamily.heading');
+  letter-spacing: 0.04em;
+}

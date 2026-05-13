@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ELEMENT | 08 — Analyzer</title>
+    <script>
+      // SPA fallback for GitHub Pages: any unknown path serves 404.html which
+      // rewrites the URL back into a hash the client-side router will handle
+      // once index.html boots. Avoids 404s on direct deep-links and refreshes.
+      // Pattern from rafgraph/spa-github-pages — minimal one-line redirect:
+      var l = window.location;
+      l.replace(l.protocol + '//' + l.hostname + l.port + '/?p=' +
+        encodeURIComponent(l.pathname.slice(1)) +
+        (l.search ? '&q=' + encodeURIComponent(l.search.slice(1)) : '') +
+        l.hash);
+    </script>
+  </head>
+  <body></body>
+</html>

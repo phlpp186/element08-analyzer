@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      name="description"
+      content="ELEMENT | 08 Analyzer — professional freediving analytics in your browser. Your data never leaves your device."
+    />
+    <title>ELEMENT | 08 — Analyzer</title>
+    <script>
+      // Companion to public/404.html — if we arrived via a deep-link
+      // bounce, reconstruct the original path/query for the SPA router.
+      (function () {
+        var p = new URLSearchParams(window.location.search);
+        var path = p.get('p');
+        if (path !== null) {
+          var rest = p.get('q') ? '?' + p.get('q') : '';
+          window.history.replaceState(null, '', '/' + path + rest + window.location.hash);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
