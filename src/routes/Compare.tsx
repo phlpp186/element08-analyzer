@@ -23,11 +23,13 @@ import {
   type Metric,
 } from '../lib/analytics/periodCompare';
 import { buildPeriodMatrix } from '../lib/analytics/periodMatrix';
+import { summarizePeriods } from '../lib/analytics/periodSummary';
 import { PeriodEditor } from '../components/PeriodEditor';
 import { PeriodComparisonChart } from '../components/charts/PeriodComparisonChart';
 import { PeriodHeatmap } from '../components/charts/PeriodHeatmap';
+import { PeriodsSummary } from '../components/PeriodsSummary';
 
-type Tab = 'overlay' | 'heatmap';
+type Tab = 'overlay' | 'heatmap' | 'summary';
 
 const TABS: { id: Tab; label: string; description: string }[] = [
   {
@@ -39,6 +41,11 @@ const TABS: { id: Tab; label: string; description: string }[] = [
     id: 'heatmap',
     label: 'Periodization',
     description: 'Week × metric grid for one period. See peaks and deloads.',
+  },
+  {
+    id: 'summary',
+    label: 'Summary',
+    description: 'One row per period: totals, peak week, and mode mix.',
   },
 ];
 
@@ -86,6 +93,10 @@ export function Compare() {
   const matrix = useMemo(
     () => (heatmapPeriod ? buildPeriodMatrix(sessions, heatmapPeriod) : null),
     [sessions, heatmapPeriod],
+  );
+  const summaries = useMemo(
+    () => summarizePeriods(sessions, periods),
+    [sessions, periods],
   );
 
   return (
@@ -160,6 +171,8 @@ export function Compare() {
               )}
             </>
           )}
+
+          {tab === 'summary' && <PeriodsSummary summaries={summaries} />}
         </div>
         <PeriodEditor />
       </div>
