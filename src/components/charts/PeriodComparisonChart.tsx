@@ -48,7 +48,11 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
             const v = typeof p.value === 'number' ? p.value.toFixed(1).replace(/\.0$/, '') : p.value;
             return `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>${v}</b> ${metric.unit}`;
           });
-        const wkLabel = wk === 0 ? 'target week' : `${wk}w before`;
+        // axisValue is the category-axis STRING ("target" or "-12w"), not a
+        // number — so a `=== 0` check would never match. Detect the anchor
+        // by its string label, and append "before" for the other ticks
+        // (which already carry their own "w" suffix).
+        const wkLabel = wk === 'target' ? 'target week' : `${wk} before`;
         return `<div style="font-weight:600;margin-bottom:4px">${wkLabel}</div>${lines.join('<br/>')}`;
       },
     },
