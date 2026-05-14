@@ -75,7 +75,7 @@ export function PeriodEditor() {
 
       {periods.length === 0 ? (
         <p className="py-4 text-sm text-textDim">
-          Add a period to start comparing — typically one per competition cycle
+          Add a period to start comparing, typically one per competition cycle
           or training block.
         </p>
       ) : (

@@ -68,7 +68,7 @@ export function HoldOverlayChart({ holds, align, groupId }: Props) {
   if (!hasHr && !hasSpo2) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-16 text-center text-textDim">
-        The selected holds have no oximeter data — see the comparison table below.
+        The selected holds have no oximeter data, see the comparison table below.
       </div>
     );
   }

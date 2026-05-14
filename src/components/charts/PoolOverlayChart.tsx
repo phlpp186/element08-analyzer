@@ -40,7 +40,7 @@ export function PoolOverlayChart({ dives }: Props) {
   if (hrDives.length === 0 && !hasSpeed) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-16 text-center text-textDim">
-        The selected dives have no heart rate or distance recorded — see the
+        The selected dives have no heart rate or distance recorded, see the
         comparison table below.
       </div>
     );

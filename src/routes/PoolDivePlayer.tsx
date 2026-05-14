@@ -120,7 +120,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 function fmtSec(s: number): string {
-  if (!s || s <= 0) return '—';
+  if (!s || s <= 0) return '-';
   if (s < 60) return `${Math.round(s)}s`;
   const m = Math.floor(s / 60);
   const sec = Math.round(s % 60);

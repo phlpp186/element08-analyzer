@@ -203,7 +203,7 @@ function DryOpenPlayer({ sessionId }: { sessionId: number }) {
   return (
     <div className="rounded-lg border border-border bg-panel p-6">
       <p className="text-sm text-textDim">
-        Dry sessions are a single continuous timeline — open the full
+        Dry sessions are a single continuous timeline, open the full
         player to scrub through SpO₂, HR, and the block timeline.
       </p>
       <Link

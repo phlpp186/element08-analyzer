@@ -74,16 +74,16 @@ export function PeriodsSummary({ summaries }: Props) {
               <Td>{s.period.weeksBefore}</Td>
               <Td>{s.totalSessions}</Td>
               <Td>{s.totalTrainingDays}</Td>
-              <Td>{s.totalDryHolds || '—'}</Td>
+              <Td>{s.totalDryHolds || '-'}</Td>
               <Td>{fmtHours(s.totalMinutes)}</Td>
-              <Td>{s.totalPoolDistance > 0 ? `${s.totalPoolDistance}m` : '—'}</Td>
-              <Td>{s.maxDepth > 0 ? `${s.maxDepth}m` : '—'}</Td>
+              <Td>{s.totalPoolDistance > 0 ? `${s.totalPoolDistance}m` : '-'}</Td>
+              <Td>{s.maxDepth > 0 ? `${s.maxDepth}m` : '-'}</Td>
               <Td>
                 {s.peakSessionsWeek != null
                   ? s.peakSessionsWeek === 0
                     ? 'target'
                     : `${s.peakSessionsWeek}w`
-                  : '—'}
+                  : '-'}
               </Td>
               <td className="px-3 py-3" style={{ minWidth: 140 }}>
                 <ModeMixBar mix={s.modeMix} />
@@ -122,7 +122,7 @@ type ModeKey = 'dry' | 'depth' | 'pool';
 function ModeMixBar({ mix }: { mix: { dry: number; depth: number; pool: number } }) {
   const total = mix.dry + mix.depth + mix.pool;
   if (total === 0) {
-    return <span className="font-mono text-xs text-textDim">—</span>;
+    return <span className="font-mono text-xs text-textDim">-</span>;
   }
   // Explicit array literal with the narrow union — TS widens the inferred
   // literal type to `string` after `.filter()`, so we declare it up front.
@@ -160,7 +160,7 @@ function ModeMixBar({ mix }: { mix: { dry: number; depth: number; pool: number }
 }
 
 function fmtHours(min: number): string {
-  if (min <= 0) return '—';
+  if (min <= 0) return '-';
   if (min < 60) return `${Math.round(min)}m`;
   const h = Math.floor(min / 60);
   const m = Math.round(min % 60);

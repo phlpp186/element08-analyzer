@@ -115,7 +115,7 @@ export function Playground() {
             Playground
           </h1>
           <p className="mt-1 max-w-xl text-sm text-textDim">
-            Pivot any subset of your data — filter by date, mode, tags,
+            Pivot any subset of your data: filter by date, mode, tags,
             lung volume, then group and aggregate.
           </p>
         </div>

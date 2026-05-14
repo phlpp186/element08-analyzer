@@ -136,7 +136,7 @@ export function DepthDivePlayer() {
       {data.points.length < 2 ? (
         <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-12 text-center">
           <p className="text-textDim">
-            No profile recorded for this dive — nothing to render.
+            No profile recorded for this dive, nothing to render.
           </p>
         </div>
       ) : (
@@ -224,7 +224,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 function fmtSec(s: number): string {
-  if (!s || s <= 0) return '—';
+  if (!s || s <= 0) return '-';
   if (s < 60) return `${Math.round(s)}s`;
   const m = Math.floor(s / 60);
   const sec = Math.round(s % 60);

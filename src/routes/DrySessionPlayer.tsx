@@ -72,7 +72,7 @@ export function DrySessionPlayer() {
 
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
           {cycles > 0 && <Stat label="Holds" value={String(cycles)} />}
-          <Stat label="Duration" value={(session as any).duration ?? '—'} />
+          <Stat label="Duration" value={(session as any).duration ?? '-'} />
           {lungVol && <Stat label="Lung volume" value={lungVol} />}
           {breathingStyle && <Stat label="Breathing" value={breathingStyle} />}
           {minSpo2 != null && <Stat label="Min SpO₂" value={`${minSpo2}%`} />}

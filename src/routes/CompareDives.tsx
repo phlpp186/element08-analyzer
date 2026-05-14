@@ -291,7 +291,7 @@ function resolveHolds(sessions: ParsedSession[], slots: CompareSlot[]): HoldEntr
 
 function depthRows(entries: DepthEntry[]): StatRow[] {
   return [
-    { label: 'Max depth', values: entries.map((e) => (e.dive.depth != null ? `${e.dive.depth}m` : '—')) },
+    { label: 'Max depth', values: entries.map((e) => (e.dive.depth != null ? `${e.dive.depth}m` : '-')) },
     { label: 'Dive time', values: entries.map((e) => fmtSec(e.dive.diveTime)) },
     { label: 'Descent', values: entries.map((e) => fmtSec(e.dive.descentTime)) },
     { label: 'Hang', values: entries.map((e) => fmtSec(e.dive.hangTime)) },
@@ -303,7 +303,7 @@ function depthRows(entries: DepthEntry[]): StatRow[] {
 
 function poolRows(entries: PoolEntry[]): StatRow[] {
   return [
-    { label: 'Discipline', values: entries.map((e) => e.dive.discipline || '—') },
+    { label: 'Discipline', values: entries.map((e) => e.dive.discipline || '-') },
     {
       label: 'Distance',
       values: entries.map((e) =>
@@ -313,7 +313,7 @@ function poolRows(entries: PoolEntry[]): StatRow[] {
     { label: 'Dive time', values: entries.map((e) => fmtSec(e.dive.diveTime)) },
     {
       label: 'Avg speed',
-      values: entries.map((e) => (e.avgSpeed != null ? `${e.avgSpeed.toFixed(2)} m/s` : '—')),
+      values: entries.map((e) => (e.avgSpeed != null ? `${e.avgSpeed.toFixed(2)} m/s` : '-')),
     },
     { label: 'Rating', values: entries.map((e) => fmtRating(e.dive.rating)) },
   ];
@@ -533,7 +533,7 @@ function Placeholder({ children }: { children: React.ReactNode }) {
 // ─── Formatters ─────────────────────────────────────────────────────────────
 
 function fmtSec(s: unknown): string {
-  if (typeof s !== 'number' || !Number.isFinite(s) || s <= 0) return '—';
+  if (typeof s !== 'number' || !Number.isFinite(s) || s <= 0) return '-';
   if (s < 60) return `${Math.round(s)}s`;
   const m = Math.floor(s / 60);
   const sec = Math.round(s % 60);
@@ -541,18 +541,18 @@ function fmtSec(s: unknown): string {
 }
 
 function fmtSpeed(v: unknown): string {
-  if (typeof v !== 'number' || !Number.isFinite(v)) return '—';
+  if (typeof v !== 'number' || !Number.isFinite(v)) return '-';
   return `${v.toFixed(2)} m/s`;
 }
 
 function fmtRating(r: unknown): string {
-  return typeof r === 'number' && r > 0 ? `${r}/5` : '—';
+  return typeof r === 'number' && r > 0 ? `${r}/5` : '-';
 }
 
 function fmtPct(v: number | null): string {
-  return v != null ? `${Math.round(v)}%` : '—';
+  return v != null ? `${Math.round(v)}%` : '-';
 }
 
 function fmtBpm(v: number | null): string {
-  return v != null ? `${Math.round(v)} bpm` : '—';
+  return v != null ? `${Math.round(v)} bpm` : '-';
 }
