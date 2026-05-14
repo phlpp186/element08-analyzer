@@ -24,7 +24,10 @@ interface Props {
 
 const SOURCE_COLOR: Record<ExerciseSource, string> = {
   dry: '#66bb6a',       // green — dry holds
-  'pool-sta': '#00e5cc', // teal — pool STA (still a breath hold, distinct)
+  'pool-sta': '#ff5f9e', // pink — pool STA. "Pink = pool" stays consistent
+                         // with Pool-distance mode, and it's clearly
+                         // distinct from the green dry holds it shares the
+                         // breath-hold chart with.
   depth: '#4fc3f7',     // blue — depth
   pool: '#ff5f9e',      // pink — pool distance
 };

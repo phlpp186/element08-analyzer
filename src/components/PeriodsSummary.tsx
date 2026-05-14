@@ -144,14 +144,14 @@ function ModeMixBar({ mix }: { mix: { dry: number; depth: number; pool: number }
           />
         ))}
       </div>
-      <div className="mt-1 flex gap-3 font-mono text-[10px] text-textDim">
+      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[10px] text-textDim">
         {parts.map((p) => (
           <span key={p.key} className="flex items-center gap-1">
             <span
               className="inline-block h-1.5 w-1.5 rounded-full"
               style={{ backgroundColor: MODE_COLORS[p.key] }}
             />
-            {Math.round(p.pct)}%
+            {MODE_LABELS[p.key]} {Math.round(p.pct)}%
           </span>
         ))}
       </div>
