@@ -48,6 +48,8 @@ export function buildPeriodMatrix(
     totalMinutes: number;
     poolDistance: number;
     maxDepth: number;
+    longestHold: number;
+    longestPoolDive: number;
   };
   const buckets = new Map<number, Bucket>();
   for (let i = -(period.weeksBefore - 1); i <= 0; i++) {
@@ -58,6 +60,8 @@ export function buildPeriodMatrix(
       totalMinutes: 0,
       poolDistance: 0,
       maxDepth: 0,
+      longestHold: 0,
+      longestPoolDive: 0,
     });
   }
 
@@ -73,9 +77,27 @@ export function buildPeriodMatrix(
 
       b.sessions++;
       b.trainingDays.add(isoDate(sd));
-      if (s.mode === 'dry') b.dryHolds += s.cyclesCount;
+      if (s.mode === 'dry') {
+        b.dryHolds += s.cyclesCount;
+        // Longest single Hold block this session contributes.
+        const timeline = (s as unknown as { blockTimeline?: { type: string; seconds: number }[] })
+          .blockTimeline;
+        if (timeline) {
+          for (const blk of timeline) {
+            if (blk.type === 'Hold' && blk.seconds > b.longestHold) b.longestHold = blk.seconds;
+          }
+        }
+      }
       b.totalMinutes += parseDurationMinutes(s.duration);
-      if (s.mode === 'pool') b.poolDistance += s.totalDistance;
+      if (s.mode === 'pool') {
+        b.poolDistance += s.totalDistance;
+        const dives = (s as unknown as { dives?: { diveTime: number }[] }).dives;
+        if (dives) {
+          for (const d of dives) {
+            if (d.diveTime > b.longestPoolDive) b.longestPoolDive = d.diveTime;
+          }
+        }
+      }
       if (s.mode === 'depth') b.maxDepth = Math.max(b.maxDepth, s.maxDepth);
     }
   }
@@ -93,6 +115,8 @@ export function buildPeriodMatrix(
         totalMinutes: Math.round(b.totalMinutes),
         poolDistance: Math.round(b.poolDistance),
         maxDepth: Math.round(b.maxDepth),
+        longestHold: Math.round(b.longestHold),
+        longestPoolDive: Math.round(b.longestPoolDive),
       },
       isAnchorWeek: i === 0,
     });

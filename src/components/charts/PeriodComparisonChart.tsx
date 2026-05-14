@@ -45,8 +45,12 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
         const lines = params
           .filter((p: any) => p.value != null && Number.isFinite(p.value))
           .map((p: any) => {
-            const v = typeof p.value === 'number' ? p.value.toFixed(1).replace(/\.0$/, '') : p.value;
-            return `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>${v}</b> ${metric.unit}`;
+            // Duration metrics carry a `format` (seconds → m:ss); the rest
+            // print the raw number with the unit suffix.
+            const v = metric.format
+              ? metric.format(p.value as number)
+              : `${typeof p.value === 'number' ? p.value.toFixed(1).replace(/\.0$/, '') : p.value} ${metric.unit}`;
+            return `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>${v}</b>`;
           });
         // axisValue is the category-axis STRING ("target" or "-12w"), not a
         // number — so a `=== 0` check would never match. Detect the anchor
@@ -88,7 +92,13 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
-      axisLabel: { color: '#9a9a9e', fontFamily: 'JetBrains Mono, ui-monospace, monospace', fontSize: 10 },
+      axisLabel: {
+        color: '#9a9a9e',
+        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontSize: 10,
+        // Duration metrics format the tick as m:ss.
+        ...(metric.format ? { formatter: (v: number) => metric.format!(v) } : {}),
+      },
       axisLine: { show: false },
       splitLine: { lineStyle: { color: '#1a1a1a' } },
       minInterval: metric.unit === 'sessions' || metric.unit === 'days' ? 1 : undefined,

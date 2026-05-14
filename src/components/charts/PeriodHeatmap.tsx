@@ -154,6 +154,13 @@ function formatValue(metric: Metric, v: number): string {
     case 'poolDistance':
     case 'maxDepth':
       return `${v}m`;
+    case 'longestHold':
+    case 'longestPoolDive': {
+      // Stored as seconds → m:ss.
+      const m = Math.floor(v / 60);
+      const s = Math.round(v % 60);
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
     default:
       return `${v}`;
   }

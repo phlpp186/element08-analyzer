@@ -35,7 +35,9 @@ export type Metric =
   | 'dryHolds'
   | 'totalMinutes'
   | 'poolDistance'
-  | 'maxDepth';
+  | 'maxDepth'
+  | 'longestHold'
+  | 'longestPoolDive';
 
 export interface MetricDef {
   id: Metric;
@@ -48,6 +50,37 @@ export interface MetricDef {
   perSession: (s: ParsedSession) => number | null;
   /** "sum" | "max" | "uniqueDates" — controls how the bucket is reduced. */
   aggregate: 'sum' | 'max' | 'uniqueDates';
+  /** Optional value formatter for axis labels + tooltips. Used by
+   *  duration metrics so seconds render as m:ss instead of "185 sec". */
+  format?: (v: number) => string;
+}
+
+/** Seconds → "m:ss" — for the duration-valued metrics. */
+export function fmtMmss(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+/** Longest single Hold block (seconds) in a dry session, or null. */
+function longestHoldInSession(s: ParsedSession): number | null {
+  if (s.mode !== 'dry') return null;
+  const timeline = (s as unknown as { blockTimeline?: { type: string; seconds: number }[] })
+    .blockTimeline;
+  if (!timeline) return null;
+  let max = 0;
+  for (const b of timeline) if (b.type === 'Hold' && b.seconds > max) max = b.seconds;
+  return max > 0 ? max : null;
+}
+
+/** Longest single dive time (seconds) in a pool session, or null. */
+function longestPoolDiveInSession(s: ParsedSession): number | null {
+  if (s.mode !== 'pool') return null;
+  const dives = (s as unknown as { dives?: { diveTime: number }[] }).dives;
+  if (!dives) return null;
+  let max = 0;
+  for (const d of dives) if (d.diveTime > max) max = d.diveTime;
+  return max > 0 ? max : null;
 }
 
 export const METRICS: MetricDef[] = [
@@ -92,6 +125,23 @@ export const METRICS: MetricDef[] = [
     unit: 'm',
     perSession: (s) => (s.mode === 'depth' ? s.maxDepth : null),
     aggregate: 'max',
+  },
+  {
+    id: 'longestHold',
+    label: 'Longest hold of the week',
+    unit: 'm:ss',
+    // Per-session longest hold, then max across the week → week's longest.
+    perSession: longestHoldInSession,
+    aggregate: 'max',
+    format: fmtMmss,
+  },
+  {
+    id: 'longestPoolDive',
+    label: 'Longest pool dive of the week',
+    unit: 'm:ss',
+    perSession: longestPoolDiveInSession,
+    aggregate: 'max',
+    format: fmtMmss,
   },
 ];
 
