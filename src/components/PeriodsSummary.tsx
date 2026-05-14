@@ -65,7 +65,7 @@ export function PeriodsSummary({ summaries }: Props) {
                     <div className="truncate font-heading text-sm tracking-wide text-text">
                       {s.period.label}
                     </div>
-                    <div className="font-mono text-[10px] text-textDim">
+                    <div className="whitespace-nowrap font-mono text-[10px] text-textDim">
                       anchor {s.period.anchorDate}
                     </div>
                   </div>

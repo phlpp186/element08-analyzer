@@ -113,8 +113,9 @@ function PeriodRow({
     onChange({ color: next });
   }
 
-  // Two-row card per period: label (wide) on top, date + weeks underneath.
-  // Tabular layout cramped the label into ~50px on narrow side panels.
+  // Stacked card per period: label on top, then anchor date and weeks on
+  // their own rows. A shared row for date + weeks cramped the native date
+  // input so badly it only showed part of the date on narrow side panels.
   return (
     <li className="space-y-2 rounded-md border border-border bg-deep p-3">
       <div className="flex items-center gap-2">
@@ -143,7 +144,7 @@ function PeriodRow({
       <div className="flex items-center gap-2 pl-6">
         <label
           htmlFor={dateId}
-          className="font-mono text-[10px] uppercase tracking-widest text-textDim"
+          className="w-14 shrink-0 font-mono text-[10px] uppercase tracking-widest text-textDim"
         >
           Anchor
         </label>
@@ -152,11 +153,13 @@ function PeriodRow({
           type="date"
           value={period.anchorDate}
           onChange={(e) => onChange({ anchorDate: e.target.value })}
-          className="flex-1 rounded-md border border-border bg-panel px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
+          className="min-w-0 flex-1 rounded-md border border-border bg-panel px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
         />
+      </div>
+      <div className="flex items-center gap-2 pl-6">
         <label
           htmlFor={weeksId}
-          className="font-mono text-[10px] uppercase tracking-widest text-textDim"
+          className="w-14 shrink-0 font-mono text-[10px] uppercase tracking-widest text-textDim"
         >
           Weeks
         </label>
@@ -170,7 +173,7 @@ function PeriodRow({
             const v = parseInt(e.target.value, 10);
             if (Number.isFinite(v) && v >= 1 && v <= 104) onChange({ weeksBefore: v });
           }}
-          className="w-16 rounded-md border border-border bg-panel px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
+          className="w-20 rounded-md border border-border bg-panel px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
         />
       </div>
     </li>
