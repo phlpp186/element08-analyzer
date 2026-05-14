@@ -7,7 +7,9 @@
  *   1. DEPTH      — always shown. Inverted (deeper = lower), hang segments
  *                   shaded, contraction marker, depth alarms, speed marks.
  *   2. HEART RATE — only when the profile has ≥2 HR points.
- *   3. SPEED      — only when the profile has ≥2 speed points.
+ *   3. SPEED      — only when the profile has ≥2 speed points. Optional
+ *                   moving-average smoothing draws a bold smoothed line
+ *                   over the faint raw curve (FIM dives oscillate hard).
  *   4. TEMP       — only when the profile has ≥2 temp points.
  *
  * Depth-track overlays the caller can toggle:
@@ -49,6 +51,9 @@ interface Props {
   showAlarms: boolean;
   /** Speed-marker interval in metres: 0 = off, else 5 or 10. */
   speedStep: number;
+  /** Vertical-speed smoothing window in samples: 0 = raw only, else an
+   *  N-sample centred moving average drawn over the faint raw curve. */
+  speedSmooth: number;
   /** Unique chart-group id (stable across re-renders for the same dive). */
   groupId: string;
 }
@@ -65,6 +70,7 @@ export function DepthDiveTracks({
   alarms,
   showAlarms,
   speedStep,
+  speedSmooth,
   groupId,
 }: Props) {
   const depthOption = useMemo(
@@ -83,8 +89,12 @@ export function DepthDiveTracks({
     [data],
   );
   const speedOption = useMemo(
-    () => buildLineOption(data.speedSeries, '#ffa726', 'm/s', data.startT, data.endT, { allowNegative: true }),
-    [data],
+    () =>
+      buildLineOption(data.speedSeries, '#ffa726', 'm/s', data.startT, data.endT, {
+        allowNegative: true,
+        smoothWindow: speedSmooth,
+      }),
+    [data, speedSmooth],
   );
   const tempOption = useMemo(
     () => buildLineOption(data.tempSeries, '#66bb6a', '°C', data.startT, data.endT),
@@ -415,15 +425,69 @@ function buildDepthOption(
   };
 }
 
+/** Centred N-sample moving average. Returns the series unchanged when the
+ *  window is too small to do anything. */
+function smoothSeries(series: [number, number][], window: number): [number, number][] {
+  if (window <= 1 || series.length < 3) return series;
+  const half = Math.floor(window / 2);
+  const out: [number, number][] = [];
+  for (let i = 0; i < series.length; i++) {
+    let sum = 0;
+    let count = 0;
+    for (let j = Math.max(0, i - half); j <= Math.min(series.length - 1, i + half); j++) {
+      sum += series[j][1];
+      count++;
+    }
+    out.push([series[i][0], sum / count]);
+  }
+  return out;
+}
+
 function buildLineOption(
   series: [number, number][],
   color: string,
   unit: string,
   startT: number,
   endT: number,
-  opts: { allowNegative?: boolean } = {},
+  opts: { allowNegative?: boolean; smoothWindow?: number } = {},
 ) {
   const empty = series.length < 2;
+  const smoothed =
+    opts.smoothWindow && opts.smoothWindow > 1
+      ? smoothSeries(series, opts.smoothWindow)
+      : null;
+
+  // When smoothing is on, the raw curve drops to a faint underlay and the
+  // bold line is the moving average. The tooltip then reports the smoothed
+  // value (last series) rather than the noisy raw one.
+  const lineSeries = smoothed
+    ? [
+        {
+          type: 'line',
+          data: series,
+          showSymbol: false,
+          smooth: 0.2,
+          silent: true,
+          lineStyle: { color, width: 1, opacity: 0.25 },
+        },
+        {
+          type: 'line',
+          data: smoothed,
+          showSymbol: false,
+          smooth: 0.2,
+          lineStyle: { color, width: 2 },
+        },
+      ]
+    : [
+        {
+          type: 'line',
+          data: series,
+          showSymbol: false,
+          smooth: 0.2,
+          lineStyle: { color, width: 1.5 },
+        },
+      ];
+
   return {
     grid: GRID,
     animation: false,
@@ -433,7 +497,8 @@ function buildLineOption(
       trigger: 'axis',
       formatter: (params: any) => {
         if (empty) return '';
-        const p = Array.isArray(params) ? params[0] : params;
+        const arr = Array.isArray(params) ? params : [params];
+        const p = arr[arr.length - 1];
         const [t, v] = p.value as [number, number];
         return `t=${fmtSec(t)}<br/>${typeof v === 'number' ? v.toFixed(1) : v} ${unit}`;
       },
@@ -453,15 +518,7 @@ function buildLineOption(
       axisLine: { show: false },
       splitLine: { lineStyle: { color: '#1a1a1a' } },
     },
-    series: [
-      {
-        type: 'line',
-        data: series,
-        showSymbol: false,
-        smooth: 0.2,
-        lineStyle: { color, width: 1.5 },
-      },
-    ],
+    series: lineSeries,
   };
 }
 

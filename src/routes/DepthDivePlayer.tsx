@@ -25,6 +25,9 @@ export function DepthDivePlayer() {
   // detail). speedStep: 0 = off, else 5 or 10 metres.
   const [showAlarms, setShowAlarms] = useState(true);
   const [speedStep, setSpeedStep] = useState<0 | 5 | 10>(0);
+  // Vertical-speed smoothing window in samples. 0 = raw only; 5/15 overlay
+  // a moving average on the raw curve (FIM dives oscillate hard).
+  const [speedSmooth, setSpeedSmooth] = useState<0 | 5 | 15>(0);
 
   if (!backup) return <Navigate to="/" replace />;
 
@@ -171,6 +174,27 @@ export function DepthDivePlayer() {
                 </button>
               ))}
             </div>
+            {data.hasSpeed && (
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
+                  Speed smoothing
+                </span>
+                {([0, 5, 15] as const).map((win) => (
+                  <button
+                    key={win}
+                    onClick={() => setSpeedSmooth(win)}
+                    className={[
+                      'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
+                      speedSmooth === win
+                        ? 'border-accent bg-accent/10 text-accent'
+                        : 'border-border text-textDim hover:border-accent hover:text-accent',
+                    ].join(' ')}
+                  >
+                    {win === 0 ? 'Raw' : win === 5 ? 'Light' : 'Strong'}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <DepthDiveTracks
@@ -179,6 +203,7 @@ export function DepthDivePlayer() {
             alarms={(session as any).alarms ?? []}
             showAlarms={showAlarms}
             speedStep={speedStep}
+            speedSmooth={speedSmooth}
             groupId={`dive-${session.id}-${idx}`}
           />
         </>
