@@ -17,7 +17,7 @@
  * shape of each season's prep is directly comparable.
  */
 import type { ParsedSession } from '../../schema/backup';
-import { includeDepthDive } from './diveFilter';
+import { includeDive } from './diveFilter';
 
 export interface Period {
   id: string;
@@ -76,14 +76,37 @@ function longestHoldInSession(s: ParsedSession): number | null {
 
 /** Longest single pool dive by DISTANCE (metres) in a pool session, or
  *  null. STA dives have no distance and are excluded — they're a
- *  time-measured discipline, surfaced in the breath-hold views instead. */
+ *  time-measured discipline, surfaced in the breath-hold views instead.
+ *  Warmup / safety / excluded dives are filtered out via includeDive. */
 function longestPoolDiveInSession(s: ParsedSession): number | null {
   if (s.mode !== 'pool') return null;
-  const dives = (s as unknown as { dives?: { distance: number | null }[] }).dives;
+  const dives = (s as unknown as {
+    dives?: { distance: number | null; diveType?: string | null }[];
+  }).dives;
   if (!dives) return null;
   let max = 0;
-  for (const d of dives) if (d.distance != null && d.distance > max) max = d.distance;
+  for (const d of dives) {
+    if (!includeDive(d.diveType)) continue;
+    if (d.distance != null && d.distance > max) max = d.distance;
+  }
   return max > 0 ? max : null;
+}
+
+/** Sum of pool dive distances in a session, counting only included
+ *  dives. The session-level `totalDistance` field counts warmup/safety
+ *  too, so the per-week "Pool distance" metric recomputes from dives. */
+function poolDistanceInSession(s: ParsedSession): number | null {
+  if (s.mode !== 'pool') return null;
+  const dives = (s as unknown as {
+    dives?: { distance: number | null; diveType?: string | null }[];
+  }).dives;
+  if (!dives) return s.totalDistance > 0 ? s.totalDistance : null;
+  let sum = 0;
+  for (const d of dives) {
+    if (!includeDive(d.diveType)) continue;
+    if (d.distance != null) sum += d.distance;
+  }
+  return sum > 0 ? sum : null;
 }
 
 export const METRICS: MetricDef[] = [
@@ -119,14 +142,14 @@ export const METRICS: MetricDef[] = [
     id: 'poolDistance',
     label: 'Pool distance per week',
     unit: 'm',
-    perSession: (s) => (s.mode === 'pool' ? s.totalDistance : null),
+    perSession: poolDistanceInSession,
     aggregate: 'sum',
   },
   {
     id: 'maxDepth',
     label: 'Deepest dive of the week',
     unit: 'm',
-    // Recompute from the dives array honoring includeDepthDive — the
+    // Recompute from the dives array honoring includeDive — the
     // session-level `maxDepth` field counts warmup/safety/excluded dives.
     perSession: (s) => {
       if (s.mode !== 'depth') return null;
@@ -136,7 +159,7 @@ export const METRICS: MetricDef[] = [
       if (!dives) return s.maxDepth > 0 ? s.maxDepth : null;
       let max = 0;
       for (const d of dives) {
-        if (!includeDepthDive(d.diveType)) continue;
+        if (!includeDive(d.diveType)) continue;
         if (d.depth > max) max = d.depth;
       }
       return max > 0 ? max : null;

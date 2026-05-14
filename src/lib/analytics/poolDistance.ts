@@ -7,10 +7,12 @@
  * we'll align bin boundaries with the app side.
  */
 import type { ParsedSession } from '../../schema/backup';
+import { includeDive } from './diveFilter';
 
 interface PoolDiveLite {
   discipline: 'STA' | 'DYN' | 'DYNB' | 'DNF' | 'other';
   distance: number | null;
+  diveType?: string | null;
 }
 
 export interface DistanceBin {
@@ -29,6 +31,7 @@ export function distanceDistribution(sessions: ParsedSession[], binSize = 25): D
     if (s.mode !== 'pool') continue;
     const dives = (s as unknown as { dives?: PoolDiveLite[] }).dives ?? [];
     for (const d of dives) {
+      if (!includeDive(d.diveType)) continue;
       if (d.discipline === 'STA') continue;
       if (d.distance != null && d.distance > 0) distances.push(d.distance);
     }

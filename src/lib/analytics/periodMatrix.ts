@@ -13,7 +13,7 @@
  */
 import type { ParsedSession } from '../../schema/backup';
 import { METRICS, type Metric, type Period } from './periodCompare';
-import { includeDepthDive } from './diveFilter';
+import { includeDive } from './diveFilter';
 
 export interface MatrixRow {
   /** Negative week offset (0 = target week, -1 = one week before). */
@@ -91,20 +91,25 @@ export function buildPeriodMatrix(
       }
       b.totalMinutes += parseDurationMinutes(s.duration);
       if (s.mode === 'pool') {
-        b.poolDistance += s.totalDistance;
-        // Longest pool dive = furthest DISTANCE. STA dives have no
-        // distance and are excluded.
-        const dives = (s as unknown as { dives?: { distance: number | null }[] }).dives;
+        // Pool distance + longest pool dive honor includeDive — warmup/
+        // safety/excluded dives don't count. STA dives have no distance
+        // so they're naturally excluded from both. Fall back to the
+        // session-level totalDistance only when the dives array is absent.
+        const dives = (s as unknown as {
+          dives?: { distance: number | null; diveType?: string | null }[];
+        }).dives;
         if (dives) {
           for (const d of dives) {
-            if (d.distance != null && d.distance > b.longestPoolDive) {
-              b.longestPoolDive = d.distance;
-            }
+            if (!includeDive(d.diveType) || d.distance == null) continue;
+            b.poolDistance += d.distance;
+            if (d.distance > b.longestPoolDive) b.longestPoolDive = d.distance;
           }
+        } else {
+          b.poolDistance += s.totalDistance;
         }
       }
       if (s.mode === 'depth') {
-        // Deepest dive honoring includeDepthDive — warmup/safety/excluded
+        // Deepest dive honoring includeDive — warmup/safety/excluded
         // dives don't count. Fall back to the session-level field only
         // when the dives array is missing.
         const dives = (s as unknown as {
@@ -112,7 +117,7 @@ export function buildPeriodMatrix(
         }).dives;
         if (dives) {
           for (const d of dives) {
-            if (includeDepthDive(d.diveType) && d.depth > b.maxDepth) {
+            if (includeDive(d.diveType) && d.depth > b.maxDepth) {
               b.maxDepth = d.depth;
             }
           }

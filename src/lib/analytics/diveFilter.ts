@@ -1,7 +1,7 @@
 /**
- * Depth-dive inclusion filter for analytics.
+ * Dive inclusion filter for analytics — depth AND pool dives.
  *
- * Mirrors the mobile app's Insights default: a depth dive counts toward
+ * Mirrors the mobile app's Insights default: a dive counts toward
  * aggregate analytics UNLESS its `diveType` is 'excluded', 'warmup', or
  * 'safety'. An untyped dive defaults to 'training' and is included.
  *
@@ -11,14 +11,14 @@
  *   training / competition / (unset) → counted
  *
  * The app additionally lets the user toggle warmup/safety back ON via a
- * filter. The analyzer doesn't have that toggle yet — when the depth
- * Insights charts land (Phase 2b) the toggle comes with them. Until
- * then this matches the app's *default* view so the numbers agree.
+ * filter. The analyzer doesn't have that toggle yet — when the depth/pool
+ * Insights charts land (Phase 2b) the toggle comes with them. Until then
+ * this matches the app's *default* view so the numbers agree.
  *
  * This filter applies to AGGREGATE analytics only. The per-dive player
  * still shows any dive the user explicitly opens — a warmup dive is
  * still viewable, it just doesn't pollute the season comparisons.
  */
-export function includeDepthDive(diveType: string | null | undefined): boolean {
+export function includeDive(diveType: string | null | undefined): boolean {
   return diveType !== 'excluded' && diveType !== 'warmup' && diveType !== 'safety';
 }

@@ -4,6 +4,7 @@
  * plus when it happened.
  */
 import type { ParsedSession } from '../../schema/backup';
+import { includeDive } from './diveFilter';
 
 type PoolDiscipline = 'STA' | 'DYN' | 'DYNB' | 'DNF' | 'other';
 
@@ -22,6 +23,7 @@ interface PoolDiveLite {
   discipline: PoolDiscipline;
   distance: number | null;
   diveTime: number;
+  diveType?: string | null;
 }
 
 const ORDER: PoolDiscipline[] = ['STA', 'DYN', 'DYNB', 'DNF', 'other'];
@@ -38,6 +40,8 @@ export function disciplineBests(sessions: ParsedSession[]): BestRecord[] {
     const dives = (s as unknown as { dives?: PoolDiveLite[] }).dives ?? [];
 
     for (const d of dives) {
+      // Warmup / safety / excluded dives shouldn't count as a PB.
+      if (!includeDive(d.diveType)) continue;
       const disc = d.discipline;
       // STA uses time; everything else uses distance.
       const isSta = disc === 'STA';
