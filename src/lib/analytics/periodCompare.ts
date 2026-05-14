@@ -17,6 +17,7 @@
  * shape of each season's prep is directly comparable.
  */
 import type { ParsedSession } from '../../schema/backup';
+import { includeDepthDive } from './diveFilter';
 
 export interface Period {
   id: string;
@@ -125,7 +126,21 @@ export const METRICS: MetricDef[] = [
     id: 'maxDepth',
     label: 'Deepest dive of the week',
     unit: 'm',
-    perSession: (s) => (s.mode === 'depth' ? s.maxDepth : null),
+    // Recompute from the dives array honoring includeDepthDive — the
+    // session-level `maxDepth` field counts warmup/safety/excluded dives.
+    perSession: (s) => {
+      if (s.mode !== 'depth') return null;
+      const dives = (s as unknown as {
+        dives?: { depth: number; diveType?: string | null }[];
+      }).dives;
+      if (!dives) return s.maxDepth > 0 ? s.maxDepth : null;
+      let max = 0;
+      for (const d of dives) {
+        if (!includeDepthDive(d.diveType)) continue;
+        if (d.depth > max) max = d.depth;
+      }
+      return max > 0 ? max : null;
+    },
     aggregate: 'max',
   },
   {

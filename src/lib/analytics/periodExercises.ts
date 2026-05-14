@@ -25,6 +25,7 @@
  */
 import type { ParsedSession } from '../../schema/backup';
 import type { Period } from './periodCompare';
+import { includeDepthDive } from './diveFilter';
 
 export type ExerciseMode = 'breathhold' | 'depth' | 'pool';
 
@@ -57,6 +58,7 @@ interface BlockEntry {
 }
 interface DepthDiveLite {
   depth: number;
+  diveType?: string | null;
 }
 interface PoolDiveLite {
   discipline: 'STA' | 'DYN' | 'DYNB' | 'DNF' | 'other';
@@ -131,6 +133,9 @@ export function extractExercises(
       if (s.mode !== 'depth') continue;
       const dives = (s as unknown as { dives?: DepthDiveLite[] }).dives ?? [];
       dives.forEach((d, i) => {
+        // Skip warmup / safety / excluded — they don't represent a real
+        // training effort. Matches the app's Insights default.
+        if (!includeDepthDive(d.diveType)) return;
         if (d.depth > 0) {
           points.push({
             dateMs,

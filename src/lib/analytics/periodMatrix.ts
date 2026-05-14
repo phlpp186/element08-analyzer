@@ -13,6 +13,7 @@
  */
 import type { ParsedSession } from '../../schema/backup';
 import { METRICS, type Metric, type Period } from './periodCompare';
+import { includeDepthDive } from './diveFilter';
 
 export interface MatrixRow {
   /** Negative week offset (0 = target week, -1 = one week before). */
@@ -102,7 +103,23 @@ export function buildPeriodMatrix(
           }
         }
       }
-      if (s.mode === 'depth') b.maxDepth = Math.max(b.maxDepth, s.maxDepth);
+      if (s.mode === 'depth') {
+        // Deepest dive honoring includeDepthDive — warmup/safety/excluded
+        // dives don't count. Fall back to the session-level field only
+        // when the dives array is missing.
+        const dives = (s as unknown as {
+          dives?: { depth: number; diveType?: string | null }[];
+        }).dives;
+        if (dives) {
+          for (const d of dives) {
+            if (includeDepthDive(d.diveType) && d.depth > b.maxDepth) {
+              b.maxDepth = d.depth;
+            }
+          }
+        } else {
+          b.maxDepth = Math.max(b.maxDepth, s.maxDepth);
+        }
+      }
     }
   }
 
