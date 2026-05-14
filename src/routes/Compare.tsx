@@ -1,16 +1,17 @@
 /**
- * Compare — period-based analysis with two visualization tabs:
+ * Compare — period-based analysis with four visualization tabs:
  *
  *   - Overlay      (Phase 5a) — one line per period on a shared x-axis,
- *                  aligned weeks-before-anchor. Best for comparing prep
- *                  shape across multiple seasons.
- *   - Periodization (Phase 5b) — week × metric heatmap for ONE selected
- *                  period. Best for spotting peak / deload / taper
- *                  patterns within a single cycle.
+ *                  aligned weeks-before-anchor. Compare prep shapes.
+ *   - Periodization (Phase 5b) — week × metric heatmap for ONE period.
+ *                  Spot peak / deload / taper patterns within a cycle.
+ *   - Summary       (Phase 5c) — one row per period: totals + mode mix.
+ *   - Exercises     (Phase 5e) — scatter of every individual hold/dive
+ *                  in ONE period. Raw training-log granularity: density
+ *                  of training days + spread of efforts at a glance.
  *
- * Both tabs share the user-defined periods (useCompareStore) and the
- * same metric definitions, so periods added here are visible in both
- * views without re-entry.
+ * All tabs share the user-defined periods (useCompareStore), so periods
+ * added in one tab are visible in the others without re-entry.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
@@ -24,12 +25,17 @@ import {
 } from '../lib/analytics/periodCompare';
 import { buildPeriodMatrix } from '../lib/analytics/periodMatrix';
 import { summarizePeriods } from '../lib/analytics/periodSummary';
+import {
+  extractExercises,
+  type ExerciseMode,
+} from '../lib/analytics/periodExercises';
 import { PeriodEditor } from '../components/PeriodEditor';
 import { PeriodComparisonChart } from '../components/charts/PeriodComparisonChart';
 import { PeriodHeatmap } from '../components/charts/PeriodHeatmap';
 import { PeriodsSummary } from '../components/PeriodsSummary';
+import { ExerciseScatter } from '../components/charts/ExerciseScatter';
 
-type Tab = 'overlay' | 'heatmap' | 'summary';
+type Tab = 'overlay' | 'heatmap' | 'summary' | 'exercises';
 
 const TABS: { id: Tab; label: string; description: string }[] = [
   {
@@ -47,6 +53,17 @@ const TABS: { id: Tab; label: string; description: string }[] = [
     label: 'Summary',
     description: 'One row per period: totals, peak week, and mode mix.',
   },
+  {
+    id: 'exercises',
+    label: 'Exercises',
+    description: 'Every hold/dive in one period as a dot. Training-log granularity.',
+  },
+];
+
+const EXERCISE_MODES: { id: ExerciseMode; label: string }[] = [
+  { id: 'dry',   label: 'Breath hold' },
+  { id: 'depth', label: 'Depth' },
+  { id: 'pool',  label: 'Pool' },
 ];
 
 export function Compare() {
@@ -57,7 +74,10 @@ export function Compare() {
   const addPeriod = useCompareStore((s) => s.addPeriod);
 
   const [tab, setTab] = useState<Tab>('overlay');
-  const [heatmapPeriodId, setHeatmapPeriodId] = useState<string | null>(null);
+  // Periodization + Exercises are both "pick one period" views — they
+  // share the selection so switching between them keeps your period.
+  const [singlePeriodId, setSinglePeriodId] = useState<string | null>(null);
+  const [exerciseMode, setExerciseMode] = useState<ExerciseMode>('dry');
 
   if (!backup) return <Navigate to="/" replace />;
 
@@ -71,17 +91,17 @@ export function Compare() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Heatmap shows ONE period; default to the first one and follow along
-  // if the selected one gets deleted.
+  // Single-period views (Periodization, Exercises) default to the first
+  // period and follow along if the selected one gets deleted.
   useEffect(() => {
     if (periods.length === 0) {
-      if (heatmapPeriodId !== null) setHeatmapPeriodId(null);
+      if (singlePeriodId !== null) setSinglePeriodId(null);
       return;
     }
-    if (heatmapPeriodId == null || !periods.some((p) => p.id === heatmapPeriodId)) {
-      setHeatmapPeriodId(periods[0].id);
+    if (singlePeriodId == null || !periods.some((p) => p.id === singlePeriodId)) {
+      setSinglePeriodId(periods[0].id);
     }
-  }, [periods, heatmapPeriodId]);
+  }, [periods, singlePeriodId]);
 
   const overlay = useMemo(
     () => aggregatePeriods(sessions, periods, metric),
@@ -89,14 +109,18 @@ export function Compare() {
   );
   const metricDef = METRICS.find((m) => m.id === metric) ?? METRICS[0];
 
-  const heatmapPeriod = periods.find((p) => p.id === heatmapPeriodId) ?? null;
+  const singlePeriod = periods.find((p) => p.id === singlePeriodId) ?? null;
   const matrix = useMemo(
-    () => (heatmapPeriod ? buildPeriodMatrix(sessions, heatmapPeriod) : null),
-    [sessions, heatmapPeriod],
+    () => (singlePeriod ? buildPeriodMatrix(sessions, singlePeriod) : null),
+    [sessions, singlePeriod],
   );
   const summaries = useMemo(
     () => summarizePeriods(sessions, periods),
     [sessions, periods],
+  );
+  const exerciseData = useMemo(
+    () => (singlePeriod ? extractExercises(sessions, singlePeriod, exerciseMode) : null),
+    [sessions, singlePeriod, exerciseMode],
   );
 
   return (
@@ -158,8 +182,8 @@ export function Compare() {
             <>
               {periods.length > 1 && (
                 <PeriodPicker
-                  selectedId={heatmapPeriodId}
-                  onChange={setHeatmapPeriodId}
+                  selectedId={singlePeriodId}
+                  onChange={setSinglePeriodId}
                   periods={periods}
                 />
               )}
@@ -173,6 +197,46 @@ export function Compare() {
           )}
 
           {tab === 'summary' && <PeriodsSummary summaries={summaries} />}
+
+          {tab === 'exercises' && (
+            <>
+              {periods.length > 1 && (
+                <PeriodPicker
+                  selectedId={singlePeriodId}
+                  onChange={setSinglePeriodId}
+                  periods={periods}
+                />
+              )}
+              {/* Mode picker drives the y-axis: hold time / max depth /
+                  dive time. */}
+              <div className="flex flex-wrap gap-2">
+                {EXERCISE_MODES.map((m) => {
+                  const active = exerciseMode === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setExerciseMode(m.id)}
+                      className={[
+                        'rounded-full border px-4 py-1.5 text-sm transition-colors',
+                        active
+                          ? 'border-accent bg-accent/10 text-accent'
+                          : 'border-border text-textDim hover:border-accent hover:text-accent',
+                      ].join(' ')}
+                    >
+                      {m.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {exerciseData ? (
+                <ExerciseScatter data={exerciseData} mode={exerciseMode} />
+              ) : (
+                <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-16 text-center text-textDim">
+                  Add a period in the right panel to see its exercises.
+                </div>
+              )}
+            </>
+          )}
         </div>
         <PeriodEditor />
       </div>
