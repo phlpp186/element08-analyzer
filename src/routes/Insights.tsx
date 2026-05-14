@@ -18,10 +18,18 @@ import { spo2ExposureZones } from '../lib/analytics/spo2Zones';
 import { disciplineBests } from '../lib/analytics/poolBests';
 import { distanceDistribution } from '../lib/analytics/poolDistance';
 import { trainingDaysHeatmap } from '../lib/analytics/heatmap';
+import {
+  sessionTagDistribution,
+  effortDistribution,
+  weeklyVolume,
+} from '../lib/analytics/balance';
 import { SpO2ZonesChart } from '../components/charts/SpO2ZonesChart';
 import { DisciplineBestsCard } from '../components/charts/DisciplineBestsCard';
 import { DistanceDistributionChart } from '../components/charts/DistanceDistributionChart';
 import { TrainingHeatmap } from '../components/charts/TrainingHeatmap';
+import { SessionTagDistributionChart } from '../components/charts/SessionTagDistributionChart';
+import { EffortDistributionChart } from '../components/charts/EffortDistributionChart';
+import { WeeklyVolumeChart } from '../components/charts/WeeklyVolumeChart';
 
 type Tab = 'breathhold' | 'depth' | 'pool' | 'balance';
 
@@ -45,6 +53,9 @@ export function Insights() {
   const bests = useMemo(() => disciplineBests(sessions), [sessions]);
   const distBins = useMemo(() => distanceDistribution(sessions), [sessions]);
   const heatmap = useMemo(() => trainingDaysHeatmap(sessions), [sessions]);
+  const tagDist = useMemo(() => sessionTagDistribution(sessions), [sessions]);
+  const effortDist = useMemo(() => effortDistribution(sessions), [sessions]);
+  const weekVol = useMemo(() => weeklyVolume(sessions), [sessions]);
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -125,15 +136,19 @@ export function Insights() {
         )}
 
         {tab === 'balance' && (
-          <div className="lg:col-span-2">
-            <TrainingHeatmap series={heatmap.series} />
-            <ComingSoon items={[
-              'Session-type distribution',
-              'Effort distribution',
-              'Weekly volume',
-              'Plan adherence',
-            ]} />
-          </div>
+          <>
+            <div className="lg:col-span-2">
+              <TrainingHeatmap series={heatmap.series} />
+            </div>
+            <SessionTagDistributionChart data={tagDist} />
+            <EffortDistributionChart data={effortDist} />
+            <div className="lg:col-span-2">
+              <WeeklyVolumeChart data={weekVol} />
+            </div>
+            <div className="lg:col-span-2">
+              <ComingSoon items={['Plan adherence']} />
+            </div>
+          </>
         )}
       </main>
     </div>
