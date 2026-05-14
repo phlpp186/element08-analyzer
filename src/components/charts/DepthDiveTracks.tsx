@@ -411,6 +411,15 @@ function buildDepthOption(
           ? {
               silent: true,
               itemStyle: { opacity: 1 },
+              // insideTop keeps the label within the grid — the default
+              // 'top' straddles the grid edge and clips the text.
+              label: {
+                show: true,
+                position: 'insideTop',
+                color: '#9a9a9e',
+                fontSize: 10,
+                fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+              },
               data: hangBands.map((b) => [
                 { xAxis: b.startT, itemStyle: { color: b.color }, name: b.name },
                 { xAxis: b.endT },
