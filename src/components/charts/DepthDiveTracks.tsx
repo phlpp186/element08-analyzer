@@ -5,14 +5,20 @@
  *
  * Visible tracks (in order):
  *   1. DEPTH      — always shown. Inverted (deeper = lower), hang segments
- *                   shaded, contraction marker (if recorded), depth alarms.
+ *                   shaded, contraction marker, depth alarms, speed marks.
  *   2. HEART RATE — only when the profile has ≥2 HR points.
  *   3. SPEED      — only when the profile has ≥2 speed points.
  *   4. TEMP       — only when the profile has ≥2 temp points.
  *
- * Cross-chart crosshair sync uses ECharts' `echarts.connect(groupId)`. We
- * set `chart.group` on each instance via onChartReady and call connect
- * once — from then on, scrubbing any track moves the cursor on all of them.
+ * Depth-track overlays the caller can toggle:
+ *   - Depth alarms: descent-triggered and ascent-triggered alarms render
+ *     as separate coloured segments spanning only their phase of the dive
+ *     (descent: start→max-depth, amber, ↓ · ascent: max-depth→end, red,
+ *     ↑). An alarm flagged for both directions draws both segments.
+ *   - Speed markers: vertical speed read out at each 5 m / 10 m depth
+ *     crossing on the descent, labelled on the depth curve.
+ *
+ * Cross-chart crosshair sync uses ECharts' `echarts.connect(groupId)`.
  */
 import { useCallback, useMemo, useRef } from 'react';
 import * as echarts from 'echarts/core';
@@ -21,6 +27,7 @@ import type {
   ContractionOnset,
   DepthDiveData,
   HangSegment,
+  ProfilePoint,
 } from '../../lib/analytics/diveProfile';
 
 interface AlarmLite {
@@ -29,12 +36,18 @@ interface AlarmLite {
   time?: number | null;
   speed?: number | null;
   enabled?: boolean;
+  triggerOnDescent?: boolean;
+  triggerOnAscent?: boolean;
 }
 
 interface Props {
   data: DepthDiveData;
   contractionOnset?: ContractionOnset | null;
   alarms?: AlarmLite[];
+  /** Show depth-alarm threshold segments on the depth track. */
+  showAlarms: boolean;
+  /** Speed-marker interval in metres: 0 = off, else 5 or 10. */
+  speedStep: number;
   /** Unique chart-group id (stable across re-renders for the same dive). */
   groupId: string;
 }
@@ -42,10 +55,27 @@ interface Props {
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
 const AXIS_POINTER_LINK = [{ xAxisIndex: 'all' as const }];
 
-export function DepthDiveTracks({ data, contractionOnset, alarms, groupId }: Props) {
+const DESCENT_COLOR = '#ffa726'; // amber — going down
+const ASCENT_COLOR = '#ef5350'; // red — coming up
+
+export function DepthDiveTracks({
+  data,
+  contractionOnset,
+  alarms,
+  showAlarms,
+  speedStep,
+  groupId,
+}: Props) {
   const depthOption = useMemo(
-    () => buildDepthOption(data, contractionOnset ?? null, alarms ?? []),
-    [data, contractionOnset, alarms],
+    () =>
+      buildDepthOption(
+        data,
+        contractionOnset ?? null,
+        alarms ?? [],
+        showAlarms,
+        speedStep,
+      ),
+    [data, contractionOnset, alarms, showAlarms, speedStep],
   );
   const hrOption = useMemo(
     () => buildLineOption(data.hrSeries, '#ff5f9e', 'bpm', data.startT, data.endT),
@@ -60,9 +90,6 @@ export function DepthDiveTracks({ data, contractionOnset, alarms, groupId }: Pro
     [data],
   );
 
-  // Track how many chart instances have mounted; once all of them have a
-  // group set, call connect() so the crosshair starts syncing. connect()
-  // is idempotent so calling it on every mount is also fine.
   const mountedRef = useRef(0);
   const handleReady = useCallback(
     (chart: { group?: string }) => {
@@ -142,10 +169,114 @@ function TrackHeader({ label, unit, hint }: { label: string; unit: string; hint?
 
 // ─── Option builders ────────────────────────────────────────────────────────
 
+/** Time of the deepest sample — the descent/ascent split point. */
+function maxDepthTime(series: [number, number][]): number {
+  let bestT = series.length > 0 ? series[0][0] : 0;
+  let bestD = -Infinity;
+  for (const [t, d] of series) {
+    if (d > bestD) {
+      bestD = d;
+      bestT = t;
+    }
+  }
+  return bestT;
+}
+
+/** Directional alarm segments. Descent-triggered alarms span only the
+ *  descent phase, ascent-triggered only the ascent phase, so the dashed
+ *  line itself tells you which direction it fires on. */
+function buildAlarmSegments(
+  alarms: AlarmLite[],
+  splitT: number,
+  startT: number,
+  endT: number,
+) {
+  const segments: any[] = [];
+  for (const a of alarms) {
+    if (a.enabled === false || a.type !== 'depth' || a.depth == null || a.depth <= 0) {
+      continue;
+    }
+    const d = a.depth;
+    // Flags absent on both → treat as a both-direction alarm rather than
+    // silently dropping it.
+    const both = !a.triggerOnDescent && !a.triggerOnAscent;
+    const showDescent = both || !!a.triggerOnDescent;
+    const showAscent = both || !!a.triggerOnAscent;
+
+    if (showDescent) {
+      segments.push([
+        {
+          coord: [startT, d],
+          lineStyle: { color: DESCENT_COLOR, type: 'dashed', width: 1 },
+          label: {
+            show: true,
+            formatter: `${d}m ↓`,
+            position: 'insideStartTop',
+            color: DESCENT_COLOR,
+            fontSize: 10,
+          },
+        },
+        { coord: [splitT, d] },
+      ]);
+    }
+    if (showAscent) {
+      segments.push([
+        {
+          coord: [splitT, d],
+          lineStyle: { color: ASCENT_COLOR, type: 'dashed', width: 1 },
+          label: {
+            show: true,
+            formatter: `${d}m ↑`,
+            position: 'insideEndTop',
+            color: ASCENT_COLOR,
+            fontSize: 10,
+          },
+        },
+        { coord: [endT, d] },
+      ]);
+    }
+  }
+  return segments;
+}
+
+/** Vertical-speed readouts at each `step`-metre descent crossing. */
+function buildSpeedMarkers(points: ProfilePoint[], step: number, splitT: number) {
+  if (step <= 0 || points.length < 2) return [];
+  const maxDepth = points.reduce((m, p) => Math.max(m, p.d), 0);
+  const markers: any[] = [];
+  for (let threshold = step; threshold < maxDepth; threshold += step) {
+    for (let i = 1; i < points.length; i++) {
+      if (points[i].t > splitT) break; // descent phase only
+      if (points[i - 1].d < threshold && points[i].d >= threshold) {
+        const v = points[i].v;
+        if (v != null) {
+          markers.push({
+            coord: [points[i].t, points[i].d],
+            symbol: 'circle',
+            symbolSize: 3,
+            itemStyle: { color: DESCENT_COLOR },
+            label: {
+              show: true,
+              formatter: `${Math.abs(v).toFixed(1)}`,
+              position: 'right',
+              color: DESCENT_COLOR,
+              fontSize: 9,
+            },
+          });
+        }
+        break;
+      }
+    }
+  }
+  return markers;
+}
+
 function buildDepthOption(
   data: DepthDiveData,
   contractionOnset: ContractionOnset | null,
   alarms: AlarmLite[],
+  showAlarms: boolean,
+  speedStep: number,
 ) {
   const hangBands = (data.hangs as HangSegment[]).map((h) => ({
     startT: h.startT,
@@ -154,25 +285,15 @@ function buildDepthOption(
     name: h.type === 'bottom' ? 'Bottom hang' : 'Off-bottom hang',
   }));
 
-  // Depth-alarm threshold lines. Time/speed alarms render on their own
-  // tracks (separate option builders).
-  const alarmLines = alarms
-    .filter((a) => a.enabled !== false && a.type === 'depth' && a.depth != null && a.depth > 0)
-    .map((a) => ({
-      yAxis: a.depth as number,
-      label: {
-        formatter: `${a.depth}m alarm`,
-        position: 'insideStartTop' as const,
-        color: '#ef5350',
-        fontSize: 10,
-      },
-      lineStyle: { color: '#ef5350', type: 'dashed' as const, width: 1 },
-    }));
+  const splitT = maxDepthTime(data.depthSeries);
 
-  // Contraction marker — we have only the depth, not the timestamp. Locate
-  // the first profile crossing of that depth in the matching direction
-  // (descent → first crossing while depth is still increasing; ascent →
-  // first crossing while depth is decreasing again).
+  const alarmSegments = showAlarms
+    ? buildAlarmSegments(alarms, splitT, data.startT, data.endT)
+    : [];
+
+  const speedMarkers = buildSpeedMarkers(data.points, speedStep, splitT);
+
+  // Contraction marker — we have only the depth, not the timestamp.
   let contractionMarker: any = null;
   if (contractionOnset && data.depthSeries.length > 1) {
     const target = contractionOnset.depth;
@@ -199,6 +320,12 @@ function buildDepthOption(
       }
     }
   }
+
+  // Merge contraction + speed markers into one markPoint data array.
+  const markPointData = [
+    ...(contractionMarker ? [contractionMarker] : []),
+    ...speedMarkers,
+  ];
 
   return {
     grid: GRID,
@@ -258,11 +385,11 @@ function buildDepthOption(
               ]),
             }
           : undefined,
-        markLine: alarmLines.length > 0
-          ? { silent: true, symbol: 'none', data: alarmLines }
+        markLine: alarmSegments.length > 0
+          ? { silent: true, symbol: 'none', data: alarmSegments }
           : undefined,
-        markPoint: contractionMarker
-          ? { data: [contractionMarker] }
+        markPoint: markPointData.length > 0
+          ? { data: markPointData }
           : undefined,
       },
     ],

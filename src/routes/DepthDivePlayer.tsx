@@ -7,7 +7,7 @@
  * a header stat bar and prev/next dive navigation. Sources come from the
  * loaded backup in useBackupStore — no fetches, all local.
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
 import { extractDiveData } from '../lib/analytics/diveProfile';
@@ -19,6 +19,12 @@ export function DepthDivePlayer() {
   const navigate = useNavigate();
   const backup = useBackupStore((s) => s.backup);
   const getSession = useBackupStore((s) => s.getSession);
+
+  // Depth-track overlay toggles. Alarms default ON (they're dive-computer
+  // safety config — worth seeing); speed markers default OFF (opt-in
+  // detail). speedStep: 0 = off, else 5 or 10 metres.
+  const [showAlarms, setShowAlarms] = useState(true);
+  const [speedStep, setSpeedStep] = useState<0 | 5 | 10>(0);
 
   if (!backup) return <Navigate to="/" replace />;
 
@@ -55,6 +61,17 @@ export function DepthDivePlayer() {
   }
 
   const data = useMemo(() => extractDiveData(dive), [dive]);
+
+  // Whether the session carries any usable depth alarms — drives whether
+  // the "Depth alarms" toggle is shown at all.
+  const hasDepthAlarms = useMemo(() => {
+    const alarms = (session as any).alarms as
+      | { type?: string; depth?: number | null; enabled?: boolean }[]
+      | undefined;
+    return !!alarms?.some(
+      (a) => a.enabled !== false && a.type === 'depth' && a.depth != null && a.depth > 0,
+    );
+  }, [session]);
 
   const hasPrev = idx > 0;
   const hasNext = idx < dives.length - 1;
@@ -114,12 +131,51 @@ export function DepthDivePlayer() {
           </p>
         </div>
       ) : (
-        <DepthDiveTracks
-          data={data}
-          contractionOnset={dive.contractionOnset ?? null}
-          alarms={(session as any).alarms ?? []}
-          groupId={`dive-${session.id}-${idx}`}
-        />
+        <>
+          {/* Depth-track overlay controls. The alarm toggle only shows
+              when the session actually carries depth alarms. */}
+          <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+            {hasDepthAlarms && (
+              <label className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-textDim">
+                <input
+                  type="checkbox"
+                  checked={showAlarms}
+                  onChange={(e) => setShowAlarms(e.target.checked)}
+                  className="accent-accent"
+                />
+                Depth alarms
+              </label>
+            )}
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
+                Speed markers
+              </span>
+              {([0, 5, 10] as const).map((step) => (
+                <button
+                  key={step}
+                  onClick={() => setSpeedStep(step)}
+                  className={[
+                    'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
+                    speedStep === step
+                      ? 'border-accent bg-accent/10 text-accent'
+                      : 'border-border text-textDim hover:border-accent hover:text-accent',
+                  ].join(' ')}
+                >
+                  {step === 0 ? 'Off' : `${step}m`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <DepthDiveTracks
+            data={data}
+            contractionOnset={dive.contractionOnset ?? null}
+            alarms={(session as any).alarms ?? []}
+            showAlarms={showAlarms}
+            speedStep={speedStep}
+            groupId={`dive-${session.id}-${idx}`}
+          />
+        </>
       )}
     </div>
   );
