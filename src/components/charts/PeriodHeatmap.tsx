@@ -153,9 +153,9 @@ function formatValue(metric: Metric, v: number): string {
       return `${Math.round(v)}m`;
     case 'poolDistance':
     case 'maxDepth':
+    case 'longestPoolDive':
       return `${v}m`;
-    case 'longestHold':
-    case 'longestPoolDive': {
+    case 'longestHold': {
       // Stored as seconds → m:ss.
       const m = Math.floor(v / 60);
       const s = Math.round(v % 60);

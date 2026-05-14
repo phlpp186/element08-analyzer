@@ -61,9 +61,9 @@ const TABS: { id: Tab; label: string; description: string }[] = [
 ];
 
 const EXERCISE_MODES: { id: ExerciseMode; label: string }[] = [
-  { id: 'dry',   label: 'Breath hold' },
-  { id: 'depth', label: 'Depth' },
-  { id: 'pool',  label: 'Pool' },
+  { id: 'breathhold', label: 'Breath hold' }, // dry holds + pool STA
+  { id: 'depth',      label: 'Depth' },
+  { id: 'pool',       label: 'Pool distance' }, // DYN / DYNB / DNF / other
 ];
 
 export function Compare() {
@@ -77,7 +77,7 @@ export function Compare() {
   // Periodization + Exercises are both "pick one period" views — they
   // share the selection so switching between them keeps your period.
   const [singlePeriodId, setSinglePeriodId] = useState<string | null>(null);
-  const [exerciseMode, setExerciseMode] = useState<ExerciseMode>('dry');
+  const [exerciseMode, setExerciseMode] = useState<ExerciseMode>('breathhold');
 
   if (!backup) return <Navigate to="/" replace />;
 

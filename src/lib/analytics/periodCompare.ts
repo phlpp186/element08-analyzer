@@ -73,13 +73,15 @@ function longestHoldInSession(s: ParsedSession): number | null {
   return max > 0 ? max : null;
 }
 
-/** Longest single dive time (seconds) in a pool session, or null. */
+/** Longest single pool dive by DISTANCE (metres) in a pool session, or
+ *  null. STA dives have no distance and are excluded — they're a
+ *  time-measured discipline, surfaced in the breath-hold views instead. */
 function longestPoolDiveInSession(s: ParsedSession): number | null {
   if (s.mode !== 'pool') return null;
-  const dives = (s as unknown as { dives?: { diveTime: number }[] }).dives;
+  const dives = (s as unknown as { dives?: { distance: number | null }[] }).dives;
   if (!dives) return null;
   let max = 0;
-  for (const d of dives) if (d.diveTime > max) max = d.diveTime;
+  for (const d of dives) if (d.distance != null && d.distance > max) max = d.distance;
   return max > 0 ? max : null;
 }
 
@@ -138,10 +140,10 @@ export const METRICS: MetricDef[] = [
   {
     id: 'longestPoolDive',
     label: 'Longest pool dive of the week',
-    unit: 'm:ss',
+    unit: 'm',
+    // Distance, not time — STA is excluded (see longestPoolDiveInSession).
     perSession: longestPoolDiveInSession,
     aggregate: 'max',
-    format: fmtMmss,
   },
 ];
 

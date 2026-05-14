@@ -91,10 +91,14 @@ export function buildPeriodMatrix(
       b.totalMinutes += parseDurationMinutes(s.duration);
       if (s.mode === 'pool') {
         b.poolDistance += s.totalDistance;
-        const dives = (s as unknown as { dives?: { diveTime: number }[] }).dives;
+        // Longest pool dive = furthest DISTANCE. STA dives have no
+        // distance and are excluded.
+        const dives = (s as unknown as { dives?: { distance: number | null }[] }).dives;
         if (dives) {
           for (const d of dives) {
-            if (d.diveTime > b.longestPoolDive) b.longestPoolDive = d.diveTime;
+            if (d.distance != null && d.distance > b.longestPoolDive) {
+              b.longestPoolDive = d.distance;
+            }
           }
         }
       }

@@ -3,32 +3,44 @@
  *
  * Unlike the Overlay/Periodization/Summary tabs (which aggregate per
  * week), this returns ONE point per individual hold or dive — the raw
- * training-log granularity. Each point carries the session's date as its
- * x coordinate and a mode-specific performance value as its y:
+ * training-log granularity.
  *
- *   dry   → each Hold block's duration (seconds)
- *   depth → each dive's max depth (metres)
- *   pool  → each dive's dive time (seconds)
+ * Disciplines are grouped by what they MEASURE, not by app mode:
+ *
+ *   'breathhold' → time-measured efforts:
+ *        dry-session Hold blocks (source 'dry')
+ *        pool STA dives          (source 'pool-sta')
+ *      Both plotted on a seconds y-axis, colour-distinguished.
+ *
+ *   'depth'      → depth-measured: depth dives, max depth in metres.
+ *
+ *   'pool'       → distance-measured: pool DYN / DYNB / DNF / other
+ *      dives that have a recorded distance. STA is excluded here — it
+ *      lives in 'breathhold' since mixing seconds and metres on one
+ *      y-axis is meaningless.
  *
  * All holds/dives of a session share the session date as x — they
- * separate on the y axis, so a day with three holds shows three dots
+ * separate on the y axis, so a day with three efforts shows three dots
  * stacked at that day's column.
  */
 import type { ParsedSession } from '../../schema/backup';
 import type { Period } from './periodCompare';
 
-export type ExerciseMode = 'dry' | 'depth' | 'pool';
+export type ExerciseMode = 'breathhold' | 'depth' | 'pool';
+
+/** Which discipline family a point came from — drives its colour. */
+export type ExerciseSource = 'dry' | 'pool-sta' | 'depth' | 'pool';
 
 export interface ExercisePoint {
   /** Session date as epoch ms — the scatter's x coordinate. */
   dateMs: number;
-  /** Mode-specific performance value — the y coordinate.
-   *  dry: hold seconds · depth: metres · pool: dive seconds. */
+  /** y coordinate. breathhold: seconds · depth/pool: metres. */
   value: number;
   /** 1-based index within its session (Hold # / Dive #) for the tooltip. */
   indexInSession: number;
   sessionId: number;
   sessionName: string;
+  source: ExerciseSource;
 }
 
 export interface ExerciseScatterData {
@@ -47,7 +59,9 @@ interface DepthDiveLite {
   depth: number;
 }
 interface PoolDiveLite {
+  discipline: 'STA' | 'DYN' | 'DYNB' | 'DNF' | 'other';
   diveTime: number;
+  distance: number | null;
 }
 
 export function extractExercises(
@@ -56,7 +70,6 @@ export function extractExercises(
   mode: ExerciseMode,
 ): ExerciseScatterData {
   const anchor = startOfDayLocal(new Date(period.anchorDate));
-  // Fallback window if the anchor date is unparseable — empty result.
   if (!anchor) {
     const now = Date.now();
     return { points: [], periodStartMs: now, periodEndMs: now };
@@ -70,34 +83,52 @@ export function extractExercises(
   const points: ExercisePoint[] = [];
 
   for (const s of sessions) {
-    if (s.mode !== mode) continue;
     const sd = startOfDayLocal(new Date(s.date));
     if (!sd) continue;
     const daysDiff = Math.floor((anchor.getTime() - sd.getTime()) / 86400000);
-    // In range: on or before the anchor, within `weeksBefore` weeks of it.
     if (daysDiff < 0 || daysDiff >= period.weeksBefore * 7) continue;
 
     const dateMs = sd.getTime();
     const sessionName = s.name || sessionFallbackName(s.mode);
 
-    if (s.mode === 'dry') {
-      // One point per Hold block in the timeline.
-      const timeline = (s as unknown as { blockTimeline?: BlockEntry[] }).blockTimeline ?? [];
-      let holdIdx = 0;
-      for (const b of timeline) {
-        if (b.type !== 'Hold') continue;
-        holdIdx++;
-        if (b.seconds > 0) {
-          points.push({
-            dateMs,
-            value: b.seconds,
-            indexInSession: holdIdx,
-            sessionId: s.id,
-            sessionName,
-          });
+    if (mode === 'breathhold') {
+      // Dry-session Hold blocks.
+      if (s.mode === 'dry') {
+        const timeline = (s as unknown as { blockTimeline?: BlockEntry[] }).blockTimeline ?? [];
+        let holdIdx = 0;
+        for (const b of timeline) {
+          if (b.type !== 'Hold') continue;
+          holdIdx++;
+          if (b.seconds > 0) {
+            points.push({
+              dateMs,
+              value: b.seconds,
+              indexInSession: holdIdx,
+              sessionId: s.id,
+              sessionName,
+              source: 'dry',
+            });
+          }
         }
       }
-    } else if (s.mode === 'depth') {
+      // Pool STA dives — time-measured, belong with the breath holds.
+      if (s.mode === 'pool') {
+        const dives = (s as unknown as { dives?: PoolDiveLite[] }).dives ?? [];
+        dives.forEach((d, i) => {
+          if (d.discipline === 'STA' && d.diveTime > 0) {
+            points.push({
+              dateMs,
+              value: d.diveTime,
+              indexInSession: i + 1,
+              sessionId: s.id,
+              sessionName,
+              source: 'pool-sta',
+            });
+          }
+        });
+      }
+    } else if (mode === 'depth') {
+      if (s.mode !== 'depth') continue;
       const dives = (s as unknown as { dives?: DepthDiveLite[] }).dives ?? [];
       dives.forEach((d, i) => {
         if (d.depth > 0) {
@@ -107,20 +138,23 @@ export function extractExercises(
             indexInSession: i + 1,
             sessionId: s.id,
             sessionName,
+            source: 'depth',
           });
         }
       });
     } else {
-      // pool
+      // pool — distance-measured disciplines only (STA excluded).
+      if (s.mode !== 'pool') continue;
       const dives = (s as unknown as { dives?: PoolDiveLite[] }).dives ?? [];
       dives.forEach((d, i) => {
-        if (d.diveTime > 0) {
+        if (d.discipline !== 'STA' && d.distance != null && d.distance > 0) {
           points.push({
             dateMs,
-            value: d.diveTime,
+            value: d.distance,
             indexInSession: i + 1,
             sessionId: s.id,
             sessionName,
+            source: 'pool',
           });
         }
       });
