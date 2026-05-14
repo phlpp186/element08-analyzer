@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import './index.css';
 import { Landing } from './routes/Landing';
 import { SessionList } from './routes/SessionList';
@@ -9,7 +9,8 @@ import { Insights } from './routes/Insights';
 import { DepthDivePlayer } from './routes/DepthDivePlayer';
 import { PoolDivePlayer } from './routes/PoolDivePlayer';
 import { DrySessionPlayer } from './routes/DrySessionPlayer';
-import { Compare } from './routes/Compare';
+import { CompareSeasons } from './routes/CompareSeasons';
+import { CompareDives } from './routes/CompareDives';
 import { Playground } from './routes/Playground';
 
 createRoot(document.getElementById('root')!).render(
@@ -23,7 +24,9 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/session/:sessionId/pool/:diveIdx" element={<PoolDivePlayer />} />
         <Route path="/session/:sessionId/dry" element={<DrySessionPlayer />} />
         <Route path="/insights" element={<Insights />} />
-        <Route path="/compare" element={<Compare />} />
+        <Route path="/compare" element={<Navigate to="/compare/seasons" replace />} />
+        <Route path="/compare/seasons" element={<CompareSeasons />} />
+        <Route path="/compare/dives" element={<CompareDives />} />
         <Route path="/playground" element={<Playground />} />
       </Routes>
     </BrowserRouter>

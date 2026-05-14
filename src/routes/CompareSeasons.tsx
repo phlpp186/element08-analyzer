@@ -1,5 +1,5 @@
 /**
- * Compare — period-based analysis with four visualization tabs:
+ * CompareSeasons — period-based analysis with four visualization tabs:
  *
  *   - Overlay      (Phase 5a) — one line per period on a shared x-axis,
  *                  aligned weeks-before-anchor. Compare prep shapes.
@@ -12,10 +12,14 @@
  *
  * All tabs share the user-defined periods (useCompareStore), so periods
  * added in one tab are visible in the others without re-entry.
+ *
+ * The /compare/dives sibling route handles single-dive overlay; the two
+ * modes share CompareModeHeader.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
+import { CompareModeHeader } from '../components/CompareModeHeader';
 import { useCompareStore } from '../stores/useCompareStore';
 import {
   aggregatePeriods,
@@ -66,7 +70,7 @@ const EXERCISE_MODES: { id: ExerciseMode; label: string }[] = [
   { id: 'pool',       label: 'Pool distance' }, // DYN / DYNB / DNF / other
 ];
 
-export function Compare() {
+export function CompareSeasons() {
   const backup = useBackupStore((s) => s.backup);
   const periods = useCompareStore((s) => s.periods);
   const metric = useCompareStore((s) => s.metric);
@@ -125,24 +129,10 @@ export function Compare() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-light tracking-widest text-text">
-            Compare seasons
-          </h1>
-          <p className="mt-1 max-w-xl text-sm text-textDim">
-            Define one period per training cycle. The Overlay tab compares
-            shapes across multiple periods; the Periodization tab zooms in
-            on one period's week-by-week intensity profile.
-          </p>
-        </div>
-        <Link
-          to="/sessions"
-          className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
-        >
-          ← back to sessions
-        </Link>
-      </header>
+      <CompareModeHeader
+        mode="seasons"
+        description="Define one period per training cycle. The Overlay tab compares shapes across multiple periods; the Periodization tab zooms in on one period's week-by-week intensity profile."
+      />
 
       <nav className="mb-6 flex gap-1 border-b border-border">
         {TABS.map((t) => {
