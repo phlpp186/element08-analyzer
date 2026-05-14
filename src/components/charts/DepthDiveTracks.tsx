@@ -11,12 +11,13 @@
  *   4. TEMP       — only when the profile has ≥2 temp points.
  *
  * Depth-track overlays the caller can toggle:
- *   - Depth alarms: descent-triggered and ascent-triggered alarms render
- *     as separate coloured segments spanning only their phase of the dive
- *     (descent: start→max-depth, amber, ↓ · ascent: max-depth→end, red,
- *     ↑). An alarm flagged for both directions draws both segments.
+ *   - Depth alarms: each enabled depth alarm renders as a dot on the
+ *     depth curve where the dive crosses the alarm depth — amber on the
+ *     descent crossing, red on the ascent crossing. Descent-only and
+ *     ascent-only alarms draw a single dot; both-direction alarms draw
+ *     both.
  *   - Speed markers: vertical speed read out at each 5 m / 10 m depth
- *     crossing on the descent, labelled on the depth curve.
+ *     crossing on both descent and ascent, labelled on the depth curve.
  *
  * Cross-chart crosshair sync uses ECharts' `echarts.connect(groupId)`.
  */
@@ -182,16 +183,17 @@ function maxDepthTime(series: [number, number][]): number {
   return bestT;
 }
 
-/** Directional alarm segments. Descent-triggered alarms span only the
- *  descent phase, ascent-triggered only the ascent phase, so the dashed
- *  line itself tells you which direction it fires on. */
-function buildAlarmSegments(
+/** Directional alarm dots. Each enabled depth alarm gets a dot on the
+ *  depth curve where the dive crosses the alarm depth — amber on the
+ *  descent crossing, red on the ascent crossing. Descent-only and
+ *  ascent-only alarms draw one dot; both-direction alarms draw both. */
+function buildAlarmMarkers(
   alarms: AlarmLite[],
+  series: [number, number][],
   splitT: number,
-  startT: number,
-  endT: number,
 ) {
-  const segments: any[] = [];
+  if (series.length < 2) return [];
+  const markers: any[] = [];
   for (const a of alarms) {
     if (a.enabled === false || a.type !== 'depth' || a.depth == null || a.depth <= 0) {
       continue;
@@ -204,71 +206,90 @@ function buildAlarmSegments(
     const showAscent = both || !!a.triggerOnAscent;
 
     if (showDescent) {
-      segments.push([
-        {
-          coord: [startT, d],
-          lineStyle: { color: DESCENT_COLOR, type: 'dashed', width: 1 },
-          label: {
-            show: true,
-            formatter: `${d}m ↓`,
-            position: 'insideStartTop',
-            color: DESCENT_COLOR,
-            fontSize: 10,
-          },
-        },
-        { coord: [splitT, d] },
-      ]);
+      for (let i = 1; i < series.length; i++) {
+        if (series[i][0] > splitT) break;
+        if (series[i - 1][1] < d && series[i][1] >= d) {
+          markers.push(alarmDot(series[i][0], d, DESCENT_COLOR, 'top'));
+          break;
+        }
+      }
     }
     if (showAscent) {
-      segments.push([
-        {
-          coord: [splitT, d],
-          lineStyle: { color: ASCENT_COLOR, type: 'dashed', width: 1 },
-          label: {
-            show: true,
-            formatter: `${d}m ↑`,
-            position: 'insideEndTop',
-            color: ASCENT_COLOR,
-            fontSize: 10,
-          },
-        },
-        { coord: [endT, d] },
-      ]);
+      for (let i = 1; i < series.length; i++) {
+        if (series[i][0] < splitT) continue;
+        if (series[i - 1][1] > d && series[i][1] <= d) {
+          markers.push(alarmDot(series[i][0], d, ASCENT_COLOR, 'bottom'));
+          break;
+        }
+      }
     }
   }
-  return segments;
+  return markers;
 }
 
-/** Vertical-speed readouts at each `step`-metre descent crossing. */
+function alarmDot(t: number, d: number, color: string, position: 'top' | 'bottom') {
+  return {
+    coord: [t, d],
+    symbol: 'circle',
+    symbolSize: 7,
+    itemStyle: { color, borderColor: '#101010', borderWidth: 1 },
+    label: {
+      show: true,
+      formatter: `${d}m`,
+      position,
+      color,
+      fontSize: 9,
+    },
+  };
+}
+
+/** Vertical-speed readouts at each `step`-metre depth crossing, on both
+ *  the descent and the ascent. */
 function buildSpeedMarkers(points: ProfilePoint[], step: number, splitT: number) {
   if (step <= 0 || points.length < 2) return [];
   const maxDepth = points.reduce((m, p) => Math.max(m, p.d), 0);
   const markers: any[] = [];
   for (let threshold = step; threshold < maxDepth; threshold += step) {
+    // Descent — first downward crossing in the descent phase.
     for (let i = 1; i < points.length; i++) {
-      if (points[i].t > splitT) break; // descent phase only
+      if (points[i].t > splitT) break;
       if (points[i - 1].d < threshold && points[i].d >= threshold) {
-        const v = points[i].v;
-        if (v != null) {
-          markers.push({
-            coord: [points[i].t, points[i].d],
-            symbol: 'circle',
-            symbolSize: 3,
-            itemStyle: { color: DESCENT_COLOR },
-            label: {
-              show: true,
-              formatter: `${Math.abs(v).toFixed(1)}`,
-              position: 'right',
-              color: DESCENT_COLOR,
-              fontSize: 9,
-            },
-          });
-        }
+        pushSpeedMarker(markers, points[i], DESCENT_COLOR, 'right');
+        break;
+      }
+    }
+    // Ascent — first upward crossing in the ascent phase.
+    for (let i = 1; i < points.length; i++) {
+      if (points[i].t < splitT) continue;
+      if (points[i - 1].d > threshold && points[i].d <= threshold) {
+        pushSpeedMarker(markers, points[i], ASCENT_COLOR, 'left');
         break;
       }
     }
   }
   return markers;
+}
+
+function pushSpeedMarker(
+  markers: any[],
+  p: ProfilePoint,
+  color: string,
+  position: 'left' | 'right',
+) {
+  if (p.v == null) return;
+  markers.push({
+    coord: [p.t, p.d],
+    symbol: 'circle',
+    symbolSize: 3,
+    itemStyle: { color },
+    label: {
+      show: true,
+      formatter: `${Math.abs(p.v).toFixed(1)}`,
+      position,
+      color,
+      fontSize: 9,
+    },
+  });
 }
 
 function buildDepthOption(
@@ -287,8 +308,8 @@ function buildDepthOption(
 
   const splitT = maxDepthTime(data.depthSeries);
 
-  const alarmSegments = showAlarms
-    ? buildAlarmSegments(alarms, splitT, data.startT, data.endT)
+  const alarmMarkers = showAlarms
+    ? buildAlarmMarkers(alarms, data.depthSeries, splitT)
     : [];
 
   const speedMarkers = buildSpeedMarkers(data.points, speedStep, splitT);
@@ -321,9 +342,10 @@ function buildDepthOption(
     }
   }
 
-  // Merge contraction + speed markers into one markPoint data array.
+  // Merge contraction + alarm + speed markers into one markPoint array.
   const markPointData = [
     ...(contractionMarker ? [contractionMarker] : []),
+    ...alarmMarkers,
     ...speedMarkers,
   ];
 
@@ -384,9 +406,6 @@ function buildDepthOption(
                 { xAxis: b.endT },
               ]),
             }
-          : undefined,
-        markLine: alarmSegments.length > 0
-          ? { silent: true, symbol: 'none', data: alarmSegments }
           : undefined,
         markPoint: markPointData.length > 0
           ? { data: markPointData }
