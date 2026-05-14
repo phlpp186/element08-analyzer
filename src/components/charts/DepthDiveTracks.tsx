@@ -287,7 +287,7 @@ function pushSpeedMarker(
       formatter: `${Math.abs(p.v).toFixed(1)}`,
       position,
       color,
-      fontSize: 9,
+      fontSize: 11,
     },
   });
 }

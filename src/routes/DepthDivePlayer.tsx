@@ -117,8 +117,14 @@ export function DepthDivePlayer() {
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
           <Stat label="Dive time" value={fmtSec(dive.diveTime)} />
           <Stat label="Descent" value={fmtSec(dive.descentTime ?? 0)} />
+          {dive.descentSpeed != null && (
+            <Stat label="Descent speed" value={`${dive.descentSpeed.toFixed(2)} m/s`} />
+          )}
           <Stat label="Hang" value={fmtSec(dive.hangTime ?? 0)} />
           <Stat label="Ascent" value={fmtSec(dive.ascentTime ?? 0)} />
+          {dive.ascentSpeed != null && (
+            <Stat label="Ascent speed" value={`${dive.ascentSpeed.toFixed(2)} m/s`} />
+          )}
           {dive.hr != null && <Stat label="Avg HR" value={`${dive.hr} bpm`} />}
           {dive.tempDepth != null && <Stat label="Temp @ depth" value={`${dive.tempDepth}°C`} />}
         </div>
