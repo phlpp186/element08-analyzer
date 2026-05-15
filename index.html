@@ -3,7 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark light" />
+    <script>
+      // FOUC prevention — apply the saved theme class before first paint
+      // so the page doesn't flash dark before flipping to the user's
+      // chosen light theme.
+      (function () {
+        try {
+          if (localStorage.getItem('element08.theme') === 'light') {
+            document.documentElement.classList.add('light');
+          }
+        } catch (e) { /* localStorage blocked, stay on default */ }
+      })();
+    </script>
     <meta
       name="description"
       content="ELEMENT | 08 Analyzer: professional freediving analytics in your browser. Your data never leaves your device."

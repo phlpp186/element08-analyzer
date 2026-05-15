@@ -8,6 +8,7 @@
  */
 import ReactECharts from 'echarts-for-react';
 import type { AggregatedSeries, MetricDef } from '../../lib/analytics/periodCompare';
+import { useChartTheme } from '../../lib/chartTheme';
 
 interface Props {
   series: AggregatedSeries[];
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
+  const ct = useChartTheme();
   const hasData = series.some((s) => s.points.some((v) => v != null && v > 0));
 
   if (series.length === 0 || !hasData) {
@@ -34,9 +36,9 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
     grid: { left: 64, right: 24, top: 24, bottom: 56 },
     animation: false,
     tooltip: {
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui', fontSize: 12 },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
       trigger: 'axis',
       axisPointer: { type: 'line', lineStyle: { color: '#4fc3f7', opacity: 0.4 } },
       formatter: (params: any) => {
@@ -63,7 +65,7 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
     legend: {
       bottom: 4,
       left: 'center',
-      textStyle: { color: '#9a9a9e', fontFamily: 'Inter, system-ui', fontSize: 11 },
+      textStyle: { color: ct.textDim, fontFamily: 'Inter, system-ui', fontSize: 11 },
       itemWidth: 16,
       itemHeight: 8,
       icon: 'rect',
@@ -71,10 +73,10 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
     xAxis: {
       type: 'category',
       data: xLabels.map((w) => (w === 0 ? 'target' : `${w}w`)),
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       axisTick: { show: false },
       axisLabel: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
         formatter: (val: string, idx: number) => {
@@ -88,19 +90,19 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
       type: 'value',
       name: metric.unit,
       nameTextStyle: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
       axisLabel: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
         // Duration metrics format the tick as m:ss.
         ...(metric.format ? { formatter: (v: number) => metric.format!(v) } : {}),
       },
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
       minInterval: metric.unit === 'sessions' || metric.unit === 'days' ? 1 : undefined,
     },
     series: series.map((s) => ({

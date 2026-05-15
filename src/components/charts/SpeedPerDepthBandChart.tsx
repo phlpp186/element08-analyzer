@@ -8,6 +8,7 @@
  */
 import ReactECharts from 'echarts-for-react';
 import type { BandStep, SpeedBand } from '../../lib/analytics/depthInsights';
+import { useChartTheme } from '../../lib/chartTheme';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -20,6 +21,7 @@ const DESCENT_COLOR = '#ffa726'; // amber — matches the depth player
 const ASCENT_COLOR = '#ef5350'; // red
 
 export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
+  const ct = useChartTheme();
   const controls = <StepPills value={step} onChange={onStepChange} />;
 
   if (bands.length === 0) {
@@ -41,9 +43,9 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
     grid: { left: 40, right: 16, top: 28, bottom: 40, containLabel: false },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui' },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];
         const idx = arr[0]?.dataIndex ?? 0;
@@ -64,7 +66,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       top: 0,
       right: 0,
       textStyle: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
@@ -74,10 +76,10 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
     xAxis: {
       type: 'category',
       data: labels,
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       axisTick: { show: false },
       axisLabel: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
@@ -85,7 +87,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       nameLocation: 'middle',
       nameGap: 24,
       nameTextStyle: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
@@ -94,9 +96,9 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       type: 'value',
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
         formatter: '{value}',

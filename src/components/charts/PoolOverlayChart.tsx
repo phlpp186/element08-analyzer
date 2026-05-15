@@ -13,6 +13,7 @@
  */
 import { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
+import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 
 export interface OverlayPoolDive {
   color: string;
@@ -31,8 +32,9 @@ interface Props {
 const GRID = { left: 48, right: 16, top: 30, bottom: 24 };
 
 export function PoolOverlayChart({ dives }: Props) {
+  const ct = useChartTheme();
   const hrDives = useMemo(() => dives.filter((d) => d.hrSeries.length >= 2), [dives]);
-  const hrOption = useMemo(() => buildHrOption(hrDives), [hrDives]);
+  const hrOption = useMemo(() => buildHrOption(hrDives, ct), [hrDives, ct]);
 
   const hasSpeed = dives.some((d) => d.avgSpeed != null);
   const maxSpeed = Math.max(0, ...dives.map((d) => d.avgSpeed ?? 0));
@@ -107,7 +109,7 @@ function PanelHeader({ label, unit }: { label: string; unit: string }) {
   );
 }
 
-function buildHrOption(dives: OverlayPoolDive[]) {
+function buildHrOption(dives: OverlayPoolDive[], ct: ChartTheme) {
   let xMin = Infinity;
   let xMax = -Infinity;
   for (const d of dives) {
@@ -126,15 +128,15 @@ function buildHrOption(dives: OverlayPoolDive[]) {
     animation: false,
     legend: {
       top: 0,
-      textStyle: { color: '#9a9a9e', fontFamily: 'Inter, system-ui', fontSize: 11 },
+      textStyle: { color: ct.textDim, fontFamily: 'Inter, system-ui', fontSize: 11 },
       itemWidth: 12,
       itemHeight: 6,
     },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui', fontSize: 12 },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];
@@ -154,16 +156,16 @@ function buildHrOption(dives: OverlayPoolDive[]) {
       type: 'value',
       min: xMin,
       max: xMax,
-      axisLabel: { formatter: (v: number) => fmtSec(v), color: '#9a9a9e', fontSize: 10 },
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLabel: { formatter: (v: number) => fmtSec(v), color: ct.textDim, fontSize: 10 },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       splitLine: { show: false },
     },
     yAxis: {
       type: 'value',
       scale: true,
-      axisLabel: { color: '#9a9a9e', fontSize: 10 },
+      axisLabel: { color: ct.textDim, fontSize: 10 },
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
     },
     series: dives.map((d) => ({
       name: d.label,

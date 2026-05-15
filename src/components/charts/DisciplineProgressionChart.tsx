@@ -5,6 +5,7 @@
  */
 import ReactECharts from 'echarts-for-react';
 import type { DisciplineSeries } from '../../lib/analytics/depthInsights';
+import { useChartTheme } from '../../lib/chartTheme';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function DisciplineProgressionChart({ series }: Props) {
+  const ct = useChartTheme();
   if (series.length === 0) {
     return (
       <ChartCard
@@ -32,9 +34,9 @@ export function DisciplineProgressionChart({ series }: Props) {
     grid: { left: 44, right: 16, top: 30, bottom: 28, containLabel: false },
     tooltip: {
       trigger: 'item',
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui' },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
       formatter: (p: any) => {
         const [date, depth] = p.value as [string, number];
         return `<span style="color:${p.color}">●</span> ${p.seriesName}<br/>${date} · ${depth.toFixed(1)}m`;
@@ -43,7 +45,7 @@ export function DisciplineProgressionChart({ series }: Props) {
     legend: {
       top: 0,
       textStyle: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
@@ -52,10 +54,10 @@ export function DisciplineProgressionChart({ series }: Props) {
     },
     xAxis: {
       type: 'time',
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       axisTick: { show: false },
       axisLabel: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
@@ -67,9 +69,9 @@ export function DisciplineProgressionChart({ series }: Props) {
       max: Math.ceil((yMax + 5) / 5) * 5,
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
         formatter: '{value}m',

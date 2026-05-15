@@ -12,9 +12,11 @@ import { DrySessionPlayer } from './routes/DrySessionPlayer';
 import { CompareSeasons } from './routes/CompareSeasons';
 import { CompareDives } from './routes/CompareDives';
 import { Playground } from './routes/Playground';
+import { ThemeToggle } from './components/ThemeToggle';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <ThemeToggle />
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />

@@ -16,6 +16,7 @@
 import { useCallback, useMemo, useRef } from 'react';
 import * as echarts from 'echarts/core';
 import ReactECharts from 'echarts-for-react';
+import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 
 export type HoldAlign = 'start' | 'end';
 
@@ -38,7 +39,6 @@ interface Props {
 
 const GRID = { left: 48, right: 16, top: 30, bottom: 24 };
 const AXIS_POINTER_LINK = [{ xAxisIndex: 'all' as const }];
-const ANCHOR_COLOR = '#f4f4f5';
 
 interface Shifted {
   color: string;
@@ -50,9 +50,10 @@ interface Shifted {
 }
 
 export function HoldOverlayChart({ holds, align, groupId }: Props) {
+  const ct = useChartTheme();
   const { hrOption, spo2Option, hasHr, hasSpo2 } = useMemo(
-    () => buildOptions(holds, align),
-    [holds, align],
+    () => buildOptions(holds, align, ct),
+    [holds, align, ct],
   );
 
   const handleReady = useCallback(
@@ -114,7 +115,7 @@ function PanelHeader({ label, unit }: { label: string; unit: string }) {
   );
 }
 
-function buildOptions(holds: OverlayHold[], align: HoldAlign) {
+function buildOptions(holds: OverlayHold[], align: HoldAlign, ct: ChartTheme) {
   const shifted: Shifted[] = holds.map((h) => {
     const offset = align === 'end' ? h.durationSec : 0;
     const shift = (s: [number, number][]) =>
@@ -147,8 +148,8 @@ function buildOptions(holds: OverlayHold[], align: HoldAlign) {
   return {
     hasHr: hrPanel.length > 0,
     hasSpo2: spo2Panel.length > 0,
-    hrOption: buildPanel(hrPanel, (s) => s.hr, '#ff5f9e', 'bpm', xMin, xMax, false),
-    spo2Option: buildPanel(spo2Panel, (s) => s.spo2, '#4fc3f7', '%', xMin, xMax, true),
+    hrOption: buildPanel(hrPanel, (s) => s.hr, '#ff5f9e', 'bpm', xMin, xMax, false, ct),
+    spo2Option: buildPanel(spo2Panel, (s) => s.spo2, '#4fc3f7', '%', xMin, xMax, true, ct),
   };
 }
 
@@ -160,12 +161,13 @@ function buildPanel(
   xMin: number,
   xMax: number,
   spo2Floor: boolean,
+  ct: ChartTheme,
 ) {
   // Vertical markers: bold anchor at t0 + a faint per-hold boundary line.
   const markLineData: any[] = [
     {
       xAxis: 0,
-      lineStyle: { color: ANCHOR_COLOR, width: 1.5, opacity: 0.7 },
+      lineStyle: { color: ct.text, width: 1.5, opacity: 0.7 },
       label: { show: false },
     },
     ...panel.map((s) => ({
@@ -184,15 +186,15 @@ function buildPanel(
     },
     legend: {
       top: 0,
-      textStyle: { color: '#9a9a9e', fontFamily: 'Inter, system-ui', fontSize: 11 },
+      textStyle: { color: ct.textDim, fontFamily: 'Inter, system-ui', fontSize: 11 },
       itemWidth: 12,
       itemHeight: 6,
     },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui', fontSize: 12 },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];
@@ -212,8 +214,8 @@ function buildPanel(
       type: 'value',
       min: xMin,
       max: xMax,
-      axisLabel: { formatter: (v: number) => fmtSigned(v), color: '#9a9a9e', fontSize: 10 },
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLabel: { formatter: (v: number) => fmtSigned(v), color: ct.textDim, fontSize: 10 },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       splitLine: { show: false },
     },
     yAxis: {
@@ -221,9 +223,9 @@ function buildPanel(
       scale: true,
       min: spo2Floor ? (v: { min: number }) => Math.max(50, Math.floor(v.min - 2)) : undefined,
       max: spo2Floor ? 100 : undefined,
-      axisLabel: { color: '#9a9a9e', fontSize: 10 },
+      axisLabel: { color: ct.textDim, fontSize: 10 },
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
     },
     series: panel.map((s, i) => ({
       name: s.label,

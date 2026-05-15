@@ -18,7 +18,8 @@
 import { useCallback, useMemo } from 'react';
 import * as echarts from 'echarts/core';
 import ReactECharts from 'echarts-for-react';
-import type { DepthDiveData } from '../../lib/analytics/diveProfile';
+import type { DepthDiveData, ProfilePoint } from '../../lib/analytics/diveProfile';
+import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 
 export type OverlayAlign = 'start' | 'maxdepth';
 export type OverlayMetric = 'depth' | 'speed' | 'hr' | 'temp';
@@ -41,6 +42,12 @@ interface Props {
   groupId?: string;
   /** Show the dive-label legend at the top. Defaults to true. */
   showLegend?: boolean;
+  /** When metric === 'depth', mark each dive at every Nth-metre depth
+   *  crossing on descent and ascent with its vertical speed. 0 = off. */
+  speedStep?: number;
+  /** When metric === 'speed', apply an N-sample centred moving average to
+   *  each dive's speed series. 0 = raw. FIM hand-cycle oscillates hard. */
+  speedSmooth?: number;
 }
 
 interface MetricConfig {
@@ -67,10 +74,13 @@ export function DiveOverlayChart({
   height = 340,
   groupId,
   showLegend = true,
+  speedStep = 0,
+  speedSmooth = 0,
 }: Props) {
+  const ct = useChartTheme();
   const option = useMemo(
-    () => buildOption(dives, align, metric, showLegend),
-    [dives, align, metric, showLegend],
+    () => buildOption(dives, align, metric, showLegend, speedStep, speedSmooth, ct),
+    [dives, align, metric, showLegend, speedStep, speedSmooth, ct],
   );
 
   const handleReady = useCallback(
@@ -113,20 +123,27 @@ function buildOption(
   align: OverlayAlign,
   metric: OverlayMetric,
   showLegend: boolean,
+  speedStep: number,
+  speedSmooth: number,
+  ct: ChartTheme,
 ) {
   const cfg = METRIC_CONFIG[metric];
+  const applySmoothing = metric === 'speed' && speedSmooth > 1;
+  const applyMarkers = metric === 'depth' && speedStep > 0;
 
   // Shift offset comes from the depth series so a stacked secondary panel
-  // lines up on the same x-axis. Picks the requested metric's series.
+  // lines up on the same x-axis. Picks the requested metric's series and
+  // optionally smooths it (speed) / attaches per-dive markers (depth).
   const shifted = dives.map((dv) => {
     const offset = align === 'maxdepth' ? maxDepthTime(dv.data.depthSeries) : 0;
-    return {
-      color: dv.color,
-      label: dv.label,
-      series: cfg.pick(dv.data).map(
-        ([t, v]) => [t - offset, v] as [number, number],
-      ),
-    };
+    const raw = cfg.pick(dv.data).map(
+      ([t, v]) => [t - offset, v] as [number, number],
+    );
+    const series = applySmoothing ? smoothSeries(raw, speedSmooth) : raw;
+    const markPointData = applyMarkers
+      ? buildOverlaySpeedMarkers(dv.data.points, speedStep, offset, dv.color)
+      : [];
+    return { color: dv.color, label: dv.label, series, markPointData };
   });
 
   let xMin = Infinity;
@@ -159,16 +176,16 @@ function buildOption(
     legend: showLegend
       ? {
           top: 0,
-          textStyle: { color: '#9a9a9e', fontFamily: 'Inter, system-ui', fontSize: 12 },
+          textStyle: { color: ct.textDim, fontFamily: 'Inter, system-ui', fontSize: 12 },
           itemWidth: 14,
           itemHeight: 8,
         }
       : { show: false },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui', fontSize: 12 },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];
@@ -188,8 +205,8 @@ function buildOption(
       type: 'value',
       min: xMin,
       max: xMax,
-      axisLabel: { formatter: (v: number) => fmtSigned(v), color: '#9a9a9e', fontSize: 10 },
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLabel: { formatter: (v: number) => fmtSigned(v), color: ct.textDim, fontSize: 10 },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       splitLine: { show: false },
     },
     yAxis: cfg.inverse
@@ -198,16 +215,16 @@ function buildOption(
           inverse: true,
           min: 0,
           max: Math.ceil(yMax * 1.05) || 1,
-          axisLabel: { color: '#9a9a9e', fontSize: 10, formatter: cfg.yLabel },
+          axisLabel: { color: ct.textDim, fontSize: 10, formatter: cfg.yLabel },
           axisLine: { show: false },
-          splitLine: { lineStyle: { color: '#1a1a1a' } },
+          splitLine: { lineStyle: { color: ct.splitLine } },
         }
       : {
           type: 'value',
           scale: true,
-          axisLabel: { color: '#9a9a9e', fontSize: 10, formatter: cfg.yLabel },
+          axisLabel: { color: ct.textDim, fontSize: 10, formatter: cfg.yLabel },
           axisLine: { show: false },
-          splitLine: { lineStyle: { color: '#1a1a1a' } },
+          splitLine: { lineStyle: { color: ct.splitLine } },
         },
     series: shifted.map((s) => ({
       name: s.label,
@@ -217,6 +234,8 @@ function buildOption(
       smooth: 0.2,
       lineStyle: { color: s.color, width: 2 },
       itemStyle: { color: s.color },
+      markPoint:
+        s.markPointData.length > 0 ? { data: s.markPointData } : undefined,
     })),
   };
 }
@@ -230,4 +249,90 @@ function fmtSigned(s: number): string {
   const m = Math.floor(abs / 60);
   const sec = abs % 60;
   return `${sign}${m}:${String(sec).padStart(2, '0')}`;
+}
+
+/** Vertical-speed readouts at each step-metre depth crossing for one dive.
+ *  Coords are pre-shifted by `offset` so the markers sit on the aligned
+ *  curve. Descent markers label to the right, ascent to the left so the
+ *  pairs don't collide at the bottom of the V. */
+function buildOverlaySpeedMarkers(
+  points: ProfilePoint[],
+  step: number,
+  offset: number,
+  color: string,
+): unknown[] {
+  if (step <= 0 || points.length < 2) return [];
+  const maxDepth = points.reduce((m, p) => Math.max(m, p.d), 0);
+  let splitT = points[0].t;
+  let bestD = -Infinity;
+  for (const p of points) {
+    if (p.d > bestD) {
+      bestD = p.d;
+      splitT = p.t;
+    }
+  }
+  const markers: unknown[] = [];
+  for (let threshold = step; threshold < maxDepth; threshold += step) {
+    // Descent — first downward crossing in the descent phase.
+    for (let i = 1; i < points.length; i++) {
+      if (points[i].t > splitT) break;
+      if (points[i - 1].d < threshold && points[i].d >= threshold) {
+        pushMarker(markers, points[i], offset, color, 'right');
+        break;
+      }
+    }
+    // Ascent — first upward crossing in the ascent phase.
+    for (let i = 1; i < points.length; i++) {
+      if (points[i].t < splitT) continue;
+      if (points[i - 1].d > threshold && points[i].d <= threshold) {
+        pushMarker(markers, points[i], offset, color, 'left');
+        break;
+      }
+    }
+  }
+  return markers;
+}
+
+function pushMarker(
+  markers: unknown[],
+  p: ProfilePoint,
+  offset: number,
+  color: string,
+  position: 'left' | 'right',
+) {
+  if (p.v == null) return;
+  markers.push({
+    coord: [p.t - offset, p.d],
+    symbol: 'circle',
+    symbolSize: 4,
+    itemStyle: { color },
+    label: {
+      show: true,
+      formatter: `${Math.abs(p.v).toFixed(1)}`,
+      position,
+      color,
+      fontSize: 9,
+    },
+  });
+}
+
+/** Centred N-sample moving average. Returns the series unchanged when the
+ *  window is too small to do anything. */
+function smoothSeries(
+  series: [number, number][],
+  window: number,
+): [number, number][] {
+  if (window <= 1 || series.length < 3) return series;
+  const half = Math.floor(window / 2);
+  const out: [number, number][] = [];
+  for (let i = 0; i < series.length; i++) {
+    let sum = 0;
+    let count = 0;
+    for (let j = Math.max(0, i - half); j <= Math.min(series.length - 1, i + half); j++) {
+      sum += series[j][1];
+      count++;
+    }
+    out.push([series[i][0], sum / count]);
+  }
+  return out;
 }

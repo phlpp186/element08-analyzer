@@ -13,6 +13,7 @@ import { useCallback, useMemo } from 'react';
 import * as echarts from 'echarts/core';
 import ReactECharts from 'echarts-for-react';
 import type { DryBlock, DrySessionData } from '../../lib/analytics/drySessionProfile';
+import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 
 interface Props {
   data: DrySessionData;
@@ -29,6 +30,7 @@ const BLOCK_COLORS = {
 } as const;
 
 export function DrySessionTracks({ data, groupId }: Props) {
+  const ct = useChartTheme();
   const holdBands = useMemo(
     () =>
       data.blocks
@@ -62,8 +64,8 @@ export function DrySessionTracks({ data, groupId }: Props) {
       startT: data.startT,
       endT: data.endT,
       bands: holdBands,
-    }),
-    [data, holdBands],
+    }, ct),
+    [data, holdBands, ct],
   );
 
   const hrOption = useMemo(
@@ -75,8 +77,8 @@ export function DrySessionTracks({ data, groupId }: Props) {
       endT: data.endT,
       bands: holdBands,
       markPoints: contractionMarks,
-    }),
-    [data, holdBands, contractionMarks],
+    }, ct),
+    [data, holdBands, contractionMarks, ct],
   );
 
   const handleReady = useCallback(
@@ -209,16 +211,16 @@ interface LineOptionParams {
   markPoints?: any[];
 }
 
-function buildLineOption(p: LineOptionParams) {
+function buildLineOption(p: LineOptionParams, ct: ChartTheme) {
   const empty = p.series.length < 2;
   return {
     grid: GRID,
     animation: false,
     axisPointer: { link: AXIS_POINTER_LINK, lineStyle: { color: p.color, opacity: 0.4 } },
     tooltip: {
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui', fontSize: 12 },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
       trigger: 'axis',
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {
@@ -232,15 +234,15 @@ function buildLineOption(p: LineOptionParams) {
       type: 'value',
       min: p.startT,
       max: p.endT,
-      axisLabel: { formatter: (v: number) => fmtSec(v), color: '#9a9a9e', fontSize: 10 },
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLabel: { formatter: (v: number) => fmtSec(v), color: ct.textDim, fontSize: 10 },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       splitLine: { show: false },
     },
     yAxis: {
       type: 'value',
-      axisLabel: { color: '#9a9a9e', fontSize: 10 },
+      axisLabel: { color: ct.textDim, fontSize: 10 },
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
     },
     series: [
       {

@@ -16,6 +16,7 @@ import { useCallback, useMemo } from 'react';
 import * as echarts from 'echarts/core';
 import ReactECharts from 'echarts-for-react';
 import type { PoolDiveData } from '../../lib/analytics/poolDiveProfile';
+import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 
 interface Props {
   data: PoolDiveData;
@@ -27,6 +28,7 @@ const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
 const AXIS_POINTER_LINK = [{ xAxisIndex: 'all' as const }];
 
 export function PoolDiveTracks({ data, groupId }: Props) {
+  const ct = useChartTheme();
   const lapLines = useMemo(
     () =>
       data.lapEndTimes.map((t, i) => ({
@@ -62,8 +64,8 @@ export function PoolDiveTracks({ data, groupId }: Props) {
       endT: data.endT,
       markLines: lapLines,
       markPoints: contractionMarks,
-    }),
-    [data, lapLines, contractionMarks],
+    }, ct),
+    [data, lapLines, contractionMarks, ct],
   );
 
   const depthOption = useMemo(
@@ -75,8 +77,8 @@ export function PoolDiveTracks({ data, groupId }: Props) {
       endT: data.endT,
       inverseY: true,
       markLines: lapLines,
-    }),
-    [data, lapLines],
+    }, ct),
+    [data, lapLines, ct],
   );
 
   const speedOption = useMemo(
@@ -87,8 +89,8 @@ export function PoolDiveTracks({ data, groupId }: Props) {
       startT: data.startT,
       endT: data.endT,
       markLines: lapLines,
-    }),
-    [data, lapLines],
+    }, ct),
+    [data, lapLines, ct],
   );
 
   const handleReady = useCallback(
@@ -171,16 +173,16 @@ interface LineOptionParams {
   markPoints?: any[];
 }
 
-function buildLineOption(p: LineOptionParams) {
+function buildLineOption(p: LineOptionParams, ct: ChartTheme) {
   const empty = p.series.length < 2;
   return {
     grid: GRID,
     animation: false,
     axisPointer: { link: AXIS_POINTER_LINK, lineStyle: { color: p.color, opacity: 0.4 } },
     tooltip: {
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui', fontSize: 12 },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
       trigger: 'axis',
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {
@@ -194,16 +196,16 @@ function buildLineOption(p: LineOptionParams) {
       type: 'value',
       min: p.startT,
       max: p.endT,
-      axisLabel: { formatter: (v: number) => fmtSec(v), color: '#9a9a9e', fontSize: 10 },
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLabel: { formatter: (v: number) => fmtSec(v), color: ct.textDim, fontSize: 10 },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       splitLine: { show: false },
     },
     yAxis: {
       type: 'value',
       inverse: p.inverseY,
-      axisLabel: { color: '#9a9a9e', fontSize: 10 },
+      axisLabel: { color: ct.textDim, fontSize: 10 },
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
     },
     series: [
       {

@@ -7,6 +7,7 @@
  */
 import ReactECharts from 'echarts-for-react';
 import type { HeatmapDay } from '../../lib/analytics/heatmap';
+import { useChartTheme } from '../../lib/chartTheme';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function TrainingHeatmap({ series }: Props) {
+  const ct = useChartTheme();
   if (series.length === 0) {
     return (
       <ChartCard
@@ -31,9 +33,9 @@ export function TrainingHeatmap({ series }: Props) {
 
   const option = {
     tooltip: {
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui' },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
       formatter: (p: any) => {
         const date = p.value[0];
         const count = p.value[1];
@@ -46,7 +48,7 @@ export function TrainingHeatmap({ series }: Props) {
       max,
       inRange: {
         // Brand-aligned ramp: dim panel → bright accent
-        color: ['#1a1a1a', '#1f3a4d', '#2a5f7d', '#3a8cbf', '#4fc3f7'],
+        color: [ct.splitLine, '#1f3a4d', '#2a5f7d', '#3a8cbf', '#4fc3f7'],
       },
     },
     calendar: {
@@ -58,13 +60,13 @@ export function TrainingHeatmap({ series }: Props) {
       orient: 'horizontal',
       splitLine: { show: false },
       itemStyle: {
-        color: '#101010',
+        color: ct.tooltipBg,
         borderColor: '#080808',
         borderWidth: 2,
       },
       yearLabel: { show: false },
       monthLabel: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
         nameMap: [
@@ -74,7 +76,7 @@ export function TrainingHeatmap({ series }: Props) {
       },
       dayLabel: {
         firstDay: 1, // Monday first
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 9,
         nameMap: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],

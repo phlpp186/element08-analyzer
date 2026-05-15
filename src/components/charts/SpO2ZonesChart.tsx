@@ -8,6 +8,7 @@
  */
 import ReactECharts from 'echarts-for-react';
 import { fmtZoneDuration, type Spo2Zones } from '../../lib/analytics/spo2Zones';
+import { useChartTheme } from '../../lib/chartTheme';
 import { ChartCard } from './ChartCard';
 
 const BANDS = [
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function SpO2ZonesChart({ zones }: Props) {
+  const ct = useChartTheme();
   const total = BANDS.reduce((sum, b) => sum + zones[b.key], 0);
 
   if (total === 0) {
@@ -42,9 +44,9 @@ export function SpO2ZonesChart({ zones }: Props) {
     grid: { left: 70, right: 80, top: 8, bottom: 24, containLabel: false },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui' },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const samples = p.value as number;
@@ -62,7 +64,7 @@ export function SpO2ZonesChart({ zones }: Props) {
       inverse: true,
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: '#9a9a9e', fontFamily: 'JetBrains Mono, ui-monospace, monospace', fontSize: 11 },
+      axisLabel: { color: ct.textDim, fontFamily: 'JetBrains Mono, ui-monospace, monospace', fontSize: 11 },
     },
     series: [
       {
@@ -75,7 +77,7 @@ export function SpO2ZonesChart({ zones }: Props) {
         label: {
           show: true,
           position: 'right',
-          color: '#9a9a9e',
+          color: ct.textDim,
           fontFamily: 'JetBrains Mono, ui-monospace, monospace',
           fontSize: 10,
           formatter: (p: any) => fmtZoneDuration(p.value),

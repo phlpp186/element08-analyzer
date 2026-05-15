@@ -2,12 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme palettes. Tokens are RGB triplets (no #, no commas) so Tailwind's
+ * `<alpha-value>` opacity modifiers work directly — see tailwind.config.js. */
+:root {
+  /* Dark — default. Matches the mobile app's chalk_dark feel. */
+  --c-deep:      8 8 8;
+  --c-abyss:     16 16 16;
+  --c-panel:     22 22 22;
+  --c-border:    38 38 38;
+  --c-text:      244 244 245;
+  --c-textDim:   154 154 158;
+  --c-accent:    79 195 247;
+  --c-highlight: 255 95 158;
+  --c-recover:   102 187 106;
+  --c-amber:     255 167 38;
+  --c-red:       239 83 80;
+  color-scheme: dark;
+}
+
+:root.light {
+  /* Chalk — warm off-white surfaces, ink-on-paper feel. */
+  --c-deep:      247 245 240;
+  --c-abyss:     237 233 226;
+  --c-panel:     240 237 231;
+  --c-border:    213 208 200;
+  --c-text:      58 56 50;
+  --c-textDim:   123 118 112;
+  --c-accent:    27 175 224;
+  --c-highlight: 232 67 147;
+  --c-recover:   61 201 107;
+  --c-amber:     240 165 0;
+  --c-red:       232 67 147;
+  color-scheme: light;
+}
+
 /* Brand-level baseline. Tailwind tokens defined in tailwind.config.js. */
 html,
 body,
 #root {
-  background: theme('colors.deep');
-  color: theme('colors.text');
+  background: rgb(var(--c-deep));
+  color: rgb(var(--c-text));
   font-family: theme('fontFamily.body');
   min-height: 100vh;
   margin: 0;

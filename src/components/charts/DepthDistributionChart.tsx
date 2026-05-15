@@ -4,6 +4,7 @@
  */
 import ReactECharts from 'echarts-for-react';
 import type { DepthBin } from '../../lib/analytics/depthInsights';
+import { useChartTheme } from '../../lib/chartTheme';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function DepthDistributionChart({ bins }: Props) {
+  const ct = useChartTheme();
   if (bins.length === 0) {
     return (
       <ChartCard
@@ -28,9 +30,9 @@ export function DepthDistributionChart({ bins }: Props) {
     grid: { left: 36, right: 16, top: 8, bottom: 48, containLabel: false },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui' },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const bin = bins[p.dataIndex];
@@ -40,10 +42,10 @@ export function DepthDistributionChart({ bins }: Props) {
     xAxis: {
       type: 'category',
       data: bins.map((b) => `${b.from}`),
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       axisTick: { show: false },
       axisLabel: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
         formatter: (val: string, idx: number) =>
@@ -53,7 +55,7 @@ export function DepthDistributionChart({ bins }: Props) {
       nameLocation: 'middle',
       nameGap: 28,
       nameTextStyle: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
@@ -62,9 +64,9 @@ export function DepthDistributionChart({ bins }: Props) {
       type: 'value',
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },

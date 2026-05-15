@@ -32,6 +32,7 @@ import type {
   HangSegment,
   ProfilePoint,
 } from '../../lib/analytics/diveProfile';
+import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 
 interface AlarmLite {
   type: 'depth' | 'time' | 'speed';
@@ -73,6 +74,7 @@ export function DepthDiveTracks({
   speedSmooth,
   groupId,
 }: Props) {
+  const ct = useChartTheme();
   const depthOption = useMemo(
     () =>
       buildDepthOption(
@@ -81,24 +83,25 @@ export function DepthDiveTracks({
         alarms ?? [],
         showAlarms,
         speedStep,
+        ct,
       ),
-    [data, contractionOnset, alarms, showAlarms, speedStep],
+    [data, contractionOnset, alarms, showAlarms, speedStep, ct],
   );
   const hrOption = useMemo(
-    () => buildLineOption(data.hrSeries, '#ff5f9e', 'bpm', data.startT, data.endT),
-    [data],
+    () => buildLineOption(data.hrSeries, '#ff5f9e', 'bpm', data.startT, data.endT, ct),
+    [data, ct],
   );
   const speedOption = useMemo(
     () =>
-      buildLineOption(data.speedSeries, '#ffa726', 'm/s', data.startT, data.endT, {
+      buildLineOption(data.speedSeries, '#ffa726', 'm/s', data.startT, data.endT, ct, {
         allowNegative: true,
         smoothWindow: speedSmooth,
       }),
-    [data, speedSmooth],
+    [data, speedSmooth, ct],
   );
   const tempOption = useMemo(
-    () => buildLineOption(data.tempSeries, '#66bb6a', '°C', data.startT, data.endT),
-    [data],
+    () => buildLineOption(data.tempSeries, '#66bb6a', '°C', data.startT, data.endT, ct),
+    [data, ct],
   );
 
   const mountedRef = useRef(0);
@@ -201,6 +204,7 @@ function buildAlarmMarkers(
   alarms: AlarmLite[],
   series: [number, number][],
   splitT: number,
+  ct: ChartTheme,
 ) {
   if (series.length < 2) return [];
   const markers: any[] = [];
@@ -219,7 +223,7 @@ function buildAlarmMarkers(
       for (let i = 1; i < series.length; i++) {
         if (series[i][0] > splitT) break;
         if (series[i - 1][1] < d && series[i][1] >= d) {
-          markers.push(alarmDot(series[i][0], d, DESCENT_COLOR, 'top'));
+          markers.push(alarmDot(series[i][0], d, DESCENT_COLOR, 'top', ct));
           break;
         }
       }
@@ -228,7 +232,7 @@ function buildAlarmMarkers(
       for (let i = 1; i < series.length; i++) {
         if (series[i][0] < splitT) continue;
         if (series[i - 1][1] > d && series[i][1] <= d) {
-          markers.push(alarmDot(series[i][0], d, ASCENT_COLOR, 'bottom'));
+          markers.push(alarmDot(series[i][0], d, ASCENT_COLOR, 'bottom', ct));
           break;
         }
       }
@@ -237,12 +241,12 @@ function buildAlarmMarkers(
   return markers;
 }
 
-function alarmDot(t: number, d: number, color: string, position: 'top' | 'bottom') {
+function alarmDot(t: number, d: number, color: string, position: 'top' | 'bottom', ct: ChartTheme) {
   return {
     coord: [t, d],
     symbol: 'circle',
     symbolSize: 7,
-    itemStyle: { color, borderColor: '#101010', borderWidth: 1 },
+    itemStyle: { color, borderColor: ct.tooltipBg, borderWidth: 1 },
     label: {
       show: true,
       formatter: `${d}m`,
@@ -308,6 +312,7 @@ function buildDepthOption(
   alarms: AlarmLite[],
   showAlarms: boolean,
   speedStep: number,
+  ct: ChartTheme,
 ) {
   const hangBands = (data.hangs as HangSegment[]).map((h) => ({
     startT: h.startT,
@@ -319,7 +324,7 @@ function buildDepthOption(
   const splitT = maxDepthTime(data.depthSeries);
 
   const alarmMarkers = showAlarms
-    ? buildAlarmMarkers(alarms, data.depthSeries, splitT)
+    ? buildAlarmMarkers(alarms, data.depthSeries, splitT, ct)
     : [];
 
   const speedMarkers = buildSpeedMarkers(data.points, speedStep, splitT);
@@ -364,7 +369,7 @@ function buildDepthOption(
     animation: false,
     axisPointer: { link: AXIS_POINTER_LINK, lineStyle: { color: '#4fc3f7', opacity: 0.4 } },
     tooltip: {
-      ...baseTooltip(),
+      ...baseTooltip(ct),
       trigger: 'axis',
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
@@ -376,8 +381,8 @@ function buildDepthOption(
       type: 'value',
       min: data.startT,
       max: data.endT,
-      axisLabel: { formatter: (v: number) => fmtSec(v), color: '#9a9a9e', fontSize: 10 },
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLabel: { formatter: (v: number) => fmtSec(v), color: ct.textDim, fontSize: 10 },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       splitLine: { show: false },
     },
     yAxis: {
@@ -385,9 +390,9 @@ function buildDepthOption(
       inverse: true,
       min: 0,
       max: Math.ceil(data.maxDepth * 1.05),
-      axisLabel: { color: '#9a9a9e', fontSize: 10, formatter: '{value}m' },
+      axisLabel: { color: ct.textDim, fontSize: 10, formatter: '{value}m' },
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
     },
     series: [
       {
@@ -416,7 +421,7 @@ function buildDepthOption(
               label: {
                 show: true,
                 position: 'insideTop',
-                color: '#9a9a9e',
+                color: ct.textDim,
                 fontSize: 10,
                 fontFamily: 'JetBrains Mono, ui-monospace, monospace',
               },
@@ -458,6 +463,7 @@ function buildLineOption(
   unit: string,
   startT: number,
   endT: number,
+  ct: ChartTheme,
   opts: { allowNegative?: boolean; smoothWindow?: number } = {},
 ) {
   const empty = series.length < 2;
@@ -502,7 +508,7 @@ function buildLineOption(
     animation: false,
     axisPointer: { link: AXIS_POINTER_LINK, lineStyle: { color, opacity: 0.4 } },
     tooltip: {
-      ...baseTooltip(),
+      ...baseTooltip(ct),
       trigger: 'axis',
       formatter: (params: any) => {
         if (empty) return '';
@@ -516,26 +522,26 @@ function buildLineOption(
       type: 'value',
       min: startT,
       max: endT,
-      axisLabel: { formatter: (v: number) => fmtSec(v), color: '#9a9a9e', fontSize: 10 },
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLabel: { formatter: (v: number) => fmtSec(v), color: ct.textDim, fontSize: 10 },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       splitLine: { show: false },
     },
     yAxis: {
       type: 'value',
       min: opts.allowNegative ? undefined : 0,
-      axisLabel: { color: '#9a9a9e', fontSize: 10 },
+      axisLabel: { color: ct.textDim, fontSize: 10 },
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
     },
     series: lineSeries,
   };
 }
 
-function baseTooltip() {
+function baseTooltip(ct: ChartTheme) {
   return {
-    backgroundColor: '#101010',
-    borderColor: '#262626',
-    textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui', fontSize: 12 },
+    backgroundColor: ct.tooltipBg,
+    borderColor: ct.axisLine,
+    textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
     axisPointer: { type: 'line' as const },
   };
 }

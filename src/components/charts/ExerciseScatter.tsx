@@ -16,6 +16,7 @@ import type {
   ExerciseScatterData,
   ExerciseSource,
 } from '../../lib/analytics/periodExercises';
+import { useChartTheme } from '../../lib/chartTheme';
 
 interface Props {
   data: ExerciseScatterData;
@@ -68,6 +69,7 @@ const Y_LABEL: Record<ExerciseMode, string> = {
 };
 
 export function ExerciseScatter({ data, mode }: Props) {
+  const ct = useChartTheme();
   if (data.points.length === 0) {
     const what =
       mode === 'breathhold'
@@ -114,7 +116,7 @@ export function ExerciseScatter({ data, mode }: Props) {
       ? {
           top: 0,
           right: 0,
-          textStyle: { color: '#9a9a9e', fontFamily: 'Inter, system-ui', fontSize: 11 },
+          textStyle: { color: ct.textDim, fontFamily: 'Inter, system-ui', fontSize: 11 },
           itemWidth: 10,
           itemHeight: 10,
           icon: 'circle',
@@ -122,9 +124,9 @@ export function ExerciseScatter({ data, mode }: Props) {
       : undefined,
     tooltip: {
       trigger: 'item',
-      backgroundColor: '#101010',
-      borderColor: '#262626',
-      textStyle: { color: '#f4f4f5', fontFamily: 'Inter, system-ui', fontSize: 12 },
+      backgroundColor: ct.tooltipBg,
+      borderColor: ct.axisLine,
+      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
       formatter: (p: any) => {
         const meta = p.data._meta as ExercisePoint;
         const unit = meta.source === 'dry' ? 'Hold' : 'Dive';
@@ -139,29 +141,29 @@ export function ExerciseScatter({ data, mode }: Props) {
       type: 'time',
       min: data.periodStartMs,
       max: data.periodEndMs,
-      axisLine: { lineStyle: { color: '#262626' } },
+      axisLine: { lineStyle: { color: ct.axisLine } },
       axisTick: { show: false },
       axisLabel: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
     },
     yAxis: {
       type: 'value',
       name: Y_LABEL[mode],
       nameTextStyle: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
       min: 0,
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: '#1a1a1a' } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
-        color: '#9a9a9e',
+        color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
         formatter: (v: number) => fmtValue(mode, v),

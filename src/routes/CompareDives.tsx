@@ -91,6 +91,10 @@ export function CompareDives() {
   // Which optional secondary panel to stack under the depth profile in
   // depth-compare mode. 'off' keeps it to just depth.
   const [depthSecondary, setDepthSecondary] = useState<DepthSecondary>('off');
+  // Speed-marker step on each dive's depth curve (m). 0 = off.
+  const [depthSpeedStep, setDepthSpeedStep] = useState<0 | 5 | 10>(0);
+  // Moving-average window applied to the secondary speed panel. 0 = raw.
+  const [depthSpeedSmooth, setDepthSpeedSmooth] = useState<0 | 5 | 15>(0);
   const [holdAlign, setHoldAlign] = useState<HoldAlign>('start');
 
   const sessions = backup?.data.sessions ?? [];
@@ -176,6 +180,28 @@ export function CompareDives() {
                     { id: 'temp', label: 'Temp', hint: 'Add temperature under depth' },
                   ]}
                 />
+                <PillToggle
+                  label="Speed markers"
+                  value={depthSpeedStep}
+                  onChange={setDepthSpeedStep}
+                  options={[
+                    { id: 0, label: 'Off', hint: 'No speed read-outs on the depth curve' },
+                    { id: 5, label: '5m', hint: 'Mark every 5 m crossing with vertical speed' },
+                    { id: 10, label: '10m', hint: 'Mark every 10 m crossing with vertical speed' },
+                  ]}
+                />
+                {depthSecondary === 'speed' && (
+                  <PillToggle
+                    label="Speed smoothing"
+                    value={depthSpeedSmooth}
+                    onChange={setDepthSpeedSmooth}
+                    options={[
+                      { id: 0, label: 'Raw', hint: 'No smoothing — show the raw oscillation' },
+                      { id: 5, label: 'Light', hint: 'Light moving average' },
+                      { id: 15, label: 'Strong', hint: 'Strong moving average — flatten FIM cycles' },
+                    ]}
+                  />
+                )}
               </div>
               {(() => {
                 const overlay = depthEntries.map((e) => ({
@@ -190,6 +216,7 @@ export function CompareDives() {
                       align={depthAlign}
                       metric="depth"
                       height={420}
+                      speedStep={depthSpeedStep}
                     />
                   );
                 }
@@ -205,6 +232,7 @@ export function CompareDives() {
                       metric="depth"
                       height={300}
                       groupId="compare-depth"
+                      speedStep={depthSpeedStep}
                     />
                     <PanelHeader label={meta.label} unit={meta.unit} hint={meta.hint} />
                     {hasData ? (
@@ -215,6 +243,7 @@ export function CompareDives() {
                         height={200}
                         groupId="compare-depth"
                         showLegend={false}
+                        speedSmooth={secondary === 'speed' ? depthSpeedSmooth : 0}
                       />
                     ) : (
                       <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-8 text-center text-sm text-textDim">
@@ -470,7 +499,7 @@ function PanelHeader({ label, unit, hint }: { label: string; unit: string; hint?
 
 // ─── Alignment toggle ───────────────────────────────────────────────────────
 
-function PillToggle<T extends string>({
+function PillToggle<T extends string | number>({
   label,
   value,
   onChange,
