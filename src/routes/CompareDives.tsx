@@ -24,7 +24,6 @@ import { CompareModeHeader } from '../components/CompareModeHeader';
 import {
   DiveOverlayChart,
   type OverlayAlign,
-  type OverlayMetric,
 } from '../components/charts/DiveOverlayChart';
 import {
   HoldOverlayChart,
@@ -194,7 +193,7 @@ export function CompareDives() {
                     />
                   );
                 }
-                const secondary = depthSecondary as OverlayMetric;
+                const secondary = depthSecondary as Exclude<DepthSecondary, 'off'>;
                 const meta = METRIC_META[secondary];
                 const hasData = depthEntries.some((e) => meta.has(e.data));
                 return (
