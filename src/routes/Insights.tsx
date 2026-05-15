@@ -23,6 +23,13 @@ import {
   effortDistribution,
   weeklyVolume,
 } from '../lib/analytics/balance';
+import {
+  depthDistribution,
+  speedPerDepthBand,
+  hangTimeDistribution,
+  disciplineProgression,
+  type BandStep,
+} from '../lib/analytics/depthInsights';
 import { SpO2ZonesChart } from '../components/charts/SpO2ZonesChart';
 import { DisciplineBestsCard } from '../components/charts/DisciplineBestsCard';
 import { DistanceDistributionChart } from '../components/charts/DistanceDistributionChart';
@@ -30,6 +37,10 @@ import { TrainingHeatmap } from '../components/charts/TrainingHeatmap';
 import { SessionTagDistributionChart } from '../components/charts/SessionTagDistributionChart';
 import { EffortDistributionChart } from '../components/charts/EffortDistributionChart';
 import { WeeklyVolumeChart } from '../components/charts/WeeklyVolumeChart';
+import { DepthDistributionChart } from '../components/charts/DepthDistributionChart';
+import { SpeedPerDepthBandChart } from '../components/charts/SpeedPerDepthBandChart';
+import { HangTimeDistributionChart } from '../components/charts/HangTimeDistributionChart';
+import { DisciplineProgressionChart } from '../components/charts/DisciplineProgressionChart';
 
 type Tab = 'breathhold' | 'depth' | 'pool' | 'balance';
 
@@ -43,11 +54,12 @@ const TABS: { id: Tab; label: string }[] = [
 export function Insights() {
   const backup = useBackupStore((s) => s.backup);
   const [tab, setTab] = useState<Tab>('breathhold');
+  const [bandStep, setBandStep] = useState<BandStep>(10);
 
   if (!backup) return <Navigate to="/" replace />;
 
-  // All four calculations are memoized against the backup. They're cheap
-  // but we recompute on tab switches otherwise.
+  // All calculations are memoized against the backup. They're cheap but
+  // we recompute on tab switches otherwise.
   const sessions = backup.data.sessions;
   const zones = useMemo(() => spo2ExposureZones(sessions), [sessions]);
   const bests = useMemo(() => disciplineBests(sessions), [sessions]);
@@ -56,6 +68,13 @@ export function Insights() {
   const tagDist = useMemo(() => sessionTagDistribution(sessions), [sessions]);
   const effortDist = useMemo(() => effortDistribution(sessions), [sessions]);
   const weekVol = useMemo(() => weeklyVolume(sessions), [sessions]);
+  const depthBins = useMemo(() => depthDistribution(sessions), [sessions]);
+  const speedBands = useMemo(
+    () => speedPerDepthBand(sessions, bandStep),
+    [sessions, bandStep],
+  );
+  const hangStats = useMemo(() => hangTimeDistribution(sessions), [sessions]);
+  const progression = useMemo(() => disciplineProgression(sessions), [sessions]);
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -111,14 +130,16 @@ export function Insights() {
         )}
 
         {tab === 'depth' && (
-          <div className="lg:col-span-2">
-            <ComingSoon items={[
-              'Depth distribution',
-              'Avg Speed per Depth Band',
-              'Hang time analysis',
-              'Discipline progression',
-            ]} />
-          </div>
+          <>
+            <DepthDistributionChart bins={depthBins} />
+            <SpeedPerDepthBandChart
+              bands={speedBands}
+              step={bandStep}
+              onStepChange={setBandStep}
+            />
+            <HangTimeDistributionChart stats={hangStats} />
+            <DisciplineProgressionChart series={progression} />
+          </>
         )}
 
         {tab === 'pool' && (
