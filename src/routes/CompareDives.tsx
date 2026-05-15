@@ -24,6 +24,7 @@ import { CompareModeHeader } from '../components/CompareModeHeader';
 import {
   DiveOverlayChart,
   type OverlayAlign,
+  type OverlayMetric,
 } from '../components/charts/DiveOverlayChart';
 import {
   HoldOverlayChart,
@@ -67,6 +68,18 @@ interface HoldEntry {
   stats: HoldStats;
 }
 
+// Optional secondary panel in depth-compare mode. 'off' = depth alone.
+type DepthSecondary = 'off' | 'speed' | 'hr' | 'temp';
+
+const METRIC_META: Record<
+  Exclude<DepthSecondary, 'off'>,
+  { label: string; unit: string; hint: string; has: (data: DepthDiveData) => boolean }
+> = {
+  speed: { label: 'Vertical Speed', unit: 'm/s', hint: 'negative = descending', has: (d) => d.hasSpeed },
+  hr:    { label: 'Heart Rate',     unit: 'bpm', hint: '',                     has: (d) => d.hasHR },
+  temp:  { label: 'Temperature',    unit: '°C',  hint: '',                     has: (d) => d.hasTemp },
+};
+
 export function CompareDives() {
   const backup = useBackupStore((s) => s.backup);
   const selections = useDiveCompareStore((s) => s.selections);
@@ -76,6 +89,9 @@ export function CompareDives() {
   const [mode, setMode] = useState<CompareMode>('depth');
   const [query, setQuery] = useState('');
   const [depthAlign, setDepthAlign] = useState<OverlayAlign>('start');
+  // Which optional secondary panel to stack under the depth profile in
+  // depth-compare mode. 'off' keeps it to just depth.
+  const [depthSecondary, setDepthSecondary] = useState<DepthSecondary>('off');
   const [holdAlign, setHoldAlign] = useState<HoldAlign>('start');
 
   const sessions = backup?.data.sessions ?? [];
@@ -140,22 +156,75 @@ export function CompareDives() {
             </Placeholder>
           ) : mode === 'depth' ? (
             <>
-              <PillToggle
-                value={depthAlign}
-                onChange={setDepthAlign}
-                options={[
-                  { id: 'start', label: 'Start', hint: 'Aligned at t=0' },
-                  { id: 'maxdepth', label: 'Max depth', hint: 'Aligned at the deepest point' },
-                ]}
-              />
-              <DiveOverlayChart
-                dives={depthEntries.map((e) => ({
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                <PillToggle
+                  label="Align"
+                  value={depthAlign}
+                  onChange={setDepthAlign}
+                  options={[
+                    { id: 'start', label: 'Start', hint: 'Aligned at t=0' },
+                    { id: 'maxdepth', label: 'Max depth', hint: 'Aligned at the deepest point' },
+                  ]}
+                />
+                <PillToggle
+                  label="Show"
+                  value={depthSecondary}
+                  onChange={setDepthSecondary}
+                  options={[
+                    { id: 'off', label: 'Off', hint: 'Just the depth profile' },
+                    { id: 'speed', label: 'Speed', hint: 'Add vertical speed under depth' },
+                    { id: 'hr', label: 'HR', hint: 'Add heart rate under depth' },
+                    { id: 'temp', label: 'Temp', hint: 'Add temperature under depth' },
+                  ]}
+                />
+              </div>
+              {(() => {
+                const overlay = depthEntries.map((e) => ({
                   color: e.color,
                   label: e.label,
                   data: e.data,
-                }))}
-                align={depthAlign}
-              />
+                }));
+                if (depthSecondary === 'off') {
+                  return (
+                    <DiveOverlayChart
+                      dives={overlay}
+                      align={depthAlign}
+                      metric="depth"
+                      height={420}
+                    />
+                  );
+                }
+                const secondary = depthSecondary as OverlayMetric;
+                const meta = METRIC_META[secondary];
+                const hasData = depthEntries.some((e) => meta.has(e.data));
+                return (
+                  <>
+                    <PanelHeader label="Depth" unit="m" />
+                    <DiveOverlayChart
+                      dives={overlay}
+                      align={depthAlign}
+                      metric="depth"
+                      height={300}
+                      groupId="compare-depth"
+                    />
+                    <PanelHeader label={meta.label} unit={meta.unit} hint={meta.hint} />
+                    {hasData ? (
+                      <DiveOverlayChart
+                        dives={overlay}
+                        align={depthAlign}
+                        metric={secondary}
+                        height={200}
+                        groupId="compare-depth"
+                        showLegend={false}
+                      />
+                    ) : (
+                      <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-8 text-center text-sm text-textDim">
+                        No {meta.label.toLowerCase()} data on the selected dives.
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
               <StatTable
                 columns={depthEntries}
                 rows={depthRows(depthEntries)}
@@ -164,6 +233,7 @@ export function CompareDives() {
           ) : mode === 'holds' ? (
             <>
               <PillToggle
+                label="Align"
                 value={holdAlign}
                 onChange={setHoldAlign}
                 options={[
@@ -383,13 +453,31 @@ function StatTable({
   );
 }
 
+// ─── Panel header (small caption above each chart) ──────────────────────────
+
+function PanelHeader({ label, unit, hint }: { label: string; unit: string; hint?: string }) {
+  return (
+    <div className="flex items-baseline gap-3 px-1">
+      <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-textDim">
+        {label}
+      </h3>
+      <span className="font-mono text-[10px] text-textDim opacity-60">{unit}</span>
+      {hint && (
+        <span className="font-mono text-[10px] text-textDim opacity-50">· {hint}</span>
+      )}
+    </div>
+  );
+}
+
 // ─── Alignment toggle ───────────────────────────────────────────────────────
 
 function PillToggle<T extends string>({
+  label,
   value,
   onChange,
   options,
 }: {
+  label: string;
   value: T;
   onChange: (v: T) => void;
   options: { id: T; label: string; hint: string }[];
@@ -397,7 +485,7 @@ function PillToggle<T extends string>({
   return (
     <div className="flex items-center gap-2">
       <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
-        Align
+        {label}
       </span>
       {options.map((o) => (
         <button
