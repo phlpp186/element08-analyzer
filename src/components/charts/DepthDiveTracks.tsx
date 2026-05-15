@@ -57,6 +57,9 @@ interface Props {
   speedSmooth: number;
   /** Unique chart-group id (stable across re-renders for the same dive). */
   groupId: string;
+  /** When set, hang bands become clickable and this fires with the band
+   *  index + the click's viewport coords (for popover anchoring). */
+  onHangClick?: (hangIdx: number, clientX: number, clientY: number) => void;
 }
 
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
@@ -73,8 +76,10 @@ export function DepthDiveTracks({
   speedStep,
   speedSmooth,
   groupId,
+  onHangClick,
 }: Props) {
   const ct = useChartTheme();
+  const hangsClickable = !!onHangClick;
   const depthOption = useMemo(
     () =>
       buildDepthOption(
@@ -84,8 +89,25 @@ export function DepthDiveTracks({
         showAlarms,
         speedStep,
         ct,
+        hangsClickable,
       ),
-    [data, contractionOnset, alarms, showAlarms, speedStep, ct],
+    [data, contractionOnset, alarms, showAlarms, speedStep, ct, hangsClickable],
+  );
+  const depthEvents = useMemo(
+    () =>
+      onHangClick
+        ? {
+            click: (params: any) => {
+              if (params?.componentType !== 'markArea') return;
+              const idx = typeof params.dataIndex === 'number' ? params.dataIndex : 0;
+              const raw = params.event?.event;
+              const x = raw?.clientX ?? params.event?.offsetX ?? 0;
+              const y = raw?.clientY ?? params.event?.offsetY ?? 0;
+              onHangClick(idx, x, y);
+            },
+          }
+        : undefined,
+    [onHangClick],
   );
   const hrOption = useMemo(
     () => buildLineOption(data.hrSeries, '#ff5f9e', 'bpm', data.startT, data.endT, ct),
@@ -122,6 +144,7 @@ export function DepthDiveTracks({
         style={{ height: 260 }}
         opts={{ renderer: 'canvas' }}
         onChartReady={handleReady}
+        onEvents={depthEvents}
         notMerge
       />
 
@@ -313,6 +336,7 @@ function buildDepthOption(
   showAlarms: boolean,
   speedStep: number,
   ct: ChartTheme,
+  hangsClickable: boolean,
 ) {
   const hangBands = (data.hangs as HangSegment[]).map((h) => ({
     startT: h.startT,
@@ -414,7 +438,9 @@ function buildDepthOption(
         },
         markArea: hangBands.length > 0
           ? {
-              silent: true,
+              // Clickable when the caller registered onHangClick — needed
+              // for the manual hang-editor popover. Otherwise stays silent.
+              silent: !hangsClickable,
               itemStyle: { opacity: 1 },
               // insideTop keeps the label within the grid — the default
               // 'top' straddles the grid edge and clips the text.

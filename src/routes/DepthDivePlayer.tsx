@@ -10,8 +10,11 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
-import { extractDiveData } from '../lib/analytics/diveProfile';
+import { useHangOverridesStore } from '../stores/useHangOverridesStore';
+import { extractDiveData, type HangSegment } from '../lib/analytics/diveProfile';
+import { effectiveHangs, diveTimes } from '../lib/analytics/effectiveHangs';
 import { DepthDiveTracks } from '../components/charts/DepthDiveTracks';
+import { HangEditorPopover } from '../components/HangEditorPopover';
 import { formatDate } from '../lib/format';
 
 export function DepthDivePlayer() {
@@ -28,6 +31,21 @@ export function DepthDivePlayer() {
   // Vertical-speed smoothing window in samples. 0 = raw only; 5/15 overlay
   // a moving average on the raw curve (FIM dives oscillate hard).
   const [speedSmooth, setSpeedSmooth] = useState<0 | 5 | 15>(0);
+  // Which hang band is currently being edited + the click position to
+  // anchor the editor popover. Null = no popover.
+  const [selectedHang, setSelectedHang] = useState<{
+    idx: number;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // Manual hang overrides — persisted to localStorage so user corrections
+  // survive a page reload as long as the same backup is re-imported.
+  const overrideRaw = useHangOverridesStore(
+    (s) => s.overrides[`${Number(sessionId)}-${Number(diveIdx)}`],
+  );
+  const setOverride = useHangOverridesStore((s) => s.set);
+  const clearOverride = useHangOverridesStore((s) => s.clear);
 
   if (!backup) return <Navigate to="/" replace />;
 
@@ -64,6 +82,61 @@ export function DepthDivePlayer() {
   }
 
   const data = useMemo(() => extractDiveData(dive), [dive]);
+
+  // Apply the manual hang override (if any) on top of the auto-detected
+  // hangs, and recompute descent / hang / ascent times + speeds so the
+  // header stat row reflects the user's edit.
+  const effective = useMemo(
+    () => effectiveHangs(overrideRaw, data.hangs),
+    [overrideRaw, data.hangs],
+  );
+  const dataWithHangs = useMemo(
+    () => ({ ...data, hangs: effective }),
+    [data, effective],
+  );
+  const times = useMemo(
+    () => diveTimes(data.points, effective, data.maxDepth),
+    [data.points, effective, data.maxDepth],
+  );
+  const hasOverride = overrideRaw !== undefined;
+
+  function handleHangClick(hangIdx: number, clientX: number, clientY: number) {
+    setSelectedHang({ idx: hangIdx, x: clientX, y: clientY });
+  }
+  function handleEditHang(updated: HangSegment) {
+    if (!selectedHang) return;
+    const next = effective.map((h, i) => (i === selectedHang.idx ? updated : h));
+    setOverride(Number(sessionId), Number(diveIdx), next);
+  }
+  function handleDeleteHang() {
+    if (!selectedHang) return;
+    const next = effective.filter((_, i) => i !== selectedHang.idx);
+    setOverride(Number(sessionId), Number(diveIdx), next);
+    setSelectedHang(null);
+  }
+  function handleAddHang() {
+    // Drop a default 5-second bottom hang centred on the deepest sample,
+    // clamped to the dive's time bounds. User clicks the new band to edit.
+    let maxT = data.points[0]?.t ?? 0;
+    let bestD = data.points[0]?.d ?? 0;
+    for (const p of data.points) {
+      if (p.d > bestD) { bestD = p.d; maxT = p.t; }
+    }
+    const startT = Math.max(data.startT, Math.round(maxT - 2));
+    const endT = Math.min(data.endT, Math.round(maxT + 3));
+    const newHang: HangSegment = {
+      startT,
+      endT,
+      avgD: data.maxDepth,
+      type: 'bottom',
+    };
+    const next = [...effective, newHang];
+    setOverride(Number(sessionId), Number(diveIdx), next);
+  }
+  function handleResetHangs() {
+    clearOverride(Number(sessionId), Number(diveIdx));
+    setSelectedHang(null);
+  }
 
   // Whether the session carries any usable depth alarms — drives whether
   // the "Depth alarms" toggle is shown at all.
@@ -119,14 +192,14 @@ export function DepthDivePlayer() {
 
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
           <Stat label="Dive time" value={fmtSec(dive.diveTime)} />
-          <Stat label="Descent" value={fmtSec(dive.descentTime ?? 0)} />
-          {dive.descentSpeed != null && (
-            <Stat label="Descent speed" value={`${dive.descentSpeed.toFixed(2)} m/s`} />
+          <Stat label="Descent" value={fmtSec(times.descentTime)} />
+          {times.descentSpeed != null && (
+            <Stat label="Descent speed" value={`${times.descentSpeed.toFixed(2)} m/s`} />
           )}
-          <Stat label="Hang" value={fmtSec(dive.hangTime ?? 0)} />
-          <Stat label="Ascent" value={fmtSec(dive.ascentTime ?? 0)} />
-          {dive.ascentSpeed != null && (
-            <Stat label="Ascent speed" value={`${dive.ascentSpeed.toFixed(2)} m/s`} />
+          <Stat label="Hang" value={fmtSec(times.hangTime)} />
+          <Stat label="Ascent" value={fmtSec(times.ascentTime)} />
+          {times.ascentSpeed != null && (
+            <Stat label="Ascent speed" value={`${times.ascentSpeed.toFixed(2)} m/s`} />
           )}
           {dive.hr != null && <Stat label="Avg HR" value={`${dive.hr} bpm`} />}
           {dive.tempDepth != null && <Stat label="Temp @ depth" value={`${dive.tempDepth}°C`} />}
@@ -195,17 +268,61 @@ export function DepthDivePlayer() {
                 ))}
               </div>
             )}
+            {/* Hangs — click a band on the chart to edit, + Add to create a
+                new one, Reset to drop any manual corrections. */}
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
+                Hangs
+              </span>
+              <button
+                onClick={handleAddHang}
+                className="rounded-full border border-border px-3 py-0.5 font-mono text-[11px] text-textDim transition-colors hover:border-accent hover:text-accent"
+              >
+                + Add
+              </button>
+              {hasOverride && (
+                <>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
+                    manual
+                  </span>
+                  <button
+                    onClick={handleResetHangs}
+                    className="rounded-full border border-border px-3 py-0.5 font-mono text-[11px] text-textDim transition-colors hover:border-red hover:text-red"
+                  >
+                    Reset
+                  </button>
+                </>
+              )}
+              {effective.length > 0 && !hasOverride && (
+                <span className="font-mono text-[10px] text-textDim">
+                  · click a band to edit
+                </span>
+              )}
+            </div>
           </div>
 
           <DepthDiveTracks
-            data={data}
+            data={dataWithHangs}
             contractionOnset={dive.contractionOnset ?? null}
             alarms={(session as any).alarms ?? []}
             showAlarms={showAlarms}
             speedStep={speedStep}
             speedSmooth={speedSmooth}
             groupId={`dive-${session.id}-${idx}`}
+            onHangClick={handleHangClick}
           />
+
+          {selectedHang && effective[selectedHang.idx] && (
+            <HangEditorPopover
+              hang={effective[selectedHang.idx]}
+              minT={data.startT}
+              maxT={data.endT}
+              position={{ x: selectedHang.x, y: selectedHang.y }}
+              onChange={handleEditHang}
+              onDelete={handleDeleteHang}
+              onClose={() => setSelectedHang(null)}
+            />
+          )}
         </>
       )}
     </div>
