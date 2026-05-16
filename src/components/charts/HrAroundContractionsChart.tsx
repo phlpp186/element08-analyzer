@@ -94,6 +94,9 @@ export function HrAroundContractionsChart({ points }: Props) {
         markLine: {
           symbol: 'none',
           silent: true,
+          // ECharts renders endpoint labels by default — they collide with
+          // the chart's top edge here. We just want the dashed lines.
+          label: { show: false },
           lineStyle: { color: ct.axisLine, type: 'dashed' },
           data: [{ xAxis: 0 }, { yAxis: 0 }],
         },
