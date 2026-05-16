@@ -272,9 +272,12 @@ export function DepthDivePlayer() {
                 ))}
               </div>
             )}
-            {/* Hangs — click a band on the chart to edit, + Add to create a
-                new one, Reset to drop any manual corrections. */}
-            <div className="flex items-center gap-2">
+            {/* Hangs — one chip per detected hang opens its editor, + Add
+                creates a new one, Reset drops manual corrections. The
+                bands on the chart are also clickable but can be very thin
+                for short auto-hangs; the chips guarantee a reliable
+                hit target. */}
+            <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
                 Hangs
               </span>
@@ -284,6 +287,27 @@ export function DepthDivePlayer() {
               >
                 + Add
               </button>
+              {effective.map((h, i) => {
+                const active = selectedHang?.idx === i;
+                return (
+                  <button
+                    key={i}
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setSelectedHang({ idx: i, x: rect.left, y: rect.bottom });
+                    }}
+                    title={h.type === 'bottom' ? 'Bottom hang' : 'Off-bottom hang'}
+                    className={[
+                      'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
+                      active
+                        ? 'border-accent bg-accent/10 text-accent'
+                        : 'border-border text-textDim hover:border-accent hover:text-accent',
+                    ].join(' ')}
+                  >
+                    {h.type === 'bottom' ? 'Bottom' : 'Off-bottom'} {fmtSec(h.startT)}-{fmtSec(h.endT)}
+                  </button>
+                );
+              })}
               {hasOverride && (
                 <>
                   <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
@@ -296,11 +320,6 @@ export function DepthDivePlayer() {
                     Reset
                   </button>
                 </>
-              )}
-              {effective.length > 0 && (
-                <span className="font-mono text-[10px] text-textDim">
-                  · click a band to edit
-                </span>
               )}
             </div>
           </div>
