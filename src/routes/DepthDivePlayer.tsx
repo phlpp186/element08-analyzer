@@ -114,9 +114,11 @@ export function DepthDivePlayer() {
     setOverride(Number(sessionId), Number(diveIdx), next);
     setSelectedHang(null);
   }
-  function handleAddHang() {
+  function handleAddHang(e: React.MouseEvent<HTMLButtonElement>) {
     // Drop a default 5-second bottom hang centred on the deepest sample,
-    // clamped to the dive's time bounds. User clicks the new band to edit.
+    // clamped to the dive's time bounds. Auto-open the editor on the new
+    // hang so the user can immediately nudge start/end — discoverability
+    // is the whole point of the popover.
     let maxT = data.points[0]?.t ?? 0;
     let bestD = data.points[0]?.d ?? 0;
     for (const p of data.points) {
@@ -132,6 +134,8 @@ export function DepthDivePlayer() {
     };
     const next = [...effective, newHang];
     setOverride(Number(sessionId), Number(diveIdx), next);
+    const rect = e.currentTarget.getBoundingClientRect();
+    setSelectedHang({ idx: next.length - 1, x: rect.left, y: rect.bottom });
   }
   function handleResetHangs() {
     clearOverride(Number(sessionId), Number(diveIdx));
@@ -293,7 +297,7 @@ export function DepthDivePlayer() {
                   </button>
                 </>
               )}
-              {effective.length > 0 && !hasOverride && (
+              {effective.length > 0 && (
                 <span className="font-mono text-[10px] text-textDim">
                   · click a band to edit
                 </span>
