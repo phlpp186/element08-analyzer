@@ -33,6 +33,13 @@ import {
 import { poolPaceProgression } from '../lib/analytics/poolPace';
 import { poolHrPerDive } from '../lib/analytics/poolHr';
 import { poolSessionTypeMix } from '../lib/analytics/poolSessionTypes';
+import {
+  holdDurationTrend,
+  contractionsPerBand,
+  recoveryTimePerHold,
+  diveReflexFirstMinute,
+  hrAroundContractions,
+} from '../lib/analytics/holdTrends';
 import { SpO2ZonesChart } from '../components/charts/SpO2ZonesChart';
 import { DisciplineBestsCard } from '../components/charts/DisciplineBestsCard';
 import { DistanceDistributionChart } from '../components/charts/DistanceDistributionChart';
@@ -47,6 +54,11 @@ import { DisciplineProgressionChart } from '../components/charts/DisciplineProgr
 import { PoolPaceChart } from '../components/charts/PoolPaceChart';
 import { PoolHrChart } from '../components/charts/PoolHrChart';
 import { PoolSessionTypeMixChart } from '../components/charts/PoolSessionTypeMixChart';
+import { HoldDurationTrendChart } from '../components/charts/HoldDurationTrendChart';
+import { ContractionsPerBandChart } from '../components/charts/ContractionsPerBandChart';
+import { RecoveryTimeChart } from '../components/charts/RecoveryTimeChart';
+import { DiveReflexFirstMinuteChart } from '../components/charts/DiveReflexFirstMinuteChart';
+import { HrAroundContractionsChart } from '../components/charts/HrAroundContractionsChart';
 
 type Tab = 'breathhold' | 'depth' | 'pool' | 'balance';
 
@@ -84,6 +96,11 @@ export function Insights() {
   const poolPace = useMemo(() => poolPaceProgression(sessions), [sessions]);
   const poolHr = useMemo(() => poolHrPerDive(sessions), [sessions]);
   const poolTypeMix = useMemo(() => poolSessionTypeMix(sessions), [sessions]);
+  const holdDur = useMemo(() => holdDurationTrend(sessions), [sessions]);
+  const contractionBands = useMemo(() => contractionsPerBand(sessions), [sessions]);
+  const recoveryTimes = useMemo(() => recoveryTimePerHold(sessions), [sessions]);
+  const firstMinute = useMemo(() => diveReflexFirstMinute(sessions), [sessions]);
+  const hrAroundC = useMemo(() => hrAroundContractions(sessions), [sessions]);
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -126,16 +143,18 @@ export function Insights() {
 
       <main className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {tab === 'breathhold' && (
-          <div className="lg:col-span-2">
-            <SpO2ZonesChart zones={zones} />
-            <ComingSoon items={[
-              'Recovery Time per Hold',
-              'Hold Duration trend',
-              'Contractions per 30s band',
-              'Dive Reflex: First Minute',
-              'HR Drop after Contractions',
-            ]} />
-          </div>
+          <>
+            <div className="lg:col-span-2">
+              <SpO2ZonesChart zones={zones} />
+            </div>
+            <div className="lg:col-span-2">
+              <HoldDurationTrendChart series={holdDur} />
+            </div>
+            <RecoveryTimeChart points={recoveryTimes} />
+            <ContractionsPerBandChart bands={contractionBands} />
+            <DiveReflexFirstMinuteChart points={firstMinute} />
+            <HrAroundContractionsChart points={hrAroundC} />
+          </>
         )}
 
         {tab === 'depth' && (
