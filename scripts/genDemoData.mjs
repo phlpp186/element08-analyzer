@@ -382,6 +382,17 @@ function makePoolDive(discipline, targetDistance, poolLen, diveType, ceilDyn) {
 
 const POOL_DISCIPLINES = ['DYN', 'DYN', 'DNF', 'DYNB', 'STA'];
 
+// Pool session-type tags map to phases roughly the way a real coach
+// programs them — base = volume + CO2 builders, build = mixed, peak =
+// speed + max efforts, taper = recovery.
+function pickPoolSessionType(phase, focus) {
+  if (focus === 'STA') return wpick({ O2: 60, CO2: 30, RC: 10 });
+  if (phase === 'base')  return wpick({ VOL: 36, CO2: 28, TE: 20, FUN: 16 });
+  if (phase === 'build') return wpick({ CO2: 28, O2: 22, VOL: 22, SP: 16, TE: 12 });
+  if (phase === 'peak')  return wpick({ SP: 30, MAX: 22, O2: 22, CO2: 16, TE: 10 });
+  return wpick({ RC: 48, TE: 28, FUN: 24 });
+}
+
 function makePoolSession(week, p, dayOffset) {
   const date = dateAt(week, dayOffset, irng(7, 20));
   const poolLen = chance(0.6) ? 25 : 50;
@@ -413,6 +424,7 @@ function makePoolSession(week, p, dayOffset) {
     breathingStyle: pick(['Relaxed', 'Box breathing']),
     totalDistance,
     poolType: poolLen === 25 ? '25m' : '50m',
+    sessionType: pickPoolSessionType(p.phase, focus),
     remarks: chance(0.2) ? pick(['Good glide phase today.', 'Turns need work.', 'Strong final effort.']) : null,
     dives,
   };

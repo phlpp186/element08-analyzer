@@ -30,6 +30,9 @@ import {
   disciplineProgression,
   type BandStep,
 } from '../lib/analytics/depthInsights';
+import { poolPaceProgression } from '../lib/analytics/poolPace';
+import { poolHrPerDive } from '../lib/analytics/poolHr';
+import { poolSessionTypeMix } from '../lib/analytics/poolSessionTypes';
 import { SpO2ZonesChart } from '../components/charts/SpO2ZonesChart';
 import { DisciplineBestsCard } from '../components/charts/DisciplineBestsCard';
 import { DistanceDistributionChart } from '../components/charts/DistanceDistributionChart';
@@ -41,6 +44,9 @@ import { DepthDistributionChart } from '../components/charts/DepthDistributionCh
 import { SpeedPerDepthBandChart } from '../components/charts/SpeedPerDepthBandChart';
 import { HangTimeDistributionChart } from '../components/charts/HangTimeDistributionChart';
 import { DisciplineProgressionChart } from '../components/charts/DisciplineProgressionChart';
+import { PoolPaceChart } from '../components/charts/PoolPaceChart';
+import { PoolHrChart } from '../components/charts/PoolHrChart';
+import { PoolSessionTypeMixChart } from '../components/charts/PoolSessionTypeMixChart';
 
 type Tab = 'breathhold' | 'depth' | 'pool' | 'balance';
 
@@ -75,6 +81,9 @@ export function Insights() {
   );
   const hangStats = useMemo(() => hangTimeDistribution(sessions), [sessions]);
   const progression = useMemo(() => disciplineProgression(sessions), [sessions]);
+  const poolPace = useMemo(() => poolPaceProgression(sessions), [sessions]);
+  const poolHr = useMemo(() => poolHrPerDive(sessions), [sessions]);
+  const poolTypeMix = useMemo(() => poolSessionTypeMix(sessions), [sessions]);
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -147,11 +156,13 @@ export function Insights() {
             <DisciplineBestsCard bests={bests} />
             <DistanceDistributionChart bins={distBins} />
             <div className="lg:col-span-2">
-              <ComingSoon items={[
-                'Pace per dive (lap times)',
-                'Heart rate per dive',
-                'CO₂/O₂ training mix',
-              ]} />
+              <PoolPaceChart series={poolPace} />
+            </div>
+            <div className="lg:col-span-2">
+              <PoolHrChart points={poolHr} />
+            </div>
+            <div className="lg:col-span-2">
+              <PoolSessionTypeMixChart buckets={poolTypeMix} />
             </div>
           </>
         )}
