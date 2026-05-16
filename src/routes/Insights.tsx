@@ -15,6 +15,7 @@ import { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
 import { spo2LowestPerSession } from '../lib/analytics/spo2Zones';
+import { minSpo2VsDuration, type LungVol } from '../lib/analytics/holdTrends';
 import { disciplineBests } from '../lib/analytics/poolBests';
 import { distanceDistribution } from '../lib/analytics/poolDistance';
 import { trainingDaysHeatmap } from '../lib/analytics/heatmap';
@@ -39,7 +40,9 @@ import {
   recoveryTimePerHold,
   diveReflexFirstMinute,
   hrAroundContractions,
+  // minSpo2VsDuration imported above with the LungVol type re-export.
 } from '../lib/analytics/holdTrends';
+import { MinSpo2VsDurationChart } from '../components/charts/MinSpo2VsDurationChart';
 import { SpO2ZonesChart } from '../components/charts/SpO2ZonesChart';
 import { DisciplineBestsCard } from '../components/charts/DisciplineBestsCard';
 import { DistanceDistributionChart } from '../components/charts/DistanceDistributionChart';
@@ -73,13 +76,15 @@ export function Insights() {
   const backup = useBackupStore((s) => s.backup);
   const [tab, setTab] = useState<Tab>('breathhold');
   const [bandStep, setBandStep] = useState<BandStep>(10);
+  /** Tab-wide lung-volume filter for the Breath Hold tab. Null = all. */
+  const [lungVol, setLungVol] = useState<LungVol | null>(null);
 
   if (!backup) return <Navigate to="/" replace />;
 
   // All calculations are memoized against the backup. They're cheap but
   // we recompute on tab switches otherwise.
   const sessions = backup.data.sessions;
-  const spo2Trend = useMemo(() => spo2LowestPerSession(sessions), [sessions]);
+  const spo2Trend = useMemo(() => spo2LowestPerSession(sessions, lungVol), [sessions, lungVol]);
   const bests = useMemo(() => disciplineBests(sessions), [sessions]);
   const distBins = useMemo(() => distanceDistribution(sessions), [sessions]);
   const heatmap = useMemo(() => trainingDaysHeatmap(sessions), [sessions]);
@@ -96,11 +101,12 @@ export function Insights() {
   const poolPace = useMemo(() => poolPaceProgression(sessions), [sessions]);
   const poolHr = useMemo(() => poolHrPerDive(sessions), [sessions]);
   const poolTypeMix = useMemo(() => poolSessionTypeMix(sessions), [sessions]);
-  const holdDur = useMemo(() => holdDurationTrend(sessions), [sessions]);
-  const contractionBands = useMemo(() => contractionsPerBand(sessions), [sessions]);
-  const recoveryTimes = useMemo(() => recoveryTimePerHold(sessions), [sessions]);
-  const firstMinute = useMemo(() => diveReflexFirstMinute(sessions), [sessions]);
-  const hrAroundC = useMemo(() => hrAroundContractions(sessions), [sessions]);
+  const holdDur = useMemo(() => holdDurationTrend(sessions, lungVol), [sessions, lungVol]);
+  const contractionBands = useMemo(() => contractionsPerBand(sessions, lungVol), [sessions, lungVol]);
+  const recoveryTimes = useMemo(() => recoveryTimePerHold(sessions, lungVol), [sessions, lungVol]);
+  const firstMinute = useMemo(() => diveReflexFirstMinute(sessions, lungVol), [sessions, lungVol]);
+  const hrAroundC = useMemo(() => hrAroundContractions(sessions, lungVol), [sessions, lungVol]);
+  const minSpo2Holds = useMemo(() => minSpo2VsDuration(sessions, lungVol), [sessions, lungVol]);
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -145,7 +151,13 @@ export function Insights() {
         {tab === 'breathhold' && (
           <>
             <div className="lg:col-span-2">
+              <LungVolFilterPills value={lungVol} onChange={setLungVol} />
+            </div>
+            <div className="lg:col-span-2">
               <SpO2ZonesChart data={spo2Trend} />
+            </div>
+            <div className="lg:col-span-2">
+              <MinSpo2VsDurationChart points={minSpo2Holds} />
             </div>
             <div className="lg:col-span-2">
               <HoldDurationTrendChart series={holdDur} />
@@ -202,6 +214,45 @@ export function Insights() {
           </>
         )}
       </main>
+    </div>
+  );
+}
+
+function LungVolFilterPills({
+  value,
+  onChange,
+}: {
+  value: LungVol | null;
+  onChange: (v: LungVol | null) => void;
+}) {
+  const opts: { id: LungVol | null; label: string }[] = [
+    { id: null,  label: 'All' },
+    { id: 'FL',  label: 'FL' },
+    { id: 'FRC', label: 'FRC' },
+    { id: 'RV',  label: 'RV' },
+  ];
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
+        Lung volume:
+      </span>
+      {opts.map((o) => {
+        const active = value === o.id;
+        return (
+          <button
+            key={o.label}
+            onClick={() => onChange(o.id)}
+            className={[
+              'rounded-full border px-3 py-1 font-mono text-[11px] transition-colors',
+              active
+                ? 'border-accent bg-accent/10 text-accent'
+                : 'border-border text-textDim hover:border-accent hover:text-accent',
+            ].join(' ')}
+          >
+            {o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

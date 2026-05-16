@@ -531,6 +531,14 @@ function makeDrySession(week, p, dayOffset) {
     oxyReadings.sort((a, b) => a.t - b.t);
   }
 
+  // Lung volume: most sessions are at FRC (relaxed exhale), max attempts
+  // tend to be FL (full lung), some advanced training at RV (residual).
+  const lungVol = tag === 'pb_attempt'
+    ? wpick({ FL: 70, FRC: 20, RV: 10 })
+    : tag === 'o2_table'
+      ? wpick({ FRC: 40, FL: 50, RV: 10 })
+      : wpick({ FRC: 60, FL: 30, RV: 10 });
+
   const totalSec = cursor;
   return {
     id: date.getTime() + irng(1, 999),
@@ -546,6 +554,7 @@ function makeDrySession(week, p, dayOffset) {
     duration: fmtDuration(totalSec),
     rating: irng(2, 5),
     sessionTag: tag,
+    lungVol,
     breathingStyle: pick(['Relaxed', 'Box breathing', 'Long exhale']),
     cyclesCount: holds.length,
     playStart,

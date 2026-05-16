@@ -1,12 +1,27 @@
 /**
  * Breath-hold trend analytics.
  *
- * Each function takes the full session list and returns a tidy data
- * structure for one chart on the Breath Hold tab. Time alignment uses
- * extractDrySessionData so the timeline / oxy / contractions agree.
+ * Each function takes the full session list (plus an optional
+ * lung-volume filter) and returns a tidy data structure for one chart
+ * on the Breath Hold tab. Time alignment uses extractDrySessionData so
+ * the timeline / oxy / contractions agree.
+ *
+ * Lung-volume filter: 'FL' | 'FRC' | 'RV' | null (= all). Applied at
+ * the session level — every function honours it the same way so the
+ * tab-wide filter pill stays coherent across charts.
  */
 import type { ParsedSession } from '../../schema/backup';
 import { extractDrySessionData } from './drySessionProfile';
+import { SPO2_ZONES, zoneFor } from './spo2Zones';
+
+export type LungVol = 'FL' | 'FRC' | 'RV';
+
+function lungVolOf(s: ParsedSession): LungVol | null {
+  return (s as unknown as { lungVol?: LungVol | null }).lungVol ?? null;
+}
+function passesLungVol(s: ParsedSession, filter: LungVol | null): boolean {
+  return filter == null || lungVolOf(s) === filter;
+}
 
 type SessionTag = 'co2_table' | 'o2_table' | 'comfy' | 'pb_attempt' | 'recovery';
 
@@ -40,10 +55,14 @@ export interface HoldDurationSeries {
   points: HoldDurationPoint[];
 }
 
-export function holdDurationTrend(sessions: ParsedSession[]): HoldDurationSeries[] {
+export function holdDurationTrend(
+  sessions: ParsedSession[],
+  lungVolFilter: LungVol | null = null,
+): HoldDurationSeries[] {
   const bucketsByTag = new Map<SessionTag, HoldDurationPoint[]>();
   for (const s of sessions) {
     if (s.mode !== 'dry') continue;
+    if (!passesLungVol(s, lungVolFilter)) continue;
     const tag = (s as unknown as { sessionTag?: SessionTag }).sessionTag;
     if (!tag) continue;
     const data = extractDrySessionData(s as never);
@@ -82,10 +101,14 @@ const BAND_WIDTH = 30;
 /** Bucket every recorded contraction by how many seconds into its hold it
  *  fired. Aggregates across all dry sessions and all holds. Empty bands
  *  between min and max are kept so the histogram x-axis is continuous. */
-export function contractionsPerBand(sessions: ParsedSession[]): ContractionBand[] {
+export function contractionsPerBand(
+  sessions: ParsedSession[],
+  lungVolFilter: LungVol | null = null,
+): ContractionBand[] {
   const elapsedWithinHold: number[] = [];
   for (const s of sessions) {
     if (s.mode !== 'dry') continue;
+    if (!passesLungVol(s, lungVolFilter)) continue;
     const data = extractDrySessionData(s as never);
     const holds = data.blocks.filter((b) => b.type === 'Hold');
     for (const c of data.contractions) {
@@ -125,10 +148,14 @@ export interface RecoveryPoint {
 
 const RECOVERY_WINDOW = 180; // seconds after hold end to search
 
-export function recoveryTimePerHold(sessions: ParsedSession[]): RecoveryPoint[] {
+export function recoveryTimePerHold(
+  sessions: ParsedSession[],
+  lungVolFilter: LungVol | null = null,
+): RecoveryPoint[] {
   const out: RecoveryPoint[] = [];
   for (const s of sessions) {
     if (s.mode !== 'dry') continue;
+    if (!passesLungVol(s, lungVolFilter)) continue;
     const data = extractDrySessionData(s as never);
     if (!data.hasOxy || data.spo2Series.length === 0) continue;
     const holds = data.blocks.filter((b) => b.type === 'Hold');
@@ -165,7 +192,10 @@ export interface FirstMinutePoint {
 
 const FIRST_MINUTE_BIN = 5; // seconds per bin
 
-export function diveReflexFirstMinute(sessions: ParsedSession[]): FirstMinutePoint[] {
+export function diveReflexFirstMinute(
+  sessions: ParsedSession[],
+  lungVolFilter: LungVol | null = null,
+): FirstMinutePoint[] {
   // For each hold, sample HR every FIRST_MINUTE_BIN seconds over [0..60]
   // and accumulate into running sums.
   const slots = Math.floor(60 / FIRST_MINUTE_BIN) + 1; // 0,5,10,…,60
@@ -174,6 +204,7 @@ export function diveReflexFirstMinute(sessions: ParsedSession[]): FirstMinutePoi
 
   for (const s of sessions) {
     if (s.mode !== 'dry') continue;
+    if (!passesLungVol(s, lungVolFilter)) continue;
     const data = extractDrySessionData(s as never);
     if (!data.hasOxy || data.hrSeries.length === 0) continue;
     const holds = data.blocks.filter((b) => b.type === 'Hold');
@@ -217,13 +248,17 @@ const POST_SEC = 20;
  *  HR-vs-baseline delta in a [-10, +20] s window and average across all
  *  contractions. A negative delta after t=0 = HR drop (dive reflex
  *  asserting through the contraction); positive = HR ticking up. */
-export function hrAroundContractions(sessions: ParsedSession[]): HrAroundContraction[] {
+export function hrAroundContractions(
+  sessions: ParsedSession[],
+  lungVolFilter: LungVol | null = null,
+): HrAroundContraction[] {
   const span = PRE_SEC + POST_SEC + 1;
   const sums = new Array(span).fill(0);
   const counts = new Array(span).fill(0);
 
   for (const s of sessions) {
     if (s.mode !== 'dry') continue;
+    if (!passesLungVol(s, lungVolFilter)) continue;
     const data = extractDrySessionData(s as never);
     if (!data.hasOxy || data.hrSeries.length === 0) continue;
     for (const c of data.contractions) {
@@ -246,6 +281,64 @@ export function hrAroundContractions(sessions: ParsedSession[]): HrAroundContrac
   }
   return out;
 }
+
+// ── Min SpO₂ per Hold vs Duration ───────────────────────────────────────────
+
+const POST_HOLD_AFTERDROP_SEC = 30;
+
+export interface HoldMinSpo2Point {
+  holdSec: number;
+  minSpo2: number;
+  date: string;
+  sessionName: string;
+  lungVol: LungVol | null;
+  /** Tailwind/CSS colour for the dot — pre-computed from SPO2_ZONES so the
+   *  chart component doesn't have to re-import zone palette logic. */
+  color: string;
+}
+
+/** Per Hold across all dry sessions: find the minimum SpO₂ reached during
+ *  the hold plus a 30 s post-hold window (the SpO₂ afterdrop dips below
+ *  the in-hold low). Returns one point per hold with hold duration on x. */
+export function minSpo2VsDuration(
+  sessions: ParsedSession[],
+  lungVolFilter: LungVol | null = null,
+): HoldMinSpo2Point[] {
+  const out: HoldMinSpo2Point[] = [];
+  for (const s of sessions) {
+    if (s.mode !== 'dry') continue;
+    if (!passesLungVol(s, lungVolFilter)) continue;
+    const data = extractDrySessionData(s as never);
+    if (!data.hasOxy || data.spo2Series.length === 0) continue;
+    const holds = data.blocks.filter((b) => b.type === 'Hold');
+    const lv = lungVolOf(s);
+    for (const h of holds) {
+      const lo = h.startT;
+      const hi = h.endT + POST_HOLD_AFTERDROP_SEC;
+      let min = Infinity;
+      for (const [t, v] of data.spo2Series) {
+        if (t < lo || t > hi) continue;
+        if (v > 0 && v < min) min = v;
+      }
+      if (!Number.isFinite(min)) continue;
+      const holdSec = h.endT - h.startT;
+      if (holdSec <= 0) continue;
+      out.push({
+        holdSec,
+        minSpo2: min,
+        date: s.date,
+        sessionName: s.name || 'Dry session',
+        lungVol: lv,
+        color: zoneFor(min).color,
+      });
+    }
+  }
+  return out;
+}
+
+// Re-exports so chart components have one import surface for the
+// zone palette + helpers.
+export { SPO2_ZONES, zoneFor };
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 

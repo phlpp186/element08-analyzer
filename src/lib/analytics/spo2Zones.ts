@@ -57,13 +57,17 @@ export interface Spo2TrendData {
   summary: Spo2Summary;
 }
 
-export function spo2LowestPerSession(sessions: ParsedSession[]): Spo2TrendData {
+export function spo2LowestPerSession(
+  sessions: ParsedSession[],
+  lungVolFilter: 'FL' | 'FRC' | 'RV' | null = null,
+): Spo2TrendData {
   const points: Spo2SessionPoint[] = [];
   let totalSecBelow89 = 0;
   let totalHolds = 0;
 
   for (const s of sessions) {
     if (s.mode !== 'dry') continue;
+    if (lungVolFilter && (s as unknown as { lungVol?: string }).lungVol !== lungVolFilter) continue;
     const readings = (s as unknown as { oxyReadings?: OxyReading[] }).oxyReadings ?? [];
     if (readings.length === 0) continue;
     const cleaned = cleanOxyReadings(readings).cleaned;
