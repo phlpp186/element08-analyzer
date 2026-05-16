@@ -1,37 +1,37 @@
 /**
- * SpO2 zones bar — horizontal bars showing time spent in each saturation
- * band. Colors track the in-app palette so screenshots feel consistent.
+ * SpO₂ trend — lowest SpO₂ reached per dry session, plotted over time.
  *
- * Values come from spo2ExposureZones(). Sample counts are rendered as
- * approximate durations via fmtZoneDuration (≈ 1 Hz sample cadence in
- * dry sessions; the app treats them the same way).
+ * Replaces the previous "total time per zone" bar chart, which inflated
+ * indefinitely as the diver collected sessions and was visually
+ * dominated by the >89 % baseline zone. The scatter answers the question
+ * the diver actually has — "am I dipping lower, more often?" — and
+ * horizontal zone bands preserve the colour-coded mental model. A
+ * one-liner above the chart carries the absolute volume that the bars
+ * used to convey.
  */
 import ReactECharts from 'echarts-for-react';
-import { fmtZoneDuration, type Spo2Zones } from '../../lib/analytics/spo2Zones';
+import {
+  fmtZoneDuration,
+  SPO2_ZONES,
+  zoneFor,
+  type Spo2TrendData,
+} from '../../lib/analytics/spo2Zones';
 import { useChartTheme } from '../../lib/chartTheme';
 import { ChartCard } from './ChartCard';
 
-const BANDS = [
-  { key: 'above89', label: '>89%',   color: '#4fc3f7' }, // ok / blue
-  { key: 'n89_75',  label: '75–89%', color: '#ffd54f' }, // mild
-  { key: 'n74_65',  label: '65–74%', color: '#ffa726' }, // moderate
-  { key: 'n64_55',  label: '55–64%', color: '#ef5350' }, // severe
-  { key: 'below55', label: '<55%',   color: '#b71c1c' }, // critical
-] as const;
-
 interface Props {
-  zones: Spo2Zones;
+  data: Spo2TrendData;
 }
 
-export function SpO2ZonesChart({ zones }: Props) {
+export function SpO2ZonesChart({ data }: Props) {
   const ct = useChartTheme();
-  const total = BANDS.reduce((sum, b) => sum + zones[b.key], 0);
+  const { points, summary } = data;
 
-  if (total === 0) {
+  if (points.length === 0) {
     return (
       <ChartCard
-        title="SpO₂ Exposure Zones"
-        description="Total time at each SpO₂ level."
+        title="SpO₂ Trend"
+        description="Lowest SpO₂ reached per dry session, over time."
       >
         <p className="py-8 text-center text-sm text-textDim">
           No oximeter data in this backup yet.
@@ -40,58 +40,108 @@ export function SpO2ZonesChart({ zones }: Props) {
     );
   }
 
+  let yMin = Infinity;
+  for (const p of points) if (p.lowest < yMin) yMin = p.lowest;
+  // Round down to the nearest 5, clamp to the lowest zone's floor so the
+  // critical band is always at least partially visible if the diver
+  // hasn't crossed into it.
+  yMin = Math.max(50, Math.floor((yMin - 2) / 5) * 5);
+
+  // markArea expects [[{ yAxis: from }, { yAxis: to }], …]. Layered behind
+  // the scatter as faint zone tints so the bands read at a glance.
+  const zoneBands = SPO2_ZONES.filter((z) => z.to <= 101 && z.to > yMin).map((z) => [
+    { yAxis: Math.max(z.from, yMin), itemStyle: { color: `${z.color}1a` } },
+    { yAxis: Math.min(z.to, 100) },
+  ]);
+
+  // Threshold lines at each zone boundary so readers can see exactly
+  // where the bands are even without hovering. Skip the topmost (>89
+  // baseline starts at 90, no upper bound to draw).
+  const thresholds = SPO2_ZONES.filter((z) => z.from > 0 && z.from > yMin).map((z) => ({
+    yAxis: z.from,
+    lineStyle: { color: `${z.color}66`, type: 'dashed' as const, width: 1 },
+  }));
+
+  const scatterData = points.map((p) => ({
+    value: [p.date, p.lowest] as [string, number],
+    itemStyle: { color: zoneFor(p.lowest).color },
+    p,
+  }));
+
   const option = {
-    grid: { left: 70, right: 80, top: 8, bottom: 24, containLabel: false },
+    grid: { left: 44, right: 16, top: 12, bottom: 28, containLabel: false },
     tooltip: {
-      trigger: 'axis',
+      trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
       textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
-      formatter: (params: any) => {
-        const p = Array.isArray(params) ? params[0] : params;
-        const samples = p.value as number;
-        const pct = total > 0 ? ((samples / total) * 100).toFixed(1) : '0.0';
-        return `${p.name}<br/>${fmtZoneDuration(samples)} · ${pct}%`;
+      formatter: (p: any) => {
+        const point = p.data.p as typeof points[number];
+        const dateStr = new Date(point.date).toLocaleDateString();
+        const zone = zoneFor(point.lowest);
+        return (
+          `<span style="color:${zone.color}">●</span> Min SpO₂ ${point.lowest}%` +
+          `<br/>${dateStr} · ${point.sessionName}` +
+          `<br/><span style="opacity:0.7">${point.holdCount} hold${point.holdCount === 1 ? '' : 's'} · ${fmtZoneDuration(point.secBelow89)} below 89%</span>`
+        );
       },
     },
     xAxis: {
-      type: 'value',
-      show: false,
+      type: 'time',
+      axisLine: { lineStyle: { color: ct.axisLine } },
+      axisTick: { show: false },
+      axisLabel: {
+        color: ct.textDim,
+        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontSize: 10,
+      },
+      splitLine: { show: false },
     },
     yAxis: {
-      type: 'category',
-      data: BANDS.map((b) => b.label),
-      inverse: true,
+      type: 'value',
+      min: yMin,
+      max: 100,
+      interval: 5,
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: ct.textDim, fontFamily: 'JetBrains Mono, ui-monospace, monospace', fontSize: 11 },
+      splitLine: { lineStyle: { color: ct.splitLine, opacity: 0.4 } },
+      axisLabel: {
+        color: ct.textDim,
+        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontSize: 10,
+        formatter: '{value}%',
+      },
     },
     series: [
       {
-        type: 'bar',
-        data: BANDS.map((b) => ({
-          value: zones[b.key],
-          itemStyle: { color: b.color, borderRadius: 4 },
-        })),
-        barWidth: 18,
-        label: {
-          show: true,
-          position: 'right',
-          color: ct.textDim,
-          fontFamily: 'JetBrains Mono, ui-monospace, monospace',
-          fontSize: 10,
-          formatter: (p: any) => fmtZoneDuration(p.value),
+        type: 'scatter',
+        data: scatterData,
+        symbolSize: 8,
+        markArea: { silent: true, data: zoneBands },
+        markLine: {
+          symbol: 'none',
+          silent: true,
+          label: { show: false },
+          data: thresholds,
         },
+        z: 3,
       },
     ],
   };
 
+  const summaryLine = (() => {
+    if (summary.totalSecBelow89 === 0) {
+      return `No time below 89 % across ${summary.sessionsWithOxy} session${summary.sessionsWithOxy === 1 ? '' : 's'}.`;
+    }
+    return `${fmtZoneDuration(summary.totalSecBelow89)} below 89 % across ${summary.totalHolds} hold${summary.totalHolds === 1 ? '' : 's'} in ${summary.sessionsWithOxy} session${summary.sessionsWithOxy === 1 ? '' : 's'}.`;
+  })();
+
   return (
     <ChartCard
-      title="SpO₂ Exposure Zones"
-      description="Total time at each SpO₂ level. Lower zones = stronger hypoxic exposure."
+      title="SpO₂ Trend"
+      description={summaryLine}
     >
-      <ReactECharts option={option} style={{ height: 200 }} notMerge />
+      <ReactECharts option={option} style={{ height: 260 }} notMerge />
     </ChartCard>
   );
 }

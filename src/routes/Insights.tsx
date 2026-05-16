@@ -14,7 +14,7 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
-import { spo2ExposureZones } from '../lib/analytics/spo2Zones';
+import { spo2LowestPerSession } from '../lib/analytics/spo2Zones';
 import { disciplineBests } from '../lib/analytics/poolBests';
 import { distanceDistribution } from '../lib/analytics/poolDistance';
 import { trainingDaysHeatmap } from '../lib/analytics/heatmap';
@@ -79,7 +79,7 @@ export function Insights() {
   // All calculations are memoized against the backup. They're cheap but
   // we recompute on tab switches otherwise.
   const sessions = backup.data.sessions;
-  const zones = useMemo(() => spo2ExposureZones(sessions), [sessions]);
+  const spo2Trend = useMemo(() => spo2LowestPerSession(sessions), [sessions]);
   const bests = useMemo(() => disciplineBests(sessions), [sessions]);
   const distBins = useMemo(() => distanceDistribution(sessions), [sessions]);
   const heatmap = useMemo(() => trainingDaysHeatmap(sessions), [sessions]);
@@ -145,7 +145,7 @@ export function Insights() {
         {tab === 'breathhold' && (
           <>
             <div className="lg:col-span-2">
-              <SpO2ZonesChart zones={zones} />
+              <SpO2ZonesChart data={spo2Trend} />
             </div>
             <div className="lg:col-span-2">
               <HoldDurationTrendChart series={holdDur} />
