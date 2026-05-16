@@ -44,8 +44,13 @@ export interface Spo2SessionPoint {
 }
 
 export interface Spo2Summary {
-  /** Sum of below-89 sample counts across all included sessions. */
-  totalSecBelow89: number;
+  /** Cumulative seconds below each zone threshold (nested: secBelow75
+   *  also counts towards secBelow89). ~1 Hz sample cadence so sample
+   *  counts ≈ seconds. */
+  secBelow89: number;
+  secBelow75: number;
+  secBelow65: number;
+  secBelow55: number;
   /** Sessions that contributed at least one usable SpO₂ reading. */
   sessionsWithOxy: number;
   /** Holds across those sessions (sum of cyclesCount). */
@@ -62,7 +67,10 @@ export function spo2LowestPerSession(
   lungVolFilter: 'FL' | 'FRC' | 'RV' | null = null,
 ): Spo2TrendData {
   const points: Spo2SessionPoint[] = [];
-  let totalSecBelow89 = 0;
+  let secBelow89 = 0;
+  let secBelow75 = 0;
+  let secBelow65 = 0;
+  let secBelow55 = 0;
   let totalHolds = 0;
 
   for (const s of sessions) {
@@ -74,11 +82,14 @@ export function spo2LowestPerSession(
     if (cleaned.length === 0) continue;
 
     let lowest = Infinity;
-    let secBelow89 = 0;
+    let sBelow89 = 0;
     for (const r of cleaned) {
       if (r.s <= 0) continue;
       if (r.s < lowest) lowest = r.s;
-      if (r.s < 90) secBelow89++;
+      if (r.s < 90) { sBelow89++; secBelow89++; }
+      if (r.s < 75) secBelow75++;
+      if (r.s < 65) secBelow65++;
+      if (r.s < 55) secBelow55++;
     }
     if (!Number.isFinite(lowest)) continue;
 
@@ -88,9 +99,8 @@ export function spo2LowestPerSession(
       sessionName: s.name || 'Dry session',
       lowest,
       holdCount,
-      secBelow89,
+      secBelow89: sBelow89,
     });
-    totalSecBelow89 += secBelow89;
     totalHolds += holdCount;
   }
 
@@ -98,7 +108,10 @@ export function spo2LowestPerSession(
   return {
     points,
     summary: {
-      totalSecBelow89,
+      secBelow89,
+      secBelow75,
+      secBelow65,
+      secBelow55,
       sessionsWithOxy: points.length,
       totalHolds,
     },

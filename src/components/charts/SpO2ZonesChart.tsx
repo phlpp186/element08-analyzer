@@ -129,18 +129,42 @@ export function SpO2ZonesChart({ data }: Props) {
     ],
   };
 
-  const summaryLine = (() => {
-    if (summary.totalSecBelow89 === 0) {
-      return `No time below 89 % across ${summary.sessionsWithOxy} session${summary.sessionsWithOxy === 1 ? '' : 's'}.`;
-    }
-    return `${fmtZoneDuration(summary.totalSecBelow89)} below 89 % across ${summary.totalHolds} hold${summary.totalHolds === 1 ? '' : 's'} in ${summary.sessionsWithOxy} session${summary.sessionsWithOxy === 1 ? '' : 's'}.`;
-  })();
+  const sessionsTxt = `${summary.totalHolds} hold${summary.totalHolds === 1 ? '' : 's'} in ${summary.sessionsWithOxy} session${summary.sessionsWithOxy === 1 ? '' : 's'}`;
+
+  // Cumulative-below-threshold pills, one per zone boundary. We pair each
+  // pill with the colour of the zone IT GATES (75-89 pill uses the mild
+  // colour, since "below 89" means you crossed into mild or deeper).
+  const thresholdPills: { label: string; color: string; sec: number }[] = [
+    { label: '< 89%', color: SPO2_ZONES[1].color, sec: summary.secBelow89 },
+    { label: '< 75%', color: SPO2_ZONES[2].color, sec: summary.secBelow75 },
+    { label: '< 65%', color: SPO2_ZONES[3].color, sec: summary.secBelow65 },
+    { label: '< 55%', color: SPO2_ZONES[4].color, sec: summary.secBelow55 },
+  ];
+
+  const summaryNode =
+    summary.sessionsWithOxy === 0 ? (
+      <p className="mt-1 text-sm text-textDim">No oximeter data in this filter.</p>
+    ) : (
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+        {thresholdPills.map((p) => (
+          <span
+            key={p.label}
+            className="flex items-center gap-1.5 font-mono text-[11px]"
+            style={{ color: p.sec > 0 ? p.color : 'var(--c-textDim, #888)', opacity: p.sec > 0 ? 1 : 0.45 }}
+          >
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{ backgroundColor: p.color }}
+            />
+            {p.label} {fmtZoneDuration(p.sec)}
+          </span>
+        ))}
+        <span className="font-mono text-[11px] text-textDim">· {sessionsTxt}</span>
+      </div>
+    );
 
   return (
-    <ChartCard
-      title="SpO₂ Trend"
-      description={summaryLine}
-    >
+    <ChartCard title="SpO₂ Trend" description={summaryNode}>
       <ReactECharts option={option} style={{ height: 260 }} notMerge />
     </ChartCard>
   );
