@@ -48,6 +48,9 @@ export interface PivotDimension {
   /** Optional explicit ordering for chip-style enums; otherwise sorted
    *  alphabetically. */
   order?: string[];
+  /** When 'numeric', buckets sort by leading number in the label so
+   *  "10.0 kg" comes after "2.0 kg". Ignored when `order` is set. */
+  sortBy?: 'numeric';
 }
 
 export interface PivotBucket {
@@ -110,15 +113,23 @@ export function pivot(
     });
   }
 
-  // Ordering: explicit dim.order wins, otherwise alpha. Time buckets are
-  // already keyed by ISO date strings so alpha = chronological.
+  // Ordering: explicit dim.order wins, then sortBy: 'numeric' for
+  // numeric labels, otherwise alpha. Time buckets are keyed by ISO date
+  // strings so alpha = chronological.
   if (dim.order) {
     const orderIdx = new Map(dim.order.map((k, i) => [k, i] as const));
     out.sort((a, b) => (orderIdx.get(a.key) ?? 999) - (orderIdx.get(b.key) ?? 999));
+  } else if (dim.sortBy === 'numeric') {
+    out.sort((a, b) => leadingNumber(a.key) - leadingNumber(b.key));
   } else {
     out.sort((a, b) => a.key.localeCompare(b.key));
   }
   return out;
+}
+
+function leadingNumber(s: string): number {
+  const m = s.match(/-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : Number.POSITIVE_INFINITY;
 }
 
 function computeStat(points: number[], stat: Stat): number {
@@ -164,8 +175,24 @@ export const PIVOT_METRICS: PivotMetric[] = [
       if (!d || !d.diveTime || !d.distance || d.distance <= 0) return null;
       return d.diveTime / (d.distance / 100);
     } },
-  { id: 'pool.avgHr',    label: 'Avg HR', unit: 'bpm', modes: ['pool'],
-    extract: (i) => i.dive ? num((i.dive as { hr?: number }).hr) : null },
+  // Pool dives store HR as hrLowest / hrHighest (no `hr` average).
+  // dive.hr may be present from richer imports; check it last as a
+  // fallback so older / sparser uploads still surface a value.
+  { id: 'pool.hrLow', label: 'HR low', unit: 'bpm', modes: ['pool'],
+    extract: (i) => i.dive ? num((i.dive as { hrLowest?: number }).hrLowest) : null },
+  { id: 'pool.hrHigh', label: 'HR high', unit: 'bpm', modes: ['pool'],
+    extract: (i) => i.dive ? num((i.dive as { hrHighest?: number }).hrHighest) : null },
+  { id: 'pool.avgHr', label: 'Avg HR', unit: 'bpm', modes: ['pool'],
+    extract: (i) => {
+      const d = i.dive as { hr?: number; hrLowest?: number; hrHighest?: number } | undefined;
+      if (!d) return null;
+      if (typeof d.hr === 'number') return d.hr;
+      // Fall back to midpoint of low/high when available.
+      if (typeof d.hrLowest === 'number' && typeof d.hrHighest === 'number') {
+        return (d.hrLowest + d.hrHighest) / 2;
+      }
+      return null;
+    } },
 
   // ─ Per-session (dry) ─
   { id: 'dry.longestHold', label: 'Longest hold', unit: 's', modes: ['dry'],
@@ -222,8 +249,15 @@ export const PIVOT_DIMENSIONS: PivotDimension[] = [
   { id: 'mode.sessionTag', label: 'Session tag', group: 'Mode', modes: ['dry'],
     extract: (i) => (i.session as unknown as { sessionTag?: string }).sessionTag ?? null,
     order: ['comfy', 'co2_table', 'o2_table', 'pb_attempt', 'recovery'] },
-  { id: 'mode.lungVol', label: 'Lung volume', group: 'Mode', modes: ['dry'],
-    extract: (i) => (i.session as unknown as { lungVol?: string }).lungVol ?? null,
+  // Lung volume lives in different places: per-session on dry, per-dive
+  // on depth and pool. Read whichever applies to the item's mode.
+  { id: 'mode.lungVol', label: 'Lung volume', group: 'Mode', modes: ['dry', 'depth', 'pool'],
+    extract: (i) => {
+      if (i.mode === 'dry') {
+        return (i.session as unknown as { lungVol?: string }).lungVol ?? null;
+      }
+      return (i.dive as { lungVol?: string } | undefined)?.lungVol ?? null;
+    },
     order: ['FL', 'FRC', 'RV'] },
   { id: 'mode.poolType', label: 'Pool length', group: 'Mode', modes: ['pool'],
     extract: (i) => (i.session as unknown as { poolType?: string }).poolType ?? null,
@@ -237,18 +271,26 @@ export const PIVOT_DIMENSIONS: PivotDimension[] = [
   chipDim('eq.mask',      'Mask',           ['depth'], 'Equipment', 'mask',      'dive'),
   chipDim('eq.weights',   'Weights (type)', ['depth'], 'Equipment', 'weights',   'dive'),
 
-  // ─ Numeric (Depth) ─ binned for grouping; the bucket label carries
-  //   the range so units stay readable in the chart axis.
+  // ─ Numeric (Depth) ─ each distinct value becomes its own bucket.
+  //   weightKg and suit are session defaults with optional per-dive
+  //   override; the per-dive value wins when present.
   { id: 'num.weightKg', label: 'Weight (kg)', group: 'Numeric', modes: ['depth'],
     extract: (i) => {
-      const v = (i.dive as { weightKg?: number } | undefined)?.weightKg;
+      const dv = (i.dive as { weightKg?: number } | undefined)?.weightKg;
+      const sv = (i.session as unknown as { weightKg?: number }).weightKg;
+      const v = typeof dv === 'number' ? dv : sv;
       if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) return null;
-      const lo = Math.floor(v * 2) / 2;       // bin width 0.5 kg
-      return `${lo.toFixed(1)}–${(lo + 0.5).toFixed(1)} kg`;
-    } },
+      // Round to 0.1 kg so 1.49 and 1.51 don't fragment into separate
+      // buckets; freedivers rarely care about finer precision than that.
+      const rounded = Math.round(v * 10) / 10;
+      return `${rounded.toFixed(1)} kg`;
+    },
+    sortBy: 'numeric' },
   { id: 'num.suitMm', label: 'Suit (mm)', group: 'Numeric', modes: ['depth'],
     extract: (i) => {
-      const s = (i.dive as { suit?: { kind?: string; mm?: number } } | undefined)?.suit;
+      const ds = (i.dive as { suit?: { kind?: string; mm?: number } } | undefined)?.suit;
+      const ss = (i.session as unknown as { suit?: { kind?: string; mm?: number } | null }).suit;
+      const s = ds ?? ss;
       if (!s) return null;
       if (s.kind === 'none') return 'none';
       if (typeof s.mm === 'number') return `${s.mm} mm`;
