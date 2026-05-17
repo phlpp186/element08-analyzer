@@ -212,6 +212,24 @@ function makeDepthDive(si, targetDepth, discipline, diveType) {
     ? Math.round(profile.reduce((a, p) => a + p.hr, 0) / profile.length)
     : Math.round((hrStart + hrBottom + hrEnd) / 3);
 
+  // Advanced chips — populated on most training dives so the Playground
+  // pivot has something to slice on. Distributions skew toward typical
+  // depth-training setups (mono fins, 3 mm suit, neutral pace).
+  const advanced = diveType === 'warmup'
+    ? null
+    : {
+        fins: wpick({ mono: 60, bi: 28, no_fins: 12 }),
+        mask: wpick({ low_volume: 55, fluid: 25, standard: 20 }),
+        suit: wpick({ '3mm': 35, '5mm': 40, '7mm': 20, none: 5 }),
+        weights: wpick({ light: 25, medium: 50, heavy: 25 }),
+        eq: wpick({ frenzel: 70, mouthfill: 22, valsalva: 8 }),
+        pace: wpick({ slow: 25, normal: 55, fast: 20 }),
+        waves: wpick({ none: 60, mild: 28, choppy: 12 }),
+        current: wpick({ none: 65, mild: 25, strong: 10 }),
+        thermocline: wpick({ none: 50, mild: 30, sharp: 20 }),
+        earlyTurn: chance(0.15) ? 'yes' : 'no',
+      };
+
   return {
     si,
     discipline,
@@ -228,6 +246,7 @@ function makeDepthDive(si, targetDepth, discipline, diveType) {
     hangs,
     mfChargeDepth,
     contractionOnset,
+    advanced,
     profile,
   };
 }
@@ -365,10 +384,20 @@ function makePoolDive(discipline, targetDistance, poolLen, diveType, ceilDyn) {
     contractions.push(Math.round(s));
   }
 
+  // Pool-side advanced chips for the pivot.
+  const advanced = diveType === 'warmup' ? null : {
+    wetsuit: wpick({ none: 30, '1mm': 35, '3mm': 25, '5mm': 10 }),
+    weights: wpick({ none: 50, light: 30, medium: 15, heavy: 5 }),
+    pool: wpick({ calm: 60, swimmers: 30, busy: 10 }),
+    noise: wpick({ quiet: 55, normal: 30, loud: 15 }),
+    pace: wpick({ slow: 30, normal: 50, fast: 20 }),
+    glides: wpick({ short: 25, medium: 50, long: 25 }),
+  };
+
   const dive = {
     discipline, diveType, distance, diveTime,
     rating: irng(2, 5),
-    lapTimes, contractions,
+    lapTimes, contractions, advanced,
   };
   if (includeProfile) {
     if (hasHr) {
@@ -539,6 +568,18 @@ function makeDrySession(week, p, dayOffset) {
       ? wpick({ FRC: 40, FL: 50, RV: 10 })
       : wpick({ FRC: 60, FL: 30, RV: 10 });
 
+  // Dry-session advanced chips for the Playground "Body" pivot.
+  const advanced = {
+    nose: wpick({ clip: 70, fingers: 25, neither: 5 }),
+    eyes: wpick({ closed: 75, open: 25 }),
+    position: wpick({ lying: 60, seated: 30, standing: 10 }),
+    relaxation: wpick({ deep: 35, normal: 50, restless: 15 }),
+    place: wpick({ home: 60, gym: 20, outdoors: 15, other: 5 }),
+    indoor: wpick({ yes: 80, no: 20 }),
+    ambient: wpick({ silent: 40, quiet: 40, noisy: 20 }),
+    external: wpick({ none: 70, music: 20, voice_guide: 10 }),
+  };
+
   const totalSec = cursor;
   return {
     id: date.getTime() + irng(1, 999),
@@ -555,6 +596,7 @@ function makeDrySession(week, p, dayOffset) {
     rating: irng(2, 5),
     sessionTag: tag,
     lungVol,
+    advanced,
     breathingStyle: pick(['Relaxed', 'Box breathing', 'Long exhale']),
     cyclesCount: holds.length,
     playStart,
