@@ -213,22 +213,36 @@ function makeDepthDive(si, targetDepth, discipline, diveType) {
     : Math.round((hrStart + hrBottom + hrEnd) / 3);
 
   // Advanced chips — populated on most training dives so the Playground
-  // pivot has something to slice on. Distributions skew toward typical
-  // depth-training setups (mono fins, 3 mm suit, neutral pace).
+  // pivot has something to slice on. Values match the app's DEPTH_*_OPTS
+  // enums (see src/lib/models/types.ts in the app repo).
   const advanced = diveType === 'warmup'
     ? null
     : {
-        fins: wpick({ mono: 60, bi: 28, no_fins: 12 }),
-        mask: wpick({ low_volume: 55, fluid: 25, standard: 20 }),
-        suit: wpick({ '3mm': 35, '5mm': 40, '7mm': 20, none: 5 }),
-        weights: wpick({ light: 25, medium: 50, heavy: 25 }),
-        eq: wpick({ frenzel: 70, mouthfill: 22, valsalva: 8 }),
-        pace: wpick({ slow: 25, normal: 55, fast: 20 }),
-        waves: wpick({ none: 60, mild: 28, choppy: 12 }),
-        current: wpick({ none: 65, mild: 25, strong: 10 }),
-        thermocline: wpick({ none: 50, mild: 30, sharp: 20 }),
-        earlyTurn: chance(0.15) ? 'yes' : 'no',
+        fins:        wpick({ training: 25, competition: 65, none: 10 }),
+        mask:        wpick({ 'noseclip-goggles': 55, 'noseclip-only': 25, mask: 20 }),
+        weights:     wpick({ neckweight: 65, beltweight: 25, none: 10 }),
+        eq:          wpick({ held: 70, leaking: 18, swallowing: 8, 'frenzel-failure': 4 }),
+        pace:        wpick({ slow: 25, normal: 55, fast: 20 }),
+        waves:       wpick({ flat: 55, wavy: 30, big: 15 }),
+        current:     wpick({ none: 65, mild: 25, strong: 10 }),
+        thermocline: wpick({ none: 50, mild: 30, strong: 20 }),
+        earlyTurn:   chance(0.15) ? 'yes' : 'no',
       };
+
+  // Per-dive numeric ballast in kg. Most freediving rigs sit 1-3 kg;
+  // wpick across half-kg ranges keeps the distribution realistic.
+  const weightKg = round(
+    wpick({ '0.5': 5, '1.0': 25, '1.5': 30, '2.0': 20, '2.5': 12, '3.0': 6, '3.5': 2 }) * 1,
+    1,
+  );
+  // SuitThickness object — preset thickness varies by water temp.
+  const suit = deepTemp < 14
+    ? { kind: 'preset', mm: 7 }
+    : deepTemp < 17
+      ? { kind: 'preset', mm: 5 }
+      : deepTemp < 22
+        ? { kind: 'preset', mm: 3 }
+        : { kind: 'preset', mm: 1.5 };
 
   return {
     si,
@@ -247,6 +261,8 @@ function makeDepthDive(si, targetDepth, discipline, diveType) {
     mfChargeDepth,
     contractionOnset,
     advanced,
+    weightKg,
+    suit,
     profile,
   };
 }
@@ -384,14 +400,15 @@ function makePoolDive(discipline, targetDistance, poolLen, diveType, ceilDyn) {
     contractions.push(Math.round(s));
   }
 
-  // Pool-side advanced chips for the pivot.
+  // Pool-side advanced chips for the pivot. Values match the app's
+  // POOL_*_OPTS enums (see src/lib/models/types.ts in the app repo).
   const advanced = diveType === 'warmup' ? null : {
-    wetsuit: wpick({ none: 30, '1mm': 35, '3mm': 25, '5mm': 10 }),
-    weights: wpick({ none: 50, light: 30, medium: 15, heavy: 5 }),
-    pool: wpick({ calm: 60, swimmers: 30, busy: 10 }),
-    noise: wpick({ quiet: 55, normal: 30, loud: 15 }),
-    pace: wpick({ slow: 30, normal: 50, fast: 20 }),
-    glides: wpick({ short: 25, medium: 50, long: 25 }),
+    wetsuit: wpick({ none: 35, 'one-piece': 45, 'two-piece': 20 }),
+    weights: wpick({ none: 50, neckweight: 30, 'neckweight-extension': 10, beltweight: 10 }),
+    pool:    wpick({ continuous: 80, 'with-drop': 20 }),
+    noise:   wpick({ quiet: 60, loud: 40 }),
+    pace:    wpick({ slow: 25, normal: 45, fast: 20, 'slow-to-fast': 10 }),
+    glides:  wpick({ short: 25, normal: 50, long: 20, none: 5 }),
   };
 
   const dive = {
@@ -568,16 +585,17 @@ function makeDrySession(week, p, dayOffset) {
       ? wpick({ FRC: 40, FL: 50, RV: 10 })
       : wpick({ FRC: 60, FL: 30, RV: 10 });
 
-  // Dry-session advanced chips for the Playground "Body" pivot.
+  // Dry-session advanced chips for the Playground "Body" pivot. Values
+  // match the app's DRY_*_OPTS enums (see src/lib/models/types.ts).
   const advanced = {
-    nose: wpick({ clip: 70, fingers: 25, neither: 5 }),
-    eyes: wpick({ closed: 75, open: 25 }),
-    position: wpick({ lying: 60, seated: 30, standing: 10 }),
-    relaxation: wpick({ deep: 35, normal: 50, restless: 15 }),
-    place: wpick({ home: 60, gym: 20, outdoors: 15, other: 5 }),
-    indoor: wpick({ yes: 80, no: 20 }),
-    ambient: wpick({ silent: 40, quiet: 40, noisy: 20 }),
-    external: wpick({ none: 70, music: 20, voice_guide: 10 }),
+    nose:       wpick({ clip: 75, none: 25 }),
+    eyes:       wpick({ closed: 70, 'sleep-mask': 20, open: 10 }),
+    position:   wpick({ laying: 60, sitting: 30, standing: 10 }),
+    relaxation: wpick({ mindfulness: 35, visualization: 25, 'mind-wander': 30, none: 10 }),
+    place:      wpick({ bed: 50, sofa: 30, floor: 20 }),
+    indoor:     wpick({ indoors: 85, outdoors: 15 }),
+    ambient:    wpick({ quiet: 70, busy: 30 }),
+    external:   wpick({ quietness: 55, music: 30, podcast: 15 }),
   };
 
   const totalSec = cursor;

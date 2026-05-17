@@ -233,10 +233,28 @@ export const PIVOT_DIMENSIONS: PivotDimension[] = [
     order: ['VOL', 'CO2', 'O2', 'SP', 'TE', 'MAX', 'FUN', 'RC'] },
 
   // ─ Equipment (Depth) ─
-  chipDim('eq.fins',      'Fins',        ['depth'], 'Equipment', 'fins',      'dive'),
-  chipDim('eq.mask',      'Mask',        ['depth'], 'Equipment', 'mask',      'dive'),
-  chipDim('eq.suit',      'Suit',        ['depth'], 'Equipment', 'suit',      'dive'),
-  chipDim('eq.weights',   'Weights',     ['depth'], 'Equipment', 'weights',   'dive'),
+  chipDim('eq.fins',      'Fins',           ['depth'], 'Equipment', 'fins',      'dive'),
+  chipDim('eq.mask',      'Mask',           ['depth'], 'Equipment', 'mask',      'dive'),
+  chipDim('eq.weights',   'Weights (type)', ['depth'], 'Equipment', 'weights',   'dive'),
+
+  // ─ Numeric (Depth) ─ binned for grouping; the bucket label carries
+  //   the range so units stay readable in the chart axis.
+  { id: 'num.weightKg', label: 'Weight (kg)', group: 'Numeric', modes: ['depth'],
+    extract: (i) => {
+      const v = (i.dive as { weightKg?: number } | undefined)?.weightKg;
+      if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) return null;
+      const lo = Math.floor(v * 2) / 2;       // bin width 0.5 kg
+      return `${lo.toFixed(1)}–${(lo + 0.5).toFixed(1)} kg`;
+    } },
+  { id: 'num.suitMm', label: 'Suit (mm)', group: 'Numeric', modes: ['depth'],
+    extract: (i) => {
+      const s = (i.dive as { suit?: { kind?: string; mm?: number } } | undefined)?.suit;
+      if (!s) return null;
+      if (s.kind === 'none') return 'none';
+      if (typeof s.mm === 'number') return `${s.mm} mm`;
+      return null;
+    },
+    order: ['none', '1.5 mm', '3 mm', '5 mm', '7 mm'] },
 
   // ─ Equipment (Pool) ─
   chipDim('eq.poolWetsuit','Wetsuit',     ['pool'], 'Equipment', 'wetsuit',   'dive'),
