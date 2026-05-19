@@ -179,6 +179,7 @@ One row inside `DepthSession.dives`.
 | `earlyTurn?` | `boolean` | True when the diver turned before reaching the declared target. Previously lived under `advanced.earlyTurn`; promoted to top-level in 2026-05-19. Older backups still parse — the app's load-time migration moves the value up. |
 | `targetDepth?` | `number` | Declared target depth in metres. Only meaningful with `earlyTurn === true`. Promoted from `advanced.targetDepth`. |
 | `earlyTurnReason?` | enum | Categorical reason chip. Promoted from `advanced.earlyTurnReason`. |
+| `remarks?` | `string \| null` | Free-text per-dive notes. Independent of the session-level `remarks` on the parent session. Added 2026-05-19; older backups don't carry it. |
 | `advanced?` | `DepthAdvanced` | Optional chip selections (gear, conditions, technique). See § 6.2. |
 
 ### 4.2 Pool dive (`PoolDive`)
