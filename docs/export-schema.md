@@ -142,6 +142,8 @@ or logged manually.
 | `dives` | `PoolDive[]` | Per-dive details. See § 4.2. |
 | `sessionType?` | `PoolSessionType` | `'VOL' \| 'CO2' \| 'O2' \| 'SP' \| 'TE' \| 'MAX' \| 'FUN' \| 'RC'`. |
 | `hrProfile?` | `{ t, hr }[]` | Session-spanning HR, including surface intervals between dives. `t` = seconds from session start. |
+| `suit?` | `SuitThickness \| null` | Session default suit thickness. Per-dive `PoolDive.suit` overrides this. Added 2026-05-19, mirroring depth sessions. |
+| `weightKg?` | `number \| null` | Session default ballast (kg). Per-dive `PoolDive.weightKg` overrides this. Added 2026-05-19. |
 
 ---
 
@@ -201,6 +203,8 @@ One row inside `PoolSession.dives`.
 | `breathingStyle?` | `string \| null` | Per-dive. |
 | `profile?` | `PoolProfilePoint[]` | 1 Hz `{ t, hr, depth, speed }`. |
 | `hrProfile?` | `{ t, hr }[]` | **Deprecated.** Use `profile` instead. Older imports populate this. |
+| `suit?` | `SuitThickness` | Per-dive suit override. Falls back to `PoolSession.suit`. Added 2026-05-19. |
+| `weightKg?` | `number \| null` | Per-dive ballast override (kg). Falls back to `PoolSession.weightKg`. Added 2026-05-19. |
 | `advanced?` | `PoolAdvanced` | Optional chip selections. See § 6.3. |
 
 ---
@@ -244,13 +248,44 @@ enums (no free-form text) to keep analytics group-friendly. See
 `mask`, `weights`, `fins`, `monofin`, `bifin`, `fimFins`, `waves`,
 `current`, `thermocline`, `eq`, `pace`.
 
+Fin chips surface per-discipline (added 2026-05-19):
+
+| Discipline | Chip field | Values |
+|---|---|---|
+| `CWT` | `monofin` | `'training' \| 'competition'` |
+| `CWTB` | `bifin` | `'training-short' \| 'training-long' \| 'competition'` |
+| `FIM` | `fimFins` | `'fins' \| 'none'` (fins-for-safety vs hands-only competition) |
+| `CNF` | — | no fin chip |
+| other / unknown | `fins` | legacy `'training' \| 'competition' \| 'none'` |
+
+The legacy `fins` chip is still read on older dives; new logs on known
+disciplines use one of `monofin` / `bifin` / `fimFins`.
+
 `earlyTurn` / `targetDepth` / `earlyTurnReason` were promoted out of
 `advanced` to top-level `Dive` fields in 2026-05-19 — they describe
 what happened on the dive, not optional chip metadata. Older backups
 still parse; the app's load-time migration moves them up.
 
 ### 6.3 `PoolAdvanced`
-`wetsuit`, `weights`, `pool`, `noise`, `pace`, `glides`.
+`wetsuit`, `sleeves`, `weights`, `monofin`, `bifin`, `pool`, `noise`,
+`pace`, `glides`.
+
+Wetsuit piece-count and sleeve length are orthogonal (a one-piece can
+be long-sleeved or sleeveless, etc.), so they live in two separate
+fields (added 2026-05-19):
+
+| Field | Values |
+|---|---|
+| `wetsuit` | `'one-piece' \| 'two-piece' \| 'shorty' \| 'none'` |
+| `sleeves` | `'long' \| 'short' \| 'sleeveless'` — only meaningful when `wetsuit !== 'none'` |
+
+Fin chips surface per-discipline:
+
+| Discipline | Chip field | Values |
+|---|---|---|
+| `DYN` | `monofin` | `'training' \| 'competition'` |
+| `DYNB` | `bifin` | `'training-short' \| 'training-long' \| 'competition'` |
+| `STA` / `DNF` | — | no fin chip |
 
 ---
 

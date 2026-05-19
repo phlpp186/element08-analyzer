@@ -267,14 +267,28 @@ export const PIVOT_DIMENSIONS: PivotDimension[] = [
     order: ['VOL', 'CO2', 'O2', 'SP', 'TE', 'MAX', 'FUN', 'RC'] },
 
   // ─ Equipment (Depth) ─
-  chipDim('eq.fins',      'Fins',           ['depth'], 'Equipment', 'fins',      'dive'),
+  // Fin chips surface per-discipline in the app:
+  //   CWT  → monofin       (training | competition)
+  //   CWTB → bifin         (training-short | training-long | competition)
+  //   FIM  → fimFins       (fins | none — safety vs hands-only)
+  //   CNF  → no fin chip
+  //   unknown/legacy → fins (kept for backward-compat with older dives)
+  chipDim('eq.fins',      'Fins (legacy)',  ['depth'], 'Equipment', 'fins',     'dive',
+    ['training', 'competition', 'none']),
+  chipDim('eq.monofin',   'Monofin',        ['depth'], 'Equipment', 'monofin',  'dive',
+    ['training', 'competition']),
+  chipDim('eq.bifin',     'Bifin',          ['depth'], 'Equipment', 'bifin',    'dive',
+    ['training-short', 'training-long', 'competition']),
+  chipDim('eq.fimFins',   'FIM fins',       ['depth'], 'Equipment', 'fimFins',  'dive',
+    ['fins', 'none']),
   chipDim('eq.mask',      'Mask',           ['depth'], 'Equipment', 'mask',      'dive'),
   chipDim('eq.weights',   'Weights (type)', ['depth'], 'Equipment', 'weights',   'dive'),
 
-  // ─ Numeric (Depth) ─ each distinct value becomes its own bucket.
+  // ─ Numeric (Depth + Pool) ─ each distinct value becomes its own bucket.
   //   weightKg and suit are session defaults with optional per-dive
-  //   override; the per-dive value wins when present.
-  { id: 'num.weightKg', label: 'Weight (kg)', group: 'Numeric', modes: ['depth'],
+  //   override; the per-dive value wins when present. Pool sessions
+  //   gained the same suit/ballast fields in 2026-05-19 mirroring depth.
+  { id: 'num.weightKg', label: 'Weight (kg)', group: 'Numeric', modes: ['depth', 'pool'],
     extract: (i) => {
       const dv = (i.dive as { weightKg?: number } | undefined)?.weightKg;
       const sv = (i.session as unknown as { weightKg?: number }).weightKg;
@@ -286,7 +300,7 @@ export const PIVOT_DIMENSIONS: PivotDimension[] = [
       return `${rounded.toFixed(1)} kg`;
     },
     sortBy: 'numeric' },
-  { id: 'num.suitMm', label: 'Suit (mm)', group: 'Numeric', modes: ['depth'],
+  { id: 'num.suitMm', label: 'Suit (mm)', group: 'Numeric', modes: ['depth', 'pool'],
     extract: (i) => {
       const ds = (i.dive as { suit?: { kind?: string; mm?: number } } | undefined)?.suit;
       const ss = (i.session as unknown as { suit?: { kind?: string; mm?: number } | null }).suit;
@@ -299,7 +313,18 @@ export const PIVOT_DIMENSIONS: PivotDimension[] = [
     order: ['none', '1.5 mm', '3 mm', '5 mm', '7 mm'] },
 
   // ─ Equipment (Pool) ─
-  chipDim('eq.poolWetsuit','Wetsuit',     ['pool'], 'Equipment', 'wetsuit',   'dive'),
+  // Wetsuit piece-count and sleeve length are orthogonal — they live
+  // in two separate chip fields on the dive.
+  // Pool fin chips also surface per-discipline (DYN → monofin,
+  // DYNB → bifin); STA/DNF show no fin chip.
+  chipDim('eq.poolWetsuit','Wetsuit',     ['pool'], 'Equipment', 'wetsuit',   'dive',
+    ['one-piece', 'two-piece', 'shorty', 'none']),
+  chipDim('eq.poolSleeves','Sleeves',     ['pool'], 'Equipment', 'sleeves',   'dive',
+    ['long', 'short', 'sleeveless']),
+  chipDim('eq.poolMonofin','Monofin',     ['pool'], 'Equipment', 'monofin',   'dive',
+    ['training', 'competition']),
+  chipDim('eq.poolBifin', 'Bifin',        ['pool'], 'Equipment', 'bifin',     'dive',
+    ['training-short', 'training-long', 'competition']),
   chipDim('eq.poolWeights','Pool weights',['pool'], 'Equipment', 'weights',   'dive'),
   chipDim('eq.poolPool',  'Pool',        ['pool'], 'Equipment', 'pool',      'dive'),
 
