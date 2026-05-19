@@ -174,6 +174,9 @@ One row inside `DepthSession.dives`.
 | `mfVolumeFeel?` | `"small" \| "medium" \| "full"` | |
 | `suit?` | `SuitThickness` | Per-dive override of session suit. |
 | `weightKg?` | `number \| null` | Per-dive ballast override. |
+| `earlyTurn?` | `boolean` | True when the diver turned before reaching the declared target. Previously lived under `advanced.earlyTurn`; promoted to top-level in 2026-05-19. Older backups still parse — the app's load-time migration moves the value up. |
+| `targetDepth?` | `number` | Declared target depth in metres. Only meaningful with `earlyTurn === true`. Promoted from `advanced.targetDepth`. |
+| `earlyTurnReason?` | enum | Categorical reason chip. Promoted from `advanced.earlyTurnReason`. |
 | `advanced?` | `DepthAdvanced` | Optional chip selections (gear, conditions, technique). See § 6.2. |
 
 ### 4.2 Pool dive (`PoolDive`)
@@ -238,8 +241,13 @@ enums (no free-form text) to keep analytics group-friendly. See
 `nose`, `eyes`, `external`, `place`, `indoor`, `ambient`, `position`, `relaxation`.
 
 ### 6.2 `DepthAdvanced`
-`mask`, `weights`, `fins`, `waves`, `current`, `thermocline`, `earlyTurn`,
-`targetDepth`, `earlyTurnReason`, `eq`, `pace`.
+`mask`, `weights`, `fins`, `monofin`, `bifin`, `fimFins`, `waves`,
+`current`, `thermocline`, `eq`, `pace`.
+
+`earlyTurn` / `targetDepth` / `earlyTurnReason` were promoted out of
+`advanced` to top-level `Dive` fields in 2026-05-19 — they describe
+what happened on the dive, not optional chip metadata. Older backups
+still parse; the app's load-time migration moves them up.
 
 ### 6.3 `PoolAdvanced`
 `wetsuit`, `weights`, `pool`, `noise`, `pace`, `glides`.
