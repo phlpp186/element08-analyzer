@@ -389,6 +389,15 @@ function toggle<T>(arr: T[], item: T): T[] {
   return arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item];
 }
 
+/** Lowercase a label for mid-sentence use while preserving acronyms and unit
+ *  tokens (HR, FIM, "s/100 m") so "Avg HR" -> "avg HR", not "avg hr". */
+function softLower(label: string): string {
+  return label
+    .split(' ')
+    .map((w) => (/[A-Z]{2,}/.test(w) || /\d/.test(w) ? w : w.charAt(0).toLowerCase() + w.slice(1)))
+    .join(' ');
+}
+
 /**
  * Plain-language explanation of the current pivot. Rewrites itself as the
  * knobs change so the user always knows what a bar/box actually represents,
@@ -409,8 +418,8 @@ function PivotHelp({
   mode: SessionMode;
 }) {
   const noun = mode === 'dry' ? 'sessions' : 'dives';
-  const m = metricLabel.toLowerCase();
-  const d = dimLabel.toLowerCase();
+  const m = softLower(metricLabel);
+  const d = softLower(dimLabel);
   const Em = ({ children }: { children: React.ReactNode }) => (
     <span className="font-semibold text-text">{children}</span>
   );
@@ -419,8 +428,8 @@ function PivotHelp({
   if (render === 'box') {
     body = (
       <>
-        Each box shows the <Em>spread</Em> of {m} across the {noun} in each {d}: the line is the{' '}
-        <Em>median</Em>, the box covers the middle 50% (Q1 to Q3), the whiskers reach the rest
+        Each box shows the <Em>spread</Em> of {m} across the {noun}, grouped by {d}: the line is
+        the <Em>median</Em>, the box covers the middle 50% (Q1 to Q3), the whiskers reach the rest
         within 1.5×IQR, and dots are outliers. The Stat toggle does not change the box; switch to
         Bars to use it.
       </>
@@ -428,8 +437,8 @@ function PivotHelp({
   } else if (stat === 'count') {
     body = (
       <>
-        Each bar counts <Em>how many {noun}</Em> fall in each {d}. The metric ({metricLabel}) is
-        ignored here; only the number of {noun} matters.
+        Each bar is the <Em>number of {noun}</Em>, grouped by {d}. The metric ({metricLabel}) is
+        ignored here; only the count matters.
       </>
     );
   } else {
@@ -443,7 +452,7 @@ function PivotHelp({
             : 'single lowest';
     body = (
       <>
-        Each bar is the <Em>{word}</Em> {m} of the {noun} in each {d}.
+        Each bar is the <Em>{word}</Em> {m} of the {noun}, grouped by {d}.
         {stat === 'median'
           ? ' Half are higher and half lower, so it is less swayed by outliers than the average.'
           : ''}{' '}
