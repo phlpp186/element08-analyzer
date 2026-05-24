@@ -261,6 +261,15 @@ export function Playground() {
           </PickerColumn>
         </div>
 
+        {/* Live explanation of what the current pivot actually shows. */}
+        <PivotHelp
+          metricLabel={metric?.label ?? 'the metric'}
+          dimLabel={dim?.label ?? 'group'}
+          stat={stat}
+          render={render}
+          mode={mode}
+        />
+
         <div className="flex items-center justify-between">
           <p className="font-mono text-[11px] text-textDim">
             {filtered.length} session{filtered.length === 1 ? '' : 's'} · {items.length} item{items.length === 1 ? '' : 's'}
@@ -378,6 +387,76 @@ function Pill({
 
 function toggle<T>(arr: T[], item: T): T[] {
   return arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item];
+}
+
+/**
+ * Plain-language explanation of the current pivot. Rewrites itself as the
+ * knobs change so the user always knows what a bar/box actually represents,
+ * and what swapping the Stat does. Items are dives (depth/pool) or sessions
+ * (dry); `count` ignores the metric; the box plot ignores the Stat.
+ */
+function PivotHelp({
+  metricLabel,
+  dimLabel,
+  stat,
+  render,
+  mode,
+}: {
+  metricLabel: string;
+  dimLabel: string;
+  stat: Stat;
+  render: 'bar' | 'box';
+  mode: SessionMode;
+}) {
+  const noun = mode === 'dry' ? 'sessions' : 'dives';
+  const m = metricLabel.toLowerCase();
+  const d = dimLabel.toLowerCase();
+  const Em = ({ children }: { children: React.ReactNode }) => (
+    <span className="font-semibold text-text">{children}</span>
+  );
+
+  let body: React.ReactNode;
+  if (render === 'box') {
+    body = (
+      <>
+        Each box shows the <Em>spread</Em> of {m} across the {noun} in each {d}: the line is the{' '}
+        <Em>median</Em>, the box covers the middle 50% (Q1 to Q3), the whiskers reach the rest
+        within 1.5×IQR, and dots are outliers. The Stat toggle does not change the box; switch to
+        Bars to use it.
+      </>
+    );
+  } else if (stat === 'count') {
+    body = (
+      <>
+        Each bar counts <Em>how many {noun}</Em> fall in each {d}. The metric ({metricLabel}) is
+        ignored here; only the number of {noun} matters.
+      </>
+    );
+  } else {
+    const word =
+      stat === 'avg'
+        ? 'average (mean)'
+        : stat === 'median'
+          ? 'median (middle value)'
+          : stat === 'max'
+            ? 'single highest'
+            : 'single lowest';
+    body = (
+      <>
+        Each bar is the <Em>{word}</Em> {m} of the {noun} in each {d}.
+        {stat === 'median'
+          ? ' Half are higher and half lower, so it is less swayed by outliers than the average.'
+          : ''}{' '}
+        <span className="opacity-70">n = number of {noun} per bar.</span>
+      </>
+    );
+  }
+
+  return (
+    <div className="rounded-md border border-border bg-deep px-3 py-2 text-xs leading-relaxed text-textDim">
+      {body}
+    </div>
+  );
 }
 
 // ── Chart builders ──────────────────────────────────────────────────────────
