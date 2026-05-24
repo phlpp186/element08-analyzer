@@ -164,6 +164,8 @@ export function Playground() {
   const [dim2Id, setDim2Id] = useState<string>(availableDims[1]?.id ?? availableDims[0]?.id ?? '');
   const [stat, setStat] = useState<Stat>('avg');
   const [render, setRender] = useState<RenderMode>('bar');
+  // Which starter-question topic is expanded (null = none, just the pills).
+  const [questionCat, setQuestionCat] = useState<string | null>(CATEGORY_ORDER[0]);
 
   // Reset selections when mode changes to something that doesn't support them.
   const metric: PivotMetric = availableMetrics.find((m) => m.id === metricId) ?? availableMetrics[0];
@@ -279,37 +281,37 @@ export function Playground() {
         <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-textDim">
           Starter questions
         </div>
-        <p className="mb-4 text-sm text-textDim">
-          Tap a question to fill in the pivot below with the chart that best answers it, then tweak
-          it or build your own.
+        <p className="mb-3 text-sm text-textDim">
+          Pick a topic, then tap a question to fill in the pivot below with the chart that best
+          answers it.
         </p>
-        <div className="space-y-4">
-          {CATEGORY_ORDER.map((cat) => {
-            const qs = QUESTIONS.filter((q) => q.category === cat);
-            if (qs.length === 0) return null;
-            return (
-              <div key={cat}>
-                <div className="mb-1.5 font-mono text-[10px] uppercase tracking-widest text-accent/80">
-                  {cat}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {qs.map((qp) => (
-                    <button
-                      key={qp.q}
-                      onClick={() => applyPreset(qp)}
-                      className="rounded-full border border-border px-3 py-1.5 text-sm text-textDim transition-colors hover:border-accent hover:text-accent"
-                    >
-                      {qp.q}
-                      <span className="ml-1.5 font-mono text-[10px] opacity-50">
-                        {RENDER_SHORT[qp.render]}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+        <div className="mb-3 flex flex-wrap gap-2">
+          {CATEGORY_ORDER.map((cat) => (
+            <Pill
+              key={cat}
+              active={questionCat === cat}
+              onClick={() => setQuestionCat(questionCat === cat ? null : cat)}
+            >
+              {cat}
+            </Pill>
+          ))}
         </div>
+        {questionCat && (
+          <div className="flex flex-wrap gap-2">
+            {QUESTIONS.filter((q) => q.category === questionCat).map((qp) => (
+              <button
+                key={qp.q}
+                onClick={() => applyPreset(qp)}
+                className="rounded-full border border-border px-3 py-1.5 text-sm text-textDim transition-colors hover:border-accent hover:text-accent"
+              >
+                {qp.q}
+                <span className="ml-1.5 font-mono text-[10px] opacity-50">
+                  {RENDER_SHORT[qp.render]}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Filters */}
