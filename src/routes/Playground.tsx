@@ -23,6 +23,7 @@ import {
   type SessionTag,
 } from '../lib/analytics/playground';
 import {
+  DIM_GROUP_NOUN,
   PIVOT_DIMENSIONS,
   PIVOT_METRICS,
   flatten,
@@ -264,7 +265,7 @@ export function Playground() {
         {/* Live explanation of what the current pivot actually shows. */}
         <PivotHelp
           metricLabel={metric?.label ?? 'the metric'}
-          dimLabel={dim?.label ?? 'group'}
+          dimLabel={dim ? (DIM_GROUP_NOUN[dim.id] ?? dim.label) : 'group'}
           stat={stat}
           render={render}
           mode={mode}

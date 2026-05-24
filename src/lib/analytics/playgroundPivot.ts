@@ -351,3 +351,18 @@ export const PIVOT_DIMENSIONS: PivotDimension[] = [
   chipDim('body.position',   'Position',    ['dry'], 'Body', 'position',   'session'),
   chipDim('body.relaxation', 'Relaxation',  ['dry'], 'Body', 'relaxation', 'session'),
 ];
+
+/**
+ * Natural-language phrase to drop in after "grouped by ..." in the Playground
+ * explanation, for dimensions whose bare label reads awkwardly. A "Waves" chip
+ * groups dives by wave *size*, "Current" by *strength*, etc. Dimensions not
+ * listed here fall back to their label. This is copy only — edit freely.
+ */
+export const DIM_GROUP_NOUN: Record<string, string> = {
+  'cond.waves': 'wave size',
+  'cond.current': 'current strength',
+  'cond.thermocline': 'thermocline strength',
+  'cond.eq': 'equalization efficiency',
+  'cond.poolNoise': 'pool noise level',
+  'cond.poolGlides': 'glide quality',
+};
