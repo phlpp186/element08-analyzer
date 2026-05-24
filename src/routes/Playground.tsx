@@ -98,6 +98,8 @@ const QUESTIONS: QuestionPreset[] = [
   { q: 'Does relaxation affect my hold length?', mode: 'dry', metric: 'dry.longestHold', dim: 'body.relaxation', stat: 'avg' },
 ];
 
+type RenderMode = 'bar' | 'box' | 'scatter' | 'hist';
+
 function todayIso(): string { return isoDate(new Date()); }
 function isoDate(d: Date): string {
   const y = d.getFullYear();
@@ -127,7 +129,7 @@ export function Playground() {
   const [metricId, setMetricId] = useState<string>(availableMetrics[0]?.id ?? '');
   const [dimId, setDimId] = useState<string>(availableDims[0]?.id ?? '');
   const [stat, setStat] = useState<Stat>('avg');
-  const [render, setRender] = useState<'bar' | 'box'>('bar');
+  const [render, setRender] = useState<RenderMode>('bar');
 
   // Reset selections when mode changes to something that doesn't support them.
   const metric: PivotMetric = availableMetrics.find((m) => m.id === metricId) ?? availableMetrics[0];
@@ -162,6 +164,16 @@ export function Playground() {
 
   // Group dimensions for the picker.
   const dimGroups = useMemo(() => groupDims(availableDims), [availableDims]);
+
+  // Scatter only makes sense against a numeric X (weight, suit, etc.); fall
+  // back to bars if the user had scatter on and switched to a categorical dim.
+  const dimIsNumeric = dim?.group === 'Numeric';
+  const effRender: RenderMode = render === 'scatter' && !dimIsNumeric ? 'bar' : render;
+  // Linear fit for the scatter view (and its caption).
+  const scatterFit = useMemo(
+    () => (effRender === 'scatter' ? linearFit(scatterData(buckets)) : null),
+    [effRender, buckets],
+  );
 
   // One-tap question: set every knob at once. React batches these in the
   // event handler, so the pivot recomputes once with the full config.
@@ -329,8 +341,9 @@ export function Playground() {
         <PivotHelp
           metricLabel={metric?.label ?? 'the metric'}
           dimLabel={dim ? (DIM_GROUP_NOUN[dim.id] ?? dim.label) : 'group'}
+          rawDimLabel={dim?.label ?? 'group'}
           stat={stat}
-          render={render}
+          render={effRender}
           mode={mode}
         />
 
@@ -340,8 +353,14 @@ export function Playground() {
             {buckets.length > 0 && ` · ${buckets.length} bucket${buckets.length === 1 ? '' : 's'}`}
           </p>
           <div className="flex gap-2">
-            <Pill active={render === 'bar'} onClick={() => setRender('bar')}>Bars</Pill>
-            <Pill active={render === 'box'} onClick={() => setRender('box')}>Box plot</Pill>
+            <Pill active={effRender === 'bar'} onClick={() => setRender('bar')}>Bars</Pill>
+            <Pill active={effRender === 'box'} onClick={() => setRender('box')}>Box plot</Pill>
+            {dimIsNumeric && (
+              <Pill active={effRender === 'scatter'} onClick={() => setRender('scatter')}>
+                Scatter
+              </Pill>
+            )}
+            <Pill active={effRender === 'hist'} onClick={() => setRender('hist')}>Histogram</Pill>
           </div>
         </div>
 
@@ -350,13 +369,26 @@ export function Playground() {
             No data for this pivot. Try a different dimension or widen filters.
           </p>
         ) : (
-          <ReactECharts
-            option={render === 'bar'
-              ? buildBarOption(buckets, metric, dim, stat)
-              : buildBoxOption(buckets, metric, dim)}
-            style={{ height: 360 }}
-            notMerge
-          />
+          <>
+            <ReactECharts
+              option={
+                effRender === 'box'
+                  ? buildBoxOption(buckets, metric, dim)
+                  : effRender === 'scatter'
+                    ? buildScatterOption(buckets, metric, dim, scatterFit)
+                    : effRender === 'hist'
+                      ? buildHistogramOption(buckets, metric)
+                      : buildBarOption(buckets, metric, dim, stat)
+              }
+              style={{ height: 360 }}
+              notMerge
+            />
+            {effRender === 'scatter' && scatterFit && (
+              <p className="mt-1 text-center font-mono text-[11px] text-textDim">
+                {describeCorrelation(scatterFit.r)} · r = {scatterFit.r.toFixed(2)}
+              </p>
+            )}
+          </>
         )}
       </section>
     </div>
@@ -471,14 +503,16 @@ function softLower(label: string): string {
 function PivotHelp({
   metricLabel,
   dimLabel,
+  rawDimLabel,
   stat,
   render,
   mode,
 }: {
   metricLabel: string;
   dimLabel: string;
+  rawDimLabel: string;
   stat: Stat;
-  render: 'bar' | 'box';
+  render: RenderMode;
   mode: SessionMode;
 }) {
   const noun = mode === 'dry' ? 'sessions' : 'dives';
@@ -489,7 +523,22 @@ function PivotHelp({
   );
 
   let body: React.ReactNode;
-  if (render === 'box') {
+  if (render === 'scatter') {
+    body = (
+      <>
+        Each dot is one dive: <Em>{m}</Em> (vertical) against <Em>{softLower(rawDimLabel)}</Em>{' '}
+        (horizontal). The line is a linear fit, and the r below it shows how tightly they track
+        (±1 = perfect, 0 = none). The Stat toggle does not apply here.
+      </>
+    );
+  } else if (render === 'hist') {
+    body = (
+      <>
+        Each bar counts how many {noun} fall in a <Em>{m}</Em> range, across every group. It shows
+        the overall shape and spread of {m}; the dimension and Stat are ignored.
+      </>
+    );
+  } else if (render === 'box') {
     body = (
       <>
         Each box shows the <Em>spread</Em> of {m} across the {noun}, grouped by {d}: the line is
@@ -724,5 +773,179 @@ function buildBoxOption(
         itemStyle: { color: '#ff5f9e', opacity: 0.7 },
       },
     ],
+  };
+}
+
+// ── Scatter + histogram (reuse the bucketed pivot output) ────────────────────
+
+/** One (x, y) pair per dive: x = numeric value parsed from the bucket key
+ *  (e.g. "5 mm" -> 5), y = each metric value in that bucket. Categorical
+ *  buckets have no leading number and are skipped (scatter is numeric-only). */
+function scatterData(buckets: PivotBucket[]): [number, number][] {
+  const pts: [number, number][] = [];
+  for (const b of buckets) {
+    const m = b.key.match(/-?\d+(\.\d+)?/);
+    if (!m) continue;
+    const x = parseFloat(m[0]);
+    if (!Number.isFinite(x)) continue;
+    for (const y of b.points) pts.push([x, y]);
+  }
+  return pts;
+}
+
+function linearFit(
+  pts: [number, number][],
+): { slope: number; intercept: number; r: number } | null {
+  const n = pts.length;
+  if (n < 3) return null;
+  let sx = 0;
+  let sy = 0;
+  let sxx = 0;
+  let sxy = 0;
+  let syy = 0;
+  for (const [x, y] of pts) {
+    sx += x;
+    sy += y;
+    sxx += x * x;
+    sxy += x * y;
+    syy += y * y;
+  }
+  const dx = n * sxx - sx * sx;
+  if (dx === 0) return null;
+  const slope = (n * sxy - sx * sy) / dx;
+  const intercept = (sy - slope * sx) / n;
+  const dr = Math.sqrt(dx * (n * syy - sy * sy));
+  const r = dr === 0 ? 0 : (n * sxy - sx * sy) / dr;
+  return { slope, intercept, r };
+}
+
+function describeCorrelation(r: number): string {
+  const a = Math.abs(r);
+  if (a < 0.2) return 'No correlation';
+  const strength = a < 0.4 ? 'Weak' : a < 0.7 ? 'Moderate' : 'Strong';
+  return `${strength} ${r > 0 ? 'positive' : 'negative'} correlation`;
+}
+
+function buildScatterOption(
+  buckets: PivotBucket[],
+  metric: PivotMetric,
+  dim: PivotDimension,
+  fit: { slope: number; intercept: number; r: number } | null,
+) {
+  const pts = scatterData(buckets);
+  const xs = pts.map((p) => p[0]);
+  const minX = xs.length ? Math.min(...xs) : 0;
+  const maxX = xs.length ? Math.max(...xs) : 1;
+  const lineData = fit
+    ? [
+        [minX, fit.intercept + fit.slope * minX],
+        [maxX, fit.intercept + fit.slope * maxX],
+      ]
+    : [];
+  return {
+    grid: { left: 56, right: 16, top: 16, bottom: 56, containLabel: false },
+    animation: false,
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: COMMON.tooltipBg,
+      borderColor: COMMON.axisLine,
+      textStyle: { color: COMMON.text, fontFamily: COMMON.inter, fontSize: 12 },
+      formatter: (p: any) =>
+        `${dim.label}: ${p.data[0]}<br/>${metric.label}: <b>${fmt(p.data[1], metric.unit)}</b> ${metric.unit}`,
+    },
+    xAxis: {
+      type: 'value',
+      name: dim.label,
+      nameLocation: 'middle',
+      nameGap: 32,
+      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      axisLine: { lineStyle: { color: COMMON.axisLine } },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: COMMON.splitLine } },
+      axisLabel: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+    },
+    yAxis: {
+      type: 'value',
+      name: metric.unit,
+      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: COMMON.splitLine } },
+      axisLabel: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+    },
+    series: [
+      { type: 'scatter', data: pts, symbolSize: 7, itemStyle: { color: '#4fc3f7', opacity: 0.55 } },
+      ...(fit
+        ? [
+            {
+              type: 'line',
+              data: lineData,
+              showSymbol: false,
+              lineStyle: { color: '#ff5f9e', width: 2 },
+              tooltip: { show: false },
+            },
+          ]
+        : []),
+    ],
+  };
+}
+
+function buildHistogramOption(buckets: PivotBucket[], metric: PivotMetric) {
+  const values = buckets.flatMap((b) => b.points);
+  if (values.length === 0) {
+    return { xAxis: { type: 'category', data: [] }, yAxis: { type: 'value' }, series: [] };
+  }
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const binCount = Math.min(20, Math.max(6, Math.round(Math.sqrt(values.length))));
+  const width = (max - min) / binCount || 1;
+  const counts = new Array(binCount).fill(0);
+  for (const v of values) {
+    let idx = Math.floor((v - min) / width);
+    if (idx < 0) idx = 0;
+    if (idx >= binCount) idx = binCount - 1;
+    counts[idx] += 1;
+  }
+  const labels = counts.map((_, i) => fmt(min + i * width, metric.unit));
+  return {
+    grid: { left: 40, right: 16, top: 16, bottom: 48, containLabel: false },
+    animation: false,
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: COMMON.tooltipBg,
+      borderColor: COMMON.axisLine,
+      textStyle: { color: COMMON.text, fontFamily: COMMON.inter, fontSize: 12 },
+      formatter: (params: any) => {
+        const p = Array.isArray(params) ? params[0] : params;
+        const lo = min + p.dataIndex * width;
+        return `${fmt(lo, metric.unit)} to ${fmt(lo + width, metric.unit)} ${metric.unit}<br/><b>${p.value}</b> dive${p.value === 1 ? '' : 's'}`;
+      },
+    },
+    xAxis: {
+      type: 'category',
+      data: labels,
+      name: metric.unit,
+      nameLocation: 'middle',
+      nameGap: 30,
+      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      axisLine: { lineStyle: { color: COMMON.axisLine } },
+      axisTick: { show: false },
+      axisLabel: {
+        color: COMMON.textDim,
+        fontFamily: COMMON.mono,
+        fontSize: 9,
+        interval: Math.max(0, Math.floor(binCount / 8)),
+      },
+    },
+    yAxis: {
+      type: 'value',
+      name: 'dives',
+      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: COMMON.splitLine } },
+      axisLabel: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+    },
+    series: [{ type: 'bar', data: counts, itemStyle: { color: '#4fc3f7' }, barWidth: '98%' }],
   };
 }
