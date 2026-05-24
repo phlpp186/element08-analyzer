@@ -144,6 +144,78 @@ function computeStat(points: number[], stat: Stat): number {
   return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
 }
 
+/** Order a set of bucket keys the same way pivot() does: explicit dim.order,
+ *  then numeric leading value, else alphabetical. */
+function orderKeys(keys: string[], dim: PivotDimension): string[] {
+  const arr = [...new Set(keys)];
+  if (dim.order) {
+    const idx = new Map(dim.order.map((k, i) => [k, i] as const));
+    return arr.sort((a, b) => (idx.get(a) ?? 999) - (idx.get(b) ?? 999));
+  }
+  if (dim.sortBy === 'numeric') return arr.sort((a, b) => leadingNumber(a) - leadingNumber(b));
+  return arr.sort((a, b) => a.localeCompare(b));
+}
+
+// ── 2-D pivot (heatmap) ───────────────────────────────────────────────────────
+
+export interface Pivot2DResult {
+  xKeys: string[];
+  yKeys: string[];
+  /** One cell per occupied (xKeys[x], yKeys[y]) pair. */
+  cells: { x: number; y: number; value: number; n: number }[];
+}
+
+/**
+ * Cross-cut a metric by two dimensions: a stat per (dim1 × dim2) cell. Powers
+ * the heatmap. Same per-item gating and key ordering as the 1-D pivot.
+ */
+export function pivot2d(
+  items: PivotItem[],
+  dim1: PivotDimension,
+  dim2: PivotDimension,
+  metric: PivotMetric,
+  stat: Stat,
+): Pivot2DResult {
+  const acc = new Map<string, number[]>();
+  const k1all: string[] = [];
+  const k2all: string[] = [];
+  for (const it of items) {
+    if (metric.modes.length > 0 && !metric.modes.includes(it.mode)) continue;
+    if (dim1.modes.length > 0 && !dim1.modes.includes(it.mode)) continue;
+    if (dim2.modes.length > 0 && !dim2.modes.includes(it.mode)) continue;
+    const k1 = dim1.extract(it);
+    const k2 = dim2.extract(it);
+    if (k1 == null || k2 == null) continue;
+    const v = metric.extract(it);
+    if (v == null) continue;
+    const key = `${k1}\u0000${k2}`;
+    const list = acc.get(key) ?? [];
+    list.push(v);
+    acc.set(key, list);
+    k1all.push(k1);
+    k2all.push(k2);
+  }
+
+  const xKeys = orderKeys(k1all, dim1);
+  const yKeys = orderKeys(k2all, dim2);
+  const xIdx = new Map(xKeys.map((k, i) => [k, i] as const));
+  const yIdx = new Map(yKeys.map((k, i) => [k, i] as const));
+
+  const cells: Pivot2DResult['cells'] = [];
+  for (const [key, vals] of acc.entries()) {
+    const sep = key.indexOf('\u0000');
+    const k1 = key.slice(0, sep);
+    const k2 = key.slice(sep + 1);
+    cells.push({
+      x: xIdx.get(k1) ?? 0,
+      y: yIdx.get(k2) ?? 0,
+      value: computeStat(vals, stat),
+      n: vals.length,
+    });
+  }
+  return { xKeys, yKeys, cells };
+}
+
 // ── Metrics ─────────────────────────────────────────────────────────────────
 
 const num = (v: unknown): number | null =>
