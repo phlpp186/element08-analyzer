@@ -31,6 +31,7 @@ import {
   disciplineProgression,
   type BandStep,
 } from '../lib/analytics/depthInsights';
+import { earlyTurnStats, mouthfillStats } from '../lib/analytics/technique';
 import { poolPaceProgression } from '../lib/analytics/poolPace';
 import { poolHrPerDive } from '../lib/analytics/poolHr';
 import { poolSessionTypeMix } from '../lib/analytics/poolSessionTypes';
@@ -62,6 +63,8 @@ import { ContractionsPerBandChart } from '../components/charts/ContractionsPerBa
 import { RecoveryTimeChart } from '../components/charts/RecoveryTimeChart';
 import { DiveReflexFirstMinuteChart } from '../components/charts/DiveReflexFirstMinuteChart';
 import { HrAroundContractionsChart } from '../components/charts/HrAroundContractionsChart';
+import { EarlyTurnCard } from '../components/charts/EarlyTurnCard';
+import { MouthfillCard } from '../components/charts/MouthfillCard';
 
 type Tab = 'breathhold' | 'depth' | 'pool' | 'balance';
 
@@ -98,6 +101,8 @@ export function Insights() {
   );
   const hangStats = useMemo(() => hangTimeDistribution(sessions), [sessions]);
   const progression = useMemo(() => disciplineProgression(sessions), [sessions]);
+  const earlyTurn = useMemo(() => earlyTurnStats(sessions), [sessions]);
+  const mouthfill = useMemo(() => mouthfillStats(sessions), [sessions]);
   const poolPace = useMemo(() => poolPaceProgression(sessions), [sessions]);
   const poolHr = useMemo(() => poolHrPerDive(sessions), [sessions]);
   const poolTypeMix = useMemo(() => poolSessionTypeMix(sessions), [sessions]);
@@ -179,6 +184,8 @@ export function Insights() {
             />
             <HangTimeDistributionChart stats={hangStats} />
             <DisciplineProgressionChart series={progression} />
+            <EarlyTurnCard stats={earlyTurn} />
+            <MouthfillCard stats={mouthfill} />
           </>
         )}
 
