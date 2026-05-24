@@ -76,6 +76,7 @@ const poolSessionSchema = z
     ...baseSessionShape,
     mode: z.literal('pool'),
     totalDistance: z.number(),
+    location: z.string().optional(),
     poolType: z.enum(['25m', '50m', '-']).optional(),
     dives: z.array(z.object({}).passthrough()).optional(),
   })

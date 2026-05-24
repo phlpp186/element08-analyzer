@@ -230,6 +230,9 @@ export function SessionList() {
 function SessionRow({ session }: { session: ParsedSession }) {
   const notes = collectDiveNotes(session);
   const hasNotes = !!session.remarks?.trim() || notes.length > 0;
+  // Location is set on depth/pool sessions (imported GPS name or manual);
+  // dry sessions never have one. Cast keeps the union access simple.
+  const location = (session as { location?: string | null }).location?.trim();
 
   return (
     <li className="overflow-hidden rounded-lg border border-border bg-panel">
@@ -252,6 +255,9 @@ function SessionRow({ session }: { session: ParsedSession }) {
           <span className="truncate font-heading text-base tracking-wide text-text">
             {session.name || 'Untitled session'}
           </span>
+          {location && (
+            <span className="font-mono text-xs text-textDim">📍 {location}</span>
+          )}
           {session.rating != null && (
             <span className="ml-auto font-mono text-xs text-textDim">
               ★ {session.rating}/5
