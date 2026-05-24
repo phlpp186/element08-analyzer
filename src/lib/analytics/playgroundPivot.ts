@@ -149,6 +149,16 @@ function computeStat(points: number[], stat: Stat): number {
 const num = (v: unknown): number | null =>
   typeof v === 'number' && Number.isFinite(v) ? v : null;
 
+/** Mouthfill factor + reach from a depth dive's logged charge depth, or null
+ *  when the charge depth is missing or not between 0 and max depth. */
+const mfFromDive = (i: PivotItem): { factor: number; reach: number } | null => {
+  const d = i.dive as { depth?: number; mfChargeDepth?: number } | undefined;
+  if (!d || typeof d.depth !== 'number' || typeof d.mfChargeDepth !== 'number') return null;
+  const c = d.mfChargeDepth;
+  if (c <= 0 || c >= d.depth) return null;
+  return { factor: (d.depth / 10 + 1) / (c / 10 + 1), reach: d.depth - c };
+};
+
 export const PIVOT_METRICS: PivotMetric[] = [
   // ─ Per-dive (depth) ─
   { id: 'depth.maxDepth',     label: 'Max depth',     unit: 'm',   modes: ['depth'],
@@ -163,6 +173,10 @@ export const PIVOT_METRICS: PivotMetric[] = [
     extract: (i) => i.dive ? num((i.dive as { hangTime?: number }).hangTime) : null },
   { id: 'depth.avgHr',        label: 'Avg HR',        unit: 'bpm', modes: ['depth'],
     extract: (i) => i.dive ? num((i.dive as { hr?: number }).hr) : null },
+  { id: 'depth.mfFactor',     label: 'Mouthfill factor', unit: '×', modes: ['depth'],
+    extract: (i) => mfFromDive(i)?.factor ?? null },
+  { id: 'depth.mfReach',      label: 'Mouthfill reach',  unit: 'm', modes: ['depth'],
+    extract: (i) => mfFromDive(i)?.reach ?? null },
 
   // ─ Per-dive (pool) ─
   { id: 'pool.distance', label: 'Distance', unit: 'm', modes: ['pool'],
@@ -334,7 +348,48 @@ export const PIVOT_DIMENSIONS: PivotDimension[] = [
   chipDim('cond.thermocline', 'Thermocline', ['depth'], 'Conditions', 'thermocline', 'dive'),
   chipDim('cond.eq',          'Equalization',['depth'], 'Conditions', 'eq',          'dive'),
   chipDim('cond.pace',        'Pace',        ['depth'], 'Conditions', 'pace',        'dive'),
-  chipDim('cond.earlyTurn',   'Early turn',  ['depth'], 'Conditions', 'earlyTurn',   'dive'),
+  // Early turn was promoted from advanced.earlyTurn to a top-level dive
+  // field; read the new location first so modern dives bucket correctly,
+  // falling back to the legacy spot for old data.
+  {
+    id: 'cond.earlyTurn',
+    label: 'Early turn',
+    group: 'Conditions',
+    modes: ['depth'],
+    extract: (i) => {
+      const d = i.dive as
+        | { earlyTurn?: boolean; advanced?: { earlyTurn?: boolean } }
+        | undefined;
+      if (!d) return null;
+      const v = d.earlyTurn ?? d.advanced?.earlyTurn;
+      if (v === true) return 'Early turn';
+      if (v === false) return 'Hit target';
+      return null;
+    },
+    order: ['Hit target', 'Early turn'],
+  },
+  {
+    id: 'cond.earlyTurnReason',
+    label: 'Early-turn reason',
+    group: 'Conditions',
+    modes: ['depth'],
+    extract: (i) => {
+      const d = i.dive as
+        | { earlyTurnReason?: string; advanced?: { earlyTurnReason?: string } }
+        | undefined;
+      const v = d?.earlyTurnReason ?? d?.advanced?.earlyTurnReason ?? null;
+      if (!v) return null;
+      const MAP: Record<string, string> = {
+        squeeze: 'Squeeze',
+        eq: 'Equalization',
+        hypoxia: 'Hypoxia',
+        mental: 'Mental',
+        'time-safety': 'Time/safety',
+      };
+      return MAP[v] ?? v;
+    },
+    order: ['Squeeze', 'Equalization', 'Hypoxia', 'Mental', 'Time/safety'],
+  },
 
   // ─ Conditions (Pool) ─
   chipDim('cond.poolNoise', 'Pool noise',  ['pool'], 'Conditions', 'noise',  'dive'),
@@ -365,4 +420,6 @@ export const DIM_GROUP_NOUN: Record<string, string> = {
   'cond.eq': 'equalization efficiency',
   'cond.poolNoise': 'pool noise level',
   'cond.poolGlides': 'glide quality',
+  'cond.earlyTurn': 'early-turn outcome',
+  'cond.earlyTurnReason': 'early-turn reason',
 };

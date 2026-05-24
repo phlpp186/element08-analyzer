@@ -66,6 +66,38 @@ const STATS: { id: Stat; label: string }[] = [
   { id: 'count',  label: 'Count' },
 ];
 
+/**
+ * Curated questions that pre-fill the pivot in one tap. Each maps a plain
+ * question to a {mode, metric, dimension, stat, render} config — the same
+ * knobs the user could set by hand. Add freely; metric/dim ids must be valid
+ * for the question's mode (see PIVOT_METRICS / PIVOT_DIMENSIONS).
+ */
+interface QuestionPreset {
+  q: string;
+  mode: SessionMode;
+  metric: string;
+  dim: string;
+  stat: Stat;
+  render?: 'bar' | 'box';
+}
+
+const QUESTIONS: QuestionPreset[] = [
+  // ─ Depth ─
+  { q: 'Does my mouthfill change with suit thickness?', mode: 'depth', metric: 'depth.mfFactor', dim: 'num.suitMm', stat: 'avg' },
+  { q: 'Do waves affect my mouthfill?', mode: 'depth', metric: 'depth.mfFactor', dim: 'cond.waves', stat: 'avg' },
+  { q: 'Does a weaker mouthfill go with turning early?', mode: 'depth', metric: 'depth.mfFactor', dim: 'cond.earlyTurn', stat: 'avg' },
+  { q: 'How deep do I get for each early-turn reason?', mode: 'depth', metric: 'depth.maxDepth', dim: 'cond.earlyTurnReason', stat: 'avg' },
+  { q: 'Which discipline do I go deepest in?', mode: 'depth', metric: 'depth.maxDepth', dim: 'mode.discipline', stat: 'max' },
+  { q: 'Does extra weight change my descent speed?', mode: 'depth', metric: 'depth.descentSpeed', dim: 'num.weightKg', stat: 'avg' },
+  { q: 'How does my dive time spread by discipline?', mode: 'depth', metric: 'depth.diveTime', dim: 'mode.discipline', stat: 'avg', render: 'box' },
+  // ─ Pool ─
+  { q: 'Which pool length gives my best distance?', mode: 'pool', metric: 'pool.distance', dim: 'mode.poolType', stat: 'max' },
+  { q: 'How does my pace vary by discipline?', mode: 'pool', metric: 'pool.pace100', dim: 'mode.discipline', stat: 'avg' },
+  // ─ Dry ─
+  { q: 'Which session type gives my longest holds?', mode: 'dry', metric: 'dry.longestHold', dim: 'mode.sessionTag', stat: 'max' },
+  { q: 'Does relaxation affect my hold length?', mode: 'dry', metric: 'dry.longestHold', dim: 'body.relaxation', stat: 'avg' },
+];
+
 function todayIso(): string { return isoDate(new Date()); }
 function isoDate(d: Date): string {
   const y = d.getFullYear();
@@ -131,6 +163,16 @@ export function Playground() {
   // Group dimensions for the picker.
   const dimGroups = useMemo(() => groupDims(availableDims), [availableDims]);
 
+  // One-tap question: set every knob at once. React batches these in the
+  // event handler, so the pivot recomputes once with the full config.
+  function applyPreset(p: QuestionPreset) {
+    setMode(p.mode);
+    setMetricId(p.metric);
+    setDimId(p.dim);
+    setStat(p.stat);
+    setRender(p.render ?? 'bar');
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
@@ -149,6 +191,27 @@ export function Playground() {
           ← back to sessions
         </Link>
       </header>
+
+      {/* Starter questions — one tap fills the pivot below. */}
+      <section className="mb-5 rounded-lg border border-border bg-panel p-5">
+        <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-textDim">
+          Starter questions
+        </div>
+        <p className="mb-3 text-sm text-textDim">
+          Tap a question to fill in the pivot below, then tweak it or build your own.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {QUESTIONS.map((qp) => (
+            <button
+              key={qp.q}
+              onClick={() => applyPreset(qp)}
+              className="rounded-full border border-border px-3 py-1.5 text-sm text-textDim transition-colors hover:border-accent hover:text-accent"
+            >
+              {qp.q}
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Filters */}
       <section className="space-y-5 rounded-lg border border-border bg-panel p-5">
@@ -487,6 +550,7 @@ function fmt(v: number, unit: string): string {
     const sec = Math.round(v % 60);
     return m > 0 ? `${m}:${String(sec).padStart(2, '0')}` : `${sec}s`;
   }
+  if (unit === '×') return v.toFixed(2);
   if (unit === 'm/s' || unit === 'bpm' || unit === 'm') return v.toFixed(1).replace(/\.0$/, '');
   return String(Math.round(v));
 }
