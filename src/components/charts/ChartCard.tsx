@@ -27,7 +27,7 @@ export function ChartCard({ title, description, children, controls }: Props) {
     ) : null;
 
   return (
-    <section className="rounded-lg border border-border bg-panel p-5">
+    <section className="glass-card rounded-lg p-5">
       <header className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 className="font-heading text-sm uppercase tracking-[0.2em] text-text">

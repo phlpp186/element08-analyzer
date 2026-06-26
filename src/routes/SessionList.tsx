@@ -235,7 +235,7 @@ function SessionRow({ session }: { session: ParsedSession }) {
   const location = (session as { location?: string | null }).location?.trim();
 
   return (
-    <li className="overflow-hidden rounded-lg border border-border bg-panel">
+    <li className="glass-card overflow-hidden rounded-lg">
       <Link
         to={`/session/${session.id}`}
         className="block px-4 py-3 transition-colors hover:bg-abyss"

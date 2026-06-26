@@ -208,7 +208,7 @@ function DryOpenPlayer({ sessionId }: { sessionId: number }) {
       </p>
       <Link
         to={`/session/${sessionId}/dry`}
-        className="mt-4 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 font-mono text-xs uppercase tracking-widest text-deep hover:opacity-90"
+        className="glow-accent mt-4 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 font-mono text-xs uppercase tracking-widest text-ink hover:opacity-95"
       >
         Open timeline player →
       </Link>

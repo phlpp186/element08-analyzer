@@ -72,7 +72,7 @@ export function CloudLogin({ onLoaded }: Props) {
   // Signed in: offer to load (or reload) the cloud logbook.
   if (session) {
     return (
-      <div className="w-full max-w-2xl rounded-lg border border-border bg-panel p-5">
+      <div className="glass-card w-full max-w-2xl rounded-lg p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-textDim">
             Signed in as <span className="text-text">{session.user.email}</span>
@@ -87,7 +87,7 @@ export function CloudLogin({ onLoaded }: Props) {
         <button
           onClick={loadMyData}
           disabled={busy}
-          className="mt-4 w-full rounded-md bg-accent px-6 py-3 font-mono text-xs uppercase tracking-widest text-ink transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="glow-accent mt-4 w-full rounded-md bg-accent px-6 py-3 font-mono text-xs uppercase tracking-widest text-ink hover:opacity-95 disabled:opacity-60"
         >
           {busy ? 'Loading your logbook…' : 'Load my logbook'}
         </button>
@@ -107,7 +107,7 @@ export function CloudLogin({ onLoaded }: Props) {
 
   // Signed out: email / password form.
   return (
-    <form onSubmit={submit} className="w-full max-w-2xl rounded-lg border border-border bg-panel p-5">
+    <form onSubmit={submit} className="glass-card w-full max-w-2xl rounded-lg p-5">
       <p className="mb-4 text-center font-heading text-lg tracking-wide text-text">
         Sign in to load your logbook
       </p>
@@ -131,7 +131,7 @@ export function CloudLogin({ onLoaded }: Props) {
         <button
           type="submit"
           disabled={busy || !email || !password}
-          className="rounded-md bg-accent px-6 py-2 font-mono text-xs uppercase tracking-widest text-ink transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="glow-accent rounded-md bg-accent px-6 py-2 font-mono text-xs uppercase tracking-widest text-ink hover:opacity-95 disabled:opacity-60"
         >
           {busy ? '…' : mode === 'in' ? 'Sign in' : 'Create'}
         </button>

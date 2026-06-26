@@ -10,9 +10,9 @@
       // chosen light theme.
       (function () {
         try {
-          if (localStorage.getItem('element08.theme') === 'light') {
-            document.documentElement.classList.add('light');
-          }
+          var t = localStorage.getItem('element08.theme');
+          if (t === 'light') document.documentElement.classList.add('light');
+          else if (t === 'neon') document.documentElement.classList.add('neon');
         } catch (e) { /* localStorage blocked, stay on default */ }
       })();
     </script>

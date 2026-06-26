@@ -8,7 +8,10 @@
  */
 import { create } from 'zustand';
 
-export type ThemeMode = 'dark' | 'light';
+export type ThemeMode = 'dark' | 'light' | 'neon';
+
+/** Cycle order for the toggle: Dark → Light → Neon → Dark. */
+const ORDER: ThemeMode[] = ['dark', 'light', 'neon'];
 
 const STORAGE_KEY = 'element08.theme';
 
@@ -16,10 +19,12 @@ function readInitial(): ThemeMode {
   if (typeof document === 'undefined') return 'dark';
   // Honour whatever the FOUC-prevention script in index.html set, falling
   // back to a fresh localStorage read.
-  if (document.documentElement.classList.contains('light')) return 'light';
+  const cls = document.documentElement.classList;
+  if (cls.contains('light')) return 'light';
+  if (cls.contains('neon')) return 'neon';
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'light' || stored === 'dark') return stored;
+    if (stored === 'light' || stored === 'dark' || stored === 'neon') return stored;
   } catch {
     /* localStorage blocked — stay on default */
   }
@@ -28,7 +33,9 @@ function readInitial(): ThemeMode {
 
 function applyClass(theme: ThemeMode) {
   if (typeof document === 'undefined') return;
-  document.documentElement.classList.toggle('light', theme === 'light');
+  const cls = document.documentElement.classList;
+  cls.toggle('light', theme === 'light');
+  cls.toggle('neon', theme === 'neon');
 }
 
 interface ThemeState {
@@ -45,7 +52,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set({ theme });
   },
   toggle: () => {
-    const next: ThemeMode = get().theme === 'light' ? 'dark' : 'light';
+    const next = ORDER[(ORDER.indexOf(get().theme) + 1) % ORDER.length];
     applyClass(next);
     try { localStorage.setItem(STORAGE_KEY, next); } catch { /* blocked */ }
     set({ theme: next });
