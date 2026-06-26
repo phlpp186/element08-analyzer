@@ -113,15 +113,6 @@ export function Landing() {
           ← continue with {currentFilename}
         </button>
       )}
-
-      <footer className="mt-auto pt-12 text-xs text-textDim">
-        <a
-          href="https://element08.io"
-          className="underline-offset-4 hover:underline"
-        >
-          element08.io
-        </a>
-      </footer>
     </div>
   );
 }

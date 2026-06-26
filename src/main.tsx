@@ -13,6 +13,7 @@ import { CompareSeasons } from './routes/CompareSeasons';
 import { CompareDives } from './routes/CompareDives';
 import { Playground } from './routes/Playground';
 import { ThemeToggle } from './components/ThemeToggle';
+import { AppFooter } from './components/AppFooter';
 import { AuthProvider } from './lib/supabase/AuthProvider';
 
 createRoot(document.getElementById('root')!).render(
@@ -33,6 +34,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/compare/dives" element={<CompareDives />} />
         <Route path="/playground" element={<Playground />} />
       </Routes>
+      <AppFooter />
     </BrowserRouter>
     </AuthProvider>
   </StrictMode>,
