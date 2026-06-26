@@ -17,6 +17,8 @@
   --c-recover:   102 187 106;
   --c-amber:     255 167 38;
   --c-red:       239 83 80;
+  /* Text on an accent fill — always dark (accent is a light cyan in both modes). */
+  --c-ink:       11 15 18;
   color-scheme: dark;
 }
 
@@ -33,6 +35,7 @@
   --c-recover:   61 201 107;
   --c-amber:     240 165 0;
   --c-red:       232 67 147;
+  --c-ink:       11 15 18;
   color-scheme: light;
 }
 

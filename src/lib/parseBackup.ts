@@ -27,6 +27,15 @@ export function parseBackupText(text: string): ParsedBackup {
   } catch {
     throw new Error('File is not valid JSON.');
   }
+  return parseBackupObject(json);
+}
+
+/**
+ * Validate an already-parsed JSON value (e.g. the `account_backups.payload`
+ * jsonb pulled from the cloud) into a ParsedBackup. Same validation as a
+ * dropped file, minus the JSON.parse step.
+ */
+export function parseBackupObject(json: unknown): ParsedBackup {
   const result = backupFileSchema.safeParse(json);
   if (!result.success) {
     // Surface the FIRST issue with its path. Most validation failures stem

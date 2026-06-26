@@ -15,6 +15,7 @@ export default {
         text:      'rgb(var(--c-text) / <alpha-value>)',
         textDim:   'rgb(var(--c-textDim) / <alpha-value>)',
         accent:    'rgb(var(--c-accent) / <alpha-value>)',
+        ink:       'rgb(var(--c-ink) / <alpha-value>)',
         highlight: 'rgb(var(--c-highlight) / <alpha-value>)',
         recover:   'rgb(var(--c-recover) / <alpha-value>)',
         amber:     'rgb(var(--c-amber) / <alpha-value>)',

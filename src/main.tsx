@@ -13,9 +13,11 @@ import { CompareSeasons } from './routes/CompareSeasons';
 import { CompareDives } from './routes/CompareDives';
 import { Playground } from './routes/Playground';
 import { ThemeToggle } from './components/ThemeToggle';
+import { AuthProvider } from './lib/supabase/AuthProvider';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <AuthProvider>
     <ThemeToggle />
     <BrowserRouter>
       <Routes>
@@ -32,5 +34,6 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/playground" element={<Playground />} />
       </Routes>
     </BrowserRouter>
+    </AuthProvider>
   </StrictMode>,
 );

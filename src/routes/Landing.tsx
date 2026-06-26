@@ -13,6 +13,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DropZone } from '../components/DropZone';
+import { CloudLogin } from '../components/CloudLogin';
 import { useBackupStore } from '../stores/useBackupStore';
 import { parseBackupText } from '../lib/parseBackup';
 import type { ParsedBackup } from '../schema/backup';
@@ -57,7 +58,19 @@ export function Landing() {
         </p>
       </header>
 
-      <DropZone onLoaded={onLoaded} />
+      <CloudLogin onLoaded={onLoaded} />
+
+      <div className="mt-6 flex w-full max-w-2xl items-center gap-4">
+        <span className="h-px flex-1 bg-border" />
+        <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
+          or drop a file
+        </span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
+      <div className="mt-6 w-full max-w-2xl">
+        <DropZone onLoaded={onLoaded} />
+      </div>
 
       <div className="mt-6 flex w-full max-w-2xl items-center gap-4">
         <span className="h-px flex-1 bg-border" />
@@ -87,8 +100,9 @@ export function Landing() {
       )}
 
       <p className="mt-8 max-w-md text-center text-sm text-textDim">
-        Your data never leaves this browser. The file you drop is parsed
-        locally; nothing is uploaded.
+        Your data stays in this browser. A dropped file is parsed locally, and
+        signing in only downloads your own cloud backup. Nothing you load here
+        is ever uploaded or shared.
       </p>
 
       {currentFilename && (
