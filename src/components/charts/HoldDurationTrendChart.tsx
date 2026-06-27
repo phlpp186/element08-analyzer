@@ -6,6 +6,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { HoldDurationSeries } from '../../lib/analytics/holdTrends';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -20,14 +21,15 @@ function fmtSec(s: number): string {
 
 export function HoldDurationTrendChart({ series }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (series.length === 0) {
     return (
       <ChartCard
-        title="Hold Duration Trend"
-        description="Longest Hold per dry session, over time."
+        title={t('Hold Duration Trend')}
+        description={t('Longest Hold per dry session, over time.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No tagged dry sessions in this backup yet.
+          {t('No tagged dry sessions in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -99,8 +101,8 @@ export function HoldDurationTrendChart({ series }: Props) {
 
   return (
     <ChartCard
-      title="Hold Duration Trend"
-      description="Longest hold per dry session, over time, grouped by session tag. Climbing pb_attempt = progress."
+      title={t('Hold Duration Trend')}
+      description={t('Longest hold per dry session, over time, grouped by session tag. Climbing pb_attempt = progress.')}
     >
       <ReactECharts option={option} style={{ height: 240 }} notMerge />
     </ChartCard>

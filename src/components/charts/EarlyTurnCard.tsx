@@ -5,6 +5,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { EarlyTurnStats } from '../../lib/analytics/technique';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -13,23 +14,24 @@ interface Props {
 
 export function EarlyTurnCard({ stats }: Props) {
   const ct = useChartTheme();
+  const t = useT();
 
   if (stats.loggedTotal === 0) {
     return (
       <ChartCard
-        title="Early Turns"
-        description="How often you turn before your target depth, and why."
+        title={t('Early Turns')}
+        description={t('How often you turn before your target depth, and why.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No early-turn data logged yet. Mark dives as early turns in the app to see this.
+          {t('No early-turn data logged yet. Mark dives as early turns in the app to see this.')}
         </p>
       </ChartCard>
     );
   }
 
   const description =
-    `${stats.earlyCount} of ${stats.loggedTotal} logged dives turned early (${stats.earlyPct}%).` +
-    (stats.loggedTotal < 5 ? ' Log more for stronger trends.' : '');
+    `${stats.earlyCount} ${t('of')} ${stats.loggedTotal} ${t('logged dives turned early')} (${stats.earlyPct}%).` +
+    (stats.loggedTotal < 5 ? ' ' + t('Log more for stronger trends.') : '');
 
   const reasonOption = {
     grid: { left: 96, right: 24, top: 8, bottom: 8, containLabel: false },
@@ -40,7 +42,7 @@ export function EarlyTurnCard({ stats }: Props) {
       textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
-        return `${p.name}<br/>${p.value} early turn${p.value === 1 ? '' : 's'}`;
+        return `${p.name}<br/>${p.value} ${p.value === 1 ? t('early turn') : t('early turns')}`;
       },
     },
     xAxis: {
@@ -77,18 +79,18 @@ export function EarlyTurnCard({ stats }: Props) {
   };
 
   return (
-    <ChartCard title="Early Turns" description={description}>
+    <ChartCard title={t('Early Turns')} description={description}>
       {/* Headline stats */}
       <div className="mb-4 flex items-stretch rounded-md border border-border bg-deep">
-        <Stat value={String(stats.earlyCount)} label="EARLY TURNS" color="text-accent" />
+        <Stat value={String(stats.earlyCount)} label={t('EARLY TURNS')} color="text-accent" />
         <Divider />
-        <Stat value={String(stats.hitCount)} label="HIT TARGET" color="text-text" />
+        <Stat value={String(stats.hitCount)} label={t('HIT TARGET')} color="text-text" />
         {stats.shortfall.count > 0 && (
           <>
             <Divider />
             <Stat
               value={`${stats.shortfall.avg.toFixed(1)}m`}
-              label="AVG SHORTFALL"
+              label={t('AVG SHORTFALL')}
               color="text-textDim"
             />
           </>
@@ -98,7 +100,7 @@ export function EarlyTurnCard({ stats }: Props) {
       {stats.reasons.length > 0 ? (
         <>
           <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-textDim">
-            By reason
+            {t('By reason')}
           </p>
           <ReactECharts
             option={reasonOption}
@@ -107,14 +109,14 @@ export function EarlyTurnCard({ stats }: Props) {
           />
         </>
       ) : (
-        <p className="text-sm text-textDim">No reason logged on the early turns yet.</p>
+        <p className="text-sm text-textDim">{t('No reason logged on the early turns yet.')}</p>
       )}
 
       {stats.shortfall.count > 0 && (
         <p className="mt-3 text-sm text-textDim">
-          Worst shortfall: {stats.shortfall.worst.toFixed(1)} m short of target
+          {t('Worst shortfall:')} {stats.shortfall.worst.toFixed(1)} {t('m short of target')}
           {stats.shortfall.count < stats.earlyCount &&
-            ` · target logged on ${stats.shortfall.count}/${stats.earlyCount} early turns`}
+            ` · ${t('target logged on')} ${stats.shortfall.count}/${stats.earlyCount} ${t('early turns')}`}
           .
         </p>
       )}

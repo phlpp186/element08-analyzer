@@ -8,6 +8,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { MouthfillStats } from '../../lib/analytics/technique';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -16,21 +17,22 @@ interface Props {
 
 export function MouthfillCard({ stats }: Props) {
   const ct = useChartTheme();
+  const t = useT();
 
   if (stats.count === 0) {
     return (
       <ChartCard
-        title="Mouthfill"
-        description="Mouthfill factor and how consistent your charge depth is."
+        title={t('Mouthfill')}
+        description={t('Mouthfill factor and how consistent your charge depth is.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No mouthfill charge depths logged yet. Add a charge depth to dives in the app to see this.
+          {t('No mouthfill charge depths logged yet. Add a charge depth to dives in the app to see this.')}
         </p>
       </ChartCard>
     );
   }
 
-  const description = `${stats.count} dive${stats.count === 1 ? '' : 's'} with a logged mouthfill · avg factor ${stats.avgFactor.toFixed(2)}× · avg reach ${stats.avgReachM.toFixed(1)} m.`;
+  const description = `${stats.count} ${stats.count === 1 ? t('dive with a logged mouthfill') : t('dives with a logged mouthfill')} · ${t('avg factor')} ${stats.avgFactor.toFixed(2)}× · ${t('avg reach')} ${stats.avgReachM.toFixed(1)} m.`;
 
   const option = {
     grid: { left: 40, right: 16, top: 16, bottom: 36, containLabel: false },
@@ -43,8 +45,8 @@ export function MouthfillCard({ stats }: Props) {
         const p = Array.isArray(params) ? params[0] : params;
         const b = stats.brackets[p.dataIndex];
         return (
-          `Charge ~${b.bracketM} m<br/>` +
-          `mean factor <b>${b.mean.toFixed(2)}×</b><br/>` +
+          `${t('Charge')} ~${b.bracketM} m<br/>` +
+          `${t('mean factor')} <b>${b.mean.toFixed(2)}×</b><br/>` +
           `σ ${b.stdev.toFixed(2)} · n = ${b.count}`
         );
       },
@@ -52,7 +54,7 @@ export function MouthfillCard({ stats }: Props) {
     xAxis: {
       type: 'category',
       data: stats.brackets.map((b) => `${b.bracketM} m`),
-      name: 'charge depth',
+      name: t('charge depth'),
       nameLocation: 'middle',
       nameGap: 26,
       nameTextStyle: { color: ct.textDim, fontFamily: 'JetBrains Mono, monospace', fontSize: 10 },
@@ -62,7 +64,7 @@ export function MouthfillCard({ stats }: Props) {
     },
     yAxis: {
       type: 'value',
-      name: 'MF factor',
+      name: t('MF factor'),
       nameTextStyle: { color: ct.textDim, fontFamily: 'JetBrains Mono, monospace', fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
@@ -88,11 +90,10 @@ export function MouthfillCard({ stats }: Props) {
   };
 
   return (
-    <ChartCard title="Mouthfill" description={description}>
+    <ChartCard title={t('Mouthfill')} description={description}>
       <ReactECharts option={option} style={{ height: 300 }} notMerge />
       <p className="mt-2 text-xs text-textDim">
-        Factor = bottom pressure ÷ charge pressure. Lower σ within a bracket means a more
-        repeatable charge depth.
+        {t('Factor = bottom pressure ÷ charge pressure. Lower σ within a bracket means a more repeatable charge depth.')}
       </p>
     </ChartCard>
   );

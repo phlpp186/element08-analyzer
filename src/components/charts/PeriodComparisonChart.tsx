@@ -9,6 +9,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { AggregatedSeries, MetricDef } from '../../lib/analytics/periodCompare';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 
 interface Props {
   series: AggregatedSeries[];
@@ -18,6 +19,7 @@ interface Props {
 
 export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   const hasData = series.some((s) => s.points.some((v) => v != null && v > 0));
 
   if (series.length === 0 || !hasData) {
@@ -25,8 +27,8 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
       <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-16 text-center">
         <p className="text-textDim">
           {series.length === 0
-            ? 'Add at least one period above to see a comparison.'
-            : 'No sessions fall inside the configured period(s) for this metric.'}
+            ? t('Add at least one period above to see a comparison.')
+            : t('No sessions fall inside the configured period(s) for this metric.')}
         </p>
       </div>
     );
@@ -58,7 +60,7 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
         // number — so a `=== 0` check would never match. Detect the anchor
         // by its string label, and append "before" for the other ticks
         // (which already carry their own "w" suffix).
-        const wkLabel = wk === 'target' ? 'target week' : `${wk} before`;
+        const wkLabel = wk === 'target' ? t('target week') : `${wk} ${t('before')}`;
         return `<div style="font-weight:600;margin-bottom:4px">${wkLabel}</div>${lines.join('<br/>')}`;
       },
     },

@@ -9,6 +9,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { BandStep, SpeedBand } from '../../lib/analytics/depthInsights';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -22,17 +23,18 @@ const ASCENT_COLOR = '#ef5350'; // red
 
 export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   const controls = <StepPills value={step} onChange={onStepChange} />;
 
   if (bands.length === 0) {
     return (
       <ChartCard
-        title="Avg Speed Per Depth Band"
-        description="Average descent and ascent speed of dives that reached each band."
+        title={t('Avg Speed Per Depth Band')}
+        description={t('Average descent and ascent speed of dives that reached each band.')}
         controls={controls}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          Not enough depth dives with speeds yet.
+          {t('Not enough depth dives with speeds yet.')}
         </p>
       </ChartCard>
     );
@@ -50,8 +52,8 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
         const arr = Array.isArray(params) ? params : [params];
         const idx = arr[0]?.dataIndex ?? 0;
         const band = bands[idx];
-        const head = `${band.band}–${band.band + band.step}m · ${band.count} dive${
-          band.count === 1 ? '' : 's'
+        const head = `${band.band}–${band.band + band.step}m · ${band.count} ${
+          band.count === 1 ? t('dive') : t('dives')
         }`;
         const lines = arr.map(
           (p: any) =>
@@ -83,7 +85,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
-      name: 'metres',
+      name: t('metres'),
       nameLocation: 'middle',
       nameGap: 24,
       nameTextStyle: {
@@ -106,7 +108,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
     },
     series: [
       {
-        name: 'Descent',
+        name: t('Descent'),
         type: 'bar',
         data: bands.map((b) => round2(b.descentSpeed)),
         itemStyle: { color: DESCENT_COLOR, borderRadius: [3, 3, 0, 0] },
@@ -114,7 +116,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
         barGap: '15%',
       },
       {
-        name: 'Ascent',
+        name: t('Ascent'),
         type: 'bar',
         data: bands.map((b) => round2(b.ascentSpeed)),
         itemStyle: { color: ASCENT_COLOR, borderRadius: [3, 3, 0, 0] },
@@ -125,8 +127,8 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
 
   return (
     <ChartCard
-      title="Avg Speed Per Depth Band"
-      description="Average descent and ascent speed of dives whose max depth fell in each band. Needs at least two dives per band."
+      title={t('Avg Speed Per Depth Band')}
+      description={t('Average descent and ascent speed of dives whose max depth fell in each band. Needs at least two dives per band.')}
       controls={controls}
     >
       <ReactECharts option={option} style={{ height: 220 }} notMerge />
@@ -141,10 +143,11 @@ function StepPills({
   value: BandStep;
   onChange: (s: BandStep) => void;
 }) {
+  const t = useT();
   return (
     <div className="flex items-center gap-2">
       <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-        Band
+        {t('Band')}
       </span>
       {([5, 10, 20] as const).map((s) => (
         <button

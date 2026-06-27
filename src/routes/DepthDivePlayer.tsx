@@ -16,8 +16,10 @@ import { effectiveHangs, diveTimes } from '../lib/analytics/effectiveHangs';
 import { DepthDiveTracks } from '../components/charts/DepthDiveTracks';
 import { HangEditorPopover } from '../components/HangEditorPopover';
 import { formatDate } from '../lib/format';
+import { useT } from '../i18n';
 
 export function DepthDivePlayer() {
+  const t = useT();
   const { sessionId, diveIdx } = useParams<{ sessionId: string; diveIdx: string }>();
   const navigate = useNavigate();
   const backup = useBackupStore((s) => s.backup);
@@ -57,9 +59,9 @@ export function DepthDivePlayer() {
           to="/sessions"
           className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
         >
-          ← back to sessions
+          ← {t('back to sessions')}
         </Link>
-        <p className="mt-8 text-textDim">Depth dive not found.</p>
+        <p className="mt-8 text-textDim">{t('Depth dive not found.')}</p>
       </div>
     );
   }
@@ -74,9 +76,9 @@ export function DepthDivePlayer() {
           to={`/session/${session.id}`}
           className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
         >
-          ← back to session
+          ← {t('back to session')}
         </Link>
-        <p className="mt-8 text-textDim">Dive index out of range.</p>
+        <p className="mt-8 text-textDim">{t('Dive index out of range.')}</p>
       </div>
     );
   }
@@ -163,7 +165,7 @@ export function DepthDivePlayer() {
           to={`/session/${session.id}`}
           className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
         >
-          ← {session.name || 'session'}
+          ← {session.name || t('session')}
         </Link>
         <nav className="flex items-center gap-3 font-mono text-xs uppercase tracking-widest">
           <button
@@ -171,49 +173,49 @@ export function DepthDivePlayer() {
             onClick={() => navigate(`/session/${session.id}/dive/${idx - 1}`)}
             className={hasPrev ? 'text-textDim hover:text-accent' : 'text-textDim opacity-30'}
           >
-            ← prev
+            ← {t('prev')}
           </button>
           <span className="text-textDim">
-            Dive {idx + 1} of {dives.length}
+            {t('Dive')} {idx + 1} {t('of')} {dives.length}
           </span>
           <button
             disabled={!hasNext}
             onClick={() => navigate(`/session/${session.id}/dive/${idx + 1}`)}
             className={hasNext ? 'text-textDim hover:text-accent' : 'text-textDim opacity-30'}
           >
-            next →
+            {t('next')} →
           </button>
         </nav>
       </div>
 
       <header className="mt-6 mb-8">
         <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
-          {dive.discipline ?? 'Depth dive'} · {formatDate(session.date)}
+          {dive.discipline ?? t('Depth dive')} · {formatDate(session.date)}
         </span>
         <h1 className="mt-1 font-heading text-4xl tracking-wide text-text">
           {dive.depth}m
         </h1>
 
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-          <Stat label="Dive time" value={fmtSec(dive.diveTime)} />
-          <Stat label="Descent" value={fmtSec(times.descentTime)} />
+          <Stat label={t('Dive time')} value={fmtSec(dive.diveTime)} />
+          <Stat label={t('Descent')} value={fmtSec(times.descentTime)} />
           {times.descentSpeed != null && (
-            <Stat label="Descent speed" value={`${times.descentSpeed.toFixed(2)} m/s`} />
+            <Stat label={t('Descent speed')} value={`${times.descentSpeed.toFixed(2)} m/s`} />
           )}
-          <Stat label="Hang" value={fmtSec(times.hangTime)} />
-          <Stat label="Ascent" value={fmtSec(times.ascentTime)} />
+          <Stat label={t('Hang')} value={fmtSec(times.hangTime)} />
+          <Stat label={t('Ascent')} value={fmtSec(times.ascentTime)} />
           {times.ascentSpeed != null && (
-            <Stat label="Ascent speed" value={`${times.ascentSpeed.toFixed(2)} m/s`} />
+            <Stat label={t('Ascent speed')} value={`${times.ascentSpeed.toFixed(2)} m/s`} />
           )}
-          {dive.hr != null && <Stat label="Avg HR" value={`${dive.hr} bpm`} />}
-          {dive.tempDepth != null && <Stat label="Temp @ depth" value={`${dive.tempDepth}°C`} />}
+          {dive.hr != null && <Stat label={t('Avg HR')} value={`${dive.hr} bpm`} />}
+          {dive.tempDepth != null && <Stat label={t('Temp @ depth')} value={`${dive.tempDepth}°C`} />}
         </div>
       </header>
 
       {data.points.length < 2 ? (
         <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-12 text-center">
           <p className="text-textDim">
-            No profile recorded for this dive, nothing to render.
+            {t('No profile recorded for this dive, nothing to render.')}
           </p>
         </div>
       ) : (
@@ -229,12 +231,12 @@ export function DepthDivePlayer() {
                   onChange={(e) => setShowAlarms(e.target.checked)}
                   className="accent-accent"
                 />
-                Depth alarms
+                {t('Depth alarms')}
               </label>
             )}
             <div className="flex items-center gap-2">
               <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
-                Speed markers
+                {t('Speed markers')}
               </span>
               {([0, 5, 10] as const).map((step) => (
                 <button
@@ -247,14 +249,14 @@ export function DepthDivePlayer() {
                       : 'border-border text-textDim hover:border-accent hover:text-accent',
                   ].join(' ')}
                 >
-                  {step === 0 ? 'Off' : `${step}m`}
+                  {step === 0 ? t('Off') : `${step}m`}
                 </button>
               ))}
             </div>
             {data.hasSpeed && (
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
-                  Speed smoothing
+                  {t('Speed smoothing')}
                 </span>
                 {([0, 5, 15] as const).map((win) => (
                   <button
@@ -267,7 +269,7 @@ export function DepthDivePlayer() {
                         : 'border-border text-textDim hover:border-accent hover:text-accent',
                     ].join(' ')}
                   >
-                    {win === 0 ? 'Raw' : win === 5 ? 'Light' : 'Strong'}
+                    {win === 0 ? t('Raw') : win === 5 ? t('Light') : t('Strong')}
                   </button>
                 ))}
               </div>
@@ -279,13 +281,13 @@ export function DepthDivePlayer() {
                 hit target. */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
-                Hangs
+                {t('Hangs')}
               </span>
               <button
                 onClick={handleAddHang}
                 className="rounded-full border border-border px-3 py-0.5 font-mono text-[11px] text-textDim transition-colors hover:border-accent hover:text-accent"
               >
-                + Add
+                + {t('Add')}
               </button>
               {effective.map((h, i) => {
                 const active = selectedHang?.idx === i;
@@ -296,7 +298,7 @@ export function DepthDivePlayer() {
                       const rect = e.currentTarget.getBoundingClientRect();
                       setSelectedHang({ idx: i, x: rect.left, y: rect.bottom });
                     }}
-                    title={h.type === 'bottom' ? 'Bottom hang' : 'Off-bottom hang'}
+                    title={h.type === 'bottom' ? t('Bottom hang') : t('Off-bottom hang')}
                     className={[
                       'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
                       active
@@ -304,20 +306,20 @@ export function DepthDivePlayer() {
                         : 'border-border text-textDim hover:border-accent hover:text-accent',
                     ].join(' ')}
                   >
-                    {h.type === 'bottom' ? 'Bottom' : 'Off-bottom'} {fmtSec(h.startT)}-{fmtSec(h.endT)}
+                    {h.type === 'bottom' ? t('Bottom') : t('Off-bottom')} {fmtSec(h.startT)}-{fmtSec(h.endT)}
                   </button>
                 );
               })}
               {hasOverride && (
                 <>
                   <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
-                    manual
+                    {t('manual')}
                   </span>
                   <button
                     onClick={handleResetHangs}
                     className="rounded-full border border-border px-3 py-0.5 font-mono text-[11px] text-textDim transition-colors hover:border-red hover:text-red"
                   >
-                    Reset
+                    {t('Reset')}
                   </button>
                 </>
               )}

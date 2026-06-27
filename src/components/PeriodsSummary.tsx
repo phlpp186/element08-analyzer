@@ -9,6 +9,7 @@
  * sorting; v1 keeps the order users typed.
  */
 import type { PeriodSummary } from '../lib/analytics/periodSummary';
+import { useT } from '../i18n';
 
 interface Props {
   summaries: PeriodSummary[];
@@ -27,10 +28,11 @@ const MODE_LABELS = {
 } as const;
 
 export function PeriodsSummary({ summaries }: Props) {
+  const t = useT();
   if (summaries.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-16 text-center text-textDim">
-        Add at least one period in the right panel to see its roll-up.
+        {t('Add at least one period in the right panel to see its roll-up.')}
       </div>
     );
   }
@@ -40,16 +42,16 @@ export function PeriodsSummary({ summaries }: Props) {
       <table className="w-full min-w-[820px]">
         <thead className="bg-abyss">
           <tr className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-            <Th label="Period" align="left" />
-            <Th label="Weeks" />
-            <Th label="Sessions" />
-            <Th label="Days" />
-            <Th label="Dry holds" />
-            <Th label="Hours" />
-            <Th label="Pool m" />
-            <Th label="Max depth" />
-            <Th label="Peak wk" />
-            <Th label="Mode mix" align="left" />
+            <Th label={t('Period')} align="left" />
+            <Th label={t('Weeks')} />
+            <Th label={t('Sessions')} />
+            <Th label={t('Days')} />
+            <Th label={t('Dry holds')} />
+            <Th label={t('Hours')} />
+            <Th label={t('Pool m')} />
+            <Th label={t('Max depth')} />
+            <Th label={t('Peak wk')} />
+            <Th label={t('Mode mix')} align="left" />
           </tr>
         </thead>
         <tbody>
@@ -66,7 +68,7 @@ export function PeriodsSummary({ summaries }: Props) {
                       {s.period.label}
                     </div>
                     <div className="whitespace-nowrap font-mono text-[10px] text-textDim">
-                      anchor {s.period.anchorDate}
+                      {t('anchor')} {s.period.anchorDate}
                     </div>
                   </div>
                 </div>
@@ -81,7 +83,7 @@ export function PeriodsSummary({ summaries }: Props) {
               <Td>
                 {s.peakSessionsWeek != null
                   ? s.peakSessionsWeek === 0
-                    ? 'target'
+                    ? t('target')
                     : `${s.peakSessionsWeek}w`
                   : '-'}
               </Td>
@@ -120,6 +122,7 @@ function Td({ children }: { children: React.ReactNode }) {
 type ModeKey = 'dry' | 'depth' | 'pool';
 
 function ModeMixBar({ mix }: { mix: { dry: number; depth: number; pool: number } }) {
+  const t = useT();
   const total = mix.dry + mix.depth + mix.pool;
   if (total === 0) {
     return <span className="font-mono text-xs text-textDim">-</span>;
@@ -140,7 +143,7 @@ function ModeMixBar({ mix }: { mix: { dry: number; depth: number; pool: number }
           <div
             key={p.key}
             style={{ width: `${p.pct}%`, backgroundColor: MODE_COLORS[p.key] }}
-            title={`${MODE_LABELS[p.key]} ${p.pct.toFixed(0)}%`}
+            title={`${t(MODE_LABELS[p.key])} ${p.pct.toFixed(0)}%`}
           />
         ))}
       </div>
@@ -151,7 +154,7 @@ function ModeMixBar({ mix }: { mix: { dry: number; depth: number; pool: number }
               className="inline-block h-1.5 w-1.5 rounded-full"
               style={{ backgroundColor: MODE_COLORS[p.key] }}
             />
-            {MODE_LABELS[p.key]} {Math.round(p.pct)}%
+            {t(MODE_LABELS[p.key])} {Math.round(p.pct)}%
           </span>
         ))}
       </div>

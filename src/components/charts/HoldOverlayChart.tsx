@@ -17,6 +17,7 @@ import { useCallback, useMemo, useRef } from 'react';
 import * as echarts from 'echarts/core';
 import ReactECharts from 'echarts-for-react';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 
 export type HoldAlign = 'start' | 'end';
 
@@ -51,6 +52,7 @@ interface Shifted {
 
 export function HoldOverlayChart({ holds, align, groupId }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   const { hrOption, spo2Option, hasHr, hasSpo2 } = useMemo(
     () => buildOptions(holds, align, ct),
     [holds, align, ct],
@@ -69,7 +71,7 @@ export function HoldOverlayChart({ holds, align, groupId }: Props) {
   if (!hasHr && !hasSpo2) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-16 text-center text-textDim">
-        The selected holds have no oximeter data, see the comparison table below.
+        {t('The selected holds have no oximeter data, see the comparison table below.')}
       </div>
     );
   }
@@ -78,7 +80,7 @@ export function HoldOverlayChart({ holds, align, groupId }: Props) {
     <div className="space-y-4">
       {hasHr && (
         <>
-          <PanelHeader label="Heart Rate" unit="bpm" />
+          <PanelHeader label={t('Heart Rate')} unit="bpm" />
           <ReactECharts
             option={hrOption}
             style={{ height: 220 }}

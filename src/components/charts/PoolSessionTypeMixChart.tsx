@@ -5,6 +5,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { PoolTypeBucket } from '../../lib/analytics/poolSessionTypes';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -13,14 +14,15 @@ interface Props {
 
 export function PoolSessionTypeMixChart({ buckets }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (buckets.length === 0) {
     return (
       <ChartCard
-        title="CO₂/O₂ Training Mix"
-        description="Pool sessions grouped by training-type tag."
+        title={t('CO₂/O₂ Training Mix')}
+        description={t('Pool sessions grouped by training-type tag.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No pool sessions in this backup yet.
+          {t('No pool sessions in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -42,7 +44,7 @@ export function PoolSessionTypeMixChart({ buckets }: Props) {
       formatter: (p: any) => {
         const b = ordered[p.dataIndex];
         const pct = total > 0 ? Math.round((b.count / total) * 100) : 0;
-        return `<span style="color:${b.color}">●</span> ${b.label}<br/>${b.count} session${b.count === 1 ? '' : 's'} · ${pct}%`;
+        return `<span style="color:${b.color}">●</span> ${b.label}<br/>${b.count} ${b.count === 1 ? t('session') : t('sessions')} · ${pct}%`;
       },
     },
     xAxis: {
@@ -91,8 +93,8 @@ export function PoolSessionTypeMixChart({ buckets }: Props) {
 
   return (
     <ChartCard
-      title="CO₂/O₂ Training Mix"
-      description="Pool sessions by training-type tag. Untagged sessions are listed so you can see your tagging coverage."
+      title={t('CO₂/O₂ Training Mix')}
+      description={t('Pool sessions by training-type tag. Untagged sessions are listed so you can see your tagging coverage.')}
     >
       <ReactECharts option={option} style={{ height }} notMerge />
     </ChartCard>

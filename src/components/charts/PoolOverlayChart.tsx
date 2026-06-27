@@ -14,6 +14,7 @@
 import { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 
 export interface OverlayPoolDive {
   color: string;
@@ -33,6 +34,7 @@ const GRID = { left: 48, right: 16, top: 30, bottom: 24 };
 
 export function PoolOverlayChart({ dives }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   const hrDives = useMemo(() => dives.filter((d) => d.hrSeries.length >= 2), [dives]);
   const hrOption = useMemo(() => buildHrOption(hrDives, ct), [hrDives, ct]);
 
@@ -42,8 +44,7 @@ export function PoolOverlayChart({ dives }: Props) {
   if (hrDives.length === 0 && !hasSpeed) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-16 text-center text-textDim">
-        The selected dives have no heart rate or distance recorded, see the
-        comparison table below.
+        {t('The selected dives have no heart rate or distance recorded, see the comparison table below.')}
       </div>
     );
   }
@@ -52,7 +53,7 @@ export function PoolOverlayChart({ dives }: Props) {
     <div className="space-y-4">
       {hrDives.length > 0 && (
         <>
-          <PanelHeader label="Heart Rate" unit="bpm" />
+          <PanelHeader label={t('Heart Rate')} unit="bpm" />
           <ReactECharts
             option={hrOption}
             style={{ height: 260 }}
@@ -64,7 +65,7 @@ export function PoolOverlayChart({ dives }: Props) {
 
       {hasSpeed && (
         <>
-          <PanelHeader label="Average speed" unit="m/s" />
+          <PanelHeader label={t('Average speed')} unit="m/s" />
           <div className="space-y-2 rounded-lg border border-border bg-panel p-4">
             {dives.map((d) => (
               <div key={d.label} className="flex items-center gap-3">
@@ -87,7 +88,7 @@ export function PoolOverlayChart({ dives }: Props) {
                   )}
                 </div>
                 <span className="w-20 shrink-0 text-right font-heading text-sm text-text">
-                  {d.avgSpeed != null ? `${d.avgSpeed.toFixed(2)} m/s` : 'static'}
+                  {d.avgSpeed != null ? `${d.avgSpeed.toFixed(2)} m/s` : t('static')}
                 </span>
               </div>
             ))}

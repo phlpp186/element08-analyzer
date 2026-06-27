@@ -30,6 +30,7 @@ import {
   summaryLine,
 } from '../lib/format';
 import type { ParsedSession } from '../schema/backup';
+import { useT } from '../i18n';
 
 type ModeFilter = 'all' | ParsedSession['mode'];
 
@@ -47,6 +48,7 @@ interface DiveNote {
 }
 
 export function SessionList() {
+  const t = useT();
   const backup = useBackupStore((s) => s.backup);
   const filename = useBackupStore((s) => s.filename);
   const clear = useBackupStore((s) => s.clear);
@@ -99,7 +101,7 @@ export function SessionList() {
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-light tracking-widest text-text">
-            Sessions
+            {t('Sessions')}
           </h1>
           {filename && (
             <p className="mt-1 font-mono text-xs text-textDim">{filename}</p>
@@ -110,25 +112,25 @@ export function SessionList() {
             to="/insights"
             className="font-mono text-xs uppercase tracking-widest text-accent hover:underline"
           >
-            insights →
+            {t('insights')} →
           </Link>
           <Link
             to="/compare"
             className="font-mono text-xs uppercase tracking-widest text-accent hover:underline"
           >
-            compare →
+            {t('compare')} →
           </Link>
           <Link
             to="/playground"
             className="font-mono text-xs uppercase tracking-widest text-accent hover:underline"
           >
-            playground →
+            {t('playground')} →
           </Link>
           <button
             onClick={loadDifferent}
             className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
           >
-            ← load different file
+            ← {t('load different file')}
           </button>
         </div>
       </header>
@@ -149,7 +151,7 @@ export function SessionList() {
                   : 'border-border text-textDim hover:border-accent hover:text-accent',
               ].join(' ')}
             >
-              {f.label} <span className="ml-1 text-xs opacity-60">{count}</span>
+              {t(f.label)} <span className="ml-1 text-xs opacity-60">{count}</span>
             </button>
           );
         })}
@@ -163,7 +165,7 @@ export function SessionList() {
               : 'border-border text-textDim hover:border-accent hover:text-accent',
           ].join(' ')}
         >
-          Has notes{' '}
+          {t('Has notes')}{' '}
           <span className="ml-1 text-xs opacity-60">{counts.withNotes}</span>
         </button>
       </div>
@@ -173,7 +175,7 @@ export function SessionList() {
         {grouped.length > 1 && (
           <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] w-32 shrink-0 overflow-y-auto md:block">
             <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-textDim">
-              Jump to
+              {t('Jump to')}
             </div>
             <ul className="space-y-1">
               {grouped.map((g) => (
@@ -207,8 +209,8 @@ export function SessionList() {
                 <h2 className="sticky top-0 z-10 -mx-2 mb-3 bg-bg/95 px-2 py-2 font-mono text-xs uppercase tracking-widest text-textDim backdrop-blur">
                   {g.label}
                   <span className="ml-3 opacity-50">
-                    {g.sessions.length} session
-                    {g.sessions.length === 1 ? '' : 's'}
+                    {g.sessions.length}{' '}
+                    {t(g.sessions.length === 1 ? 'session' : 'sessions')}
                   </span>
                 </h2>
                 <ul className="space-y-3">
@@ -228,6 +230,7 @@ export function SessionList() {
 // ── Row ─────────────────────────────────────────────────────────────────────
 
 function SessionRow({ session }: { session: ParsedSession }) {
+  const t = useT();
   const notes = collectDiveNotes(session);
   const hasNotes = !!session.remarks?.trim() || notes.length > 0;
   // Location is set on depth/pool sessions (imported GPS name or manual);
@@ -253,7 +256,7 @@ function SessionRow({ session }: { session: ParsedSession }) {
             {formatDate(session.date)}
           </span>
           <span className="truncate font-heading text-base tracking-wide text-text">
-            {session.name || 'Untitled session'}
+            {session.name || t('Untitled session')}
           </span>
           {location && (
             <span className="font-mono text-xs text-textDim">📍 {location}</span>
@@ -288,7 +291,7 @@ function SessionRow({ session }: { session: ParsedSession }) {
                     className="flex gap-2 text-xs leading-relaxed text-textDim"
                   >
                     <span className="font-mono shrink-0 text-textDim opacity-60">
-                      {n.label}
+                      {t('Dive')} {n.index + 1}
                     </span>
                     <span className="text-text/85">{n.text}</span>
                   </li>
@@ -311,14 +314,17 @@ function EmptyState({
   onlyWithNotes: boolean;
   filter: ModeFilter;
 }) {
+  const t = useT();
   return (
     <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-12 text-center">
       <p className="text-textDim">
         {onlyWithNotes
-          ? "No sessions with notes match this filter. Try widening the mode or turning 'Has notes' off."
+          ? t(
+              "No sessions with notes match this filter. Try widening the mode or turning 'Has notes' off.",
+            )
           : filter === 'all'
-            ? 'No sessions in this backup.'
-            : `No ${filter} sessions in this backup.`}
+            ? t('No sessions in this backup.')
+            : `${t('No')} ${filter} ${t('sessions in this backup.')}`}
       </p>
     </div>
   );

@@ -14,6 +14,7 @@
 import { useId } from 'react';
 import type { Period } from '../lib/analytics/periodCompare';
 import { useCompareStore } from '../stores/useCompareStore';
+import { useT } from '../i18n';
 
 const PALETTE = [
   '#4fc3f7', // accent blue
@@ -44,6 +45,7 @@ function todayIso(): string {
 }
 
 export function PeriodEditor() {
+  const t = useT();
   const periods = useCompareStore((s) => s.periods);
   const addPeriod = useCompareStore((s) => s.addPeriod);
   const updatePeriod = useCompareStore((s) => s.updatePeriod);
@@ -52,7 +54,7 @@ export function PeriodEditor() {
   function add() {
     addPeriod({
       id: makeId(),
-      label: `Period ${periods.length + 1}`,
+      label: `${t('Period')} ${periods.length + 1}`,
       color: nextColor(periods),
       anchorDate: todayIso(),
       weeksBefore: 12,
@@ -63,20 +65,19 @@ export function PeriodEditor() {
     <section className="rounded-lg border border-border bg-panel p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-textDim">
-          Comparison periods
+          {t('Comparison periods')}
         </h2>
         <button
           onClick={add}
           className="rounded-md border border-border px-3 py-1 font-mono text-xs text-textDim hover:border-accent hover:text-accent"
         >
-          + Add period
+          + {t('Add period')}
         </button>
       </header>
 
       {periods.length === 0 ? (
         <p className="py-4 text-sm text-textDim">
-          Add a period to start comparing, typically one per competition cycle
-          or training block.
+          {t('Add a period to start comparing, typically one per competition cycle or training block.')}
         </p>
       ) : (
         <ul className="space-y-3">
@@ -103,6 +104,7 @@ function PeriodRow({
   onChange: (patch: Partial<Period>) => void;
   onRemove: () => void;
 }) {
+  const t = useT();
   const labelId = useId();
   const dateId = useId();
   const weeksId = useId();
@@ -121,7 +123,7 @@ function PeriodRow({
       <div className="flex items-center gap-2">
         <button
           onClick={cycleColor}
-          aria-label="Cycle color"
+          aria-label={t('Cycle color')}
           className="h-4 w-4 shrink-0 rounded-full border border-border hover:scale-110"
           style={{ backgroundColor: period.color }}
         />
@@ -130,12 +132,12 @@ function PeriodRow({
           type="text"
           value={period.label}
           onChange={(e) => onChange({ label: e.target.value })}
-          placeholder="Label"
+          placeholder={t('Label')}
           className="min-w-0 flex-1 rounded-md border border-border bg-panel px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
         />
         <button
           onClick={onRemove}
-          aria-label="Remove period"
+          aria-label={t('Remove period')}
           className="shrink-0 px-2 font-mono text-sm text-textDim hover:text-red"
         >
           ×
@@ -146,7 +148,7 @@ function PeriodRow({
           htmlFor={dateId}
           className="w-14 shrink-0 font-mono text-[10px] uppercase tracking-widest text-textDim"
         >
-          Anchor
+          {t('Anchor')}
         </label>
         <input
           id={dateId}
@@ -161,7 +163,7 @@ function PeriodRow({
           htmlFor={weeksId}
           className="w-14 shrink-0 font-mono text-[10px] uppercase tracking-widest text-textDim"
         >
-          Weeks
+          {t('Weeks')}
         </label>
         <input
           id={weeksId}

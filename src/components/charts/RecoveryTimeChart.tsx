@@ -8,6 +8,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { RecoveryPoint } from '../../lib/analytics/holdTrends';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -23,14 +24,15 @@ function fmtSec(s: number): string {
 
 export function RecoveryTimeChart({ points }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (points.length === 0) {
     return (
       <ChartCard
-        title="Recovery Time per Hold"
-        description="Seconds for SpO₂ to climb back to within 1 % of pre-hold baseline."
+        title={t('Recovery Time per Hold')}
+        description={t('Seconds for SpO₂ to climb back to within 1 % of pre-hold baseline.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No holds with usable SpO₂ recovery data in this backup yet.
+          {t('No holds with usable SpO₂ recovery data in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -66,7 +68,7 @@ export function RecoveryTimeChart({ points }: Props) {
       formatter: (p: any) => {
         const point = p.data.p as RecoveryPoint;
         const dateStr = new Date(point.date).toLocaleDateString();
-        return `<span style="color:${p.color}">●</span> Recovery<br/>${dateStr} · ${fmtSec(point.recoverySec)}<br/><span style="opacity:0.7">after a ${fmtSec(point.holdSec)} hold</span>`;
+        return `<span style="color:${p.color}">●</span> ${t('Recovery')}<br/>${dateStr} · ${fmtSec(point.recoverySec)}<br/><span style="opacity:0.7">${t('after a')} ${fmtSec(point.holdSec)} ${t('hold')}</span>`;
       },
     },
     xAxis: {
@@ -105,8 +107,8 @@ export function RecoveryTimeChart({ points }: Props) {
 
   return (
     <ChartCard
-      title="Recovery Time per Hold"
-      description="Seconds for SpO₂ to climb back to within 1 % of pre-hold baseline. Dot size = hold length."
+      title={t('Recovery Time per Hold')}
+      description={t('Seconds for SpO₂ to climb back to within 1 % of pre-hold baseline. Dot size = hold length.')}
     >
       <ReactECharts option={option} style={{ height: 220 }} notMerge />
     </ChartCard>

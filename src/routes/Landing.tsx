@@ -17,8 +17,10 @@ import { CloudLogin } from '../components/CloudLogin';
 import { useBackupStore } from '../stores/useBackupStore';
 import { parseBackupText } from '../lib/parseBackup';
 import type { ParsedBackup } from '../schema/backup';
+import { useT } from '../i18n';
 
 export function Landing() {
+  const t = useT();
   const navigate = useNavigate();
   const setBackup = useBackupStore((s) => s.setBackup);
   const currentFilename = useBackupStore((s) => s.filename);
@@ -37,12 +39,12 @@ export function Landing() {
       // Relative path so the demo works under any base href (GH Pages,
       // local preview, custom domain).
       const res = await fetch(`${import.meta.env.BASE_URL}demo-backup.json`);
-      if (!res.ok) throw new Error(`Could not load demo data (${res.status}).`);
+      if (!res.ok) throw new Error(`${t('Could not load demo data')} (${res.status}).`);
       const text = await res.text();
       const backup = parseBackupText(text);
       onLoaded(backup, 'demo-backup.json');
     } catch (e) {
-      setDemoError(e instanceof Error ? e.message : 'Could not load demo data.');
+      setDemoError(e instanceof Error ? e.message : t('Could not load demo data.'));
       setDemoBusy(false);
     }
   }
@@ -54,7 +56,7 @@ export function Landing() {
           ELEMENT <span className="text-accent">|</span> 08
         </h1>
         <p className="font-mono text-sm uppercase tracking-[0.3em] text-textDim">
-          Analyzer
+          {t('Analyzer')}
         </p>
       </header>
 
@@ -63,7 +65,7 @@ export function Landing() {
       <div className="mt-6 flex w-full max-w-2xl items-center gap-4">
         <span className="h-px flex-1 bg-border" />
         <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-          or drop a file
+          {t('or drop a file')}
         </span>
         <span className="h-px flex-1 bg-border" />
       </div>
@@ -75,7 +77,7 @@ export function Landing() {
       <div className="mt-6 flex w-full max-w-2xl items-center gap-4">
         <span className="h-px flex-1 bg-border" />
         <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-          or
+          {t('or')}
         </span>
         <span className="h-px flex-1 bg-border" />
       </div>
@@ -85,10 +87,10 @@ export function Landing() {
         disabled={demoBusy}
         className="mt-6 rounded-md border border-border bg-panel px-6 py-3 font-mono text-xs uppercase tracking-widest text-text transition-colors hover:border-accent hover:text-accent disabled:opacity-60"
       >
-        {demoBusy ? 'Loading demo…' : 'Try with demo data'}
+        {demoBusy ? t('Loading demo…') : t('Try with demo data')}
       </button>
       <p className="mt-2 text-center text-xs text-textDim">
-        Synthetic 12-month season for one freediver. No download needed.
+        {t('Synthetic 12-month season for one freediver. No download needed.')}
       </p>
       {demoError && (
         <p
@@ -100,9 +102,9 @@ export function Landing() {
       )}
 
       <p className="mt-8 max-w-md text-center text-sm text-textDim">
-        Your data stays in this browser. A dropped file is parsed locally, and
-        signing in only downloads your own cloud backup. Nothing you load here
-        is ever uploaded or shared.
+        {t(
+          'Your data stays in this browser. A dropped file is parsed locally, and signing in only downloads your own cloud backup. Nothing you load here is ever uploaded or shared.',
+        )}
       </p>
 
       {currentFilename && (
@@ -110,7 +112,7 @@ export function Landing() {
           onClick={() => navigate('/sessions')}
           className="mt-6 font-mono text-xs uppercase tracking-widest text-accent hover:underline"
         >
-          ← continue with {currentFilename}
+          ← {t('continue with')} {currentFilename}
         </button>
       )}
     </div>

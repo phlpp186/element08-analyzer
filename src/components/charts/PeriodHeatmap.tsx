@@ -12,12 +12,14 @@
  */
 import type { PeriodMatrix } from '../../lib/analytics/periodMatrix';
 import { METRICS, type Metric } from '../../lib/analytics/periodCompare';
+import { useT } from '../../i18n';
 
 interface Props {
   matrix: PeriodMatrix;
 }
 
 export function PeriodHeatmap({ matrix }: Props) {
+  const t = useT();
   const cellColumns = METRICS.length;
   // Grid template: 80px for the week label, then equal columns for metrics.
   const gridTemplate = `80px repeat(${cellColumns}, minmax(80px, 1fr))`;
@@ -30,7 +32,7 @@ export function PeriodHeatmap({ matrix }: Props) {
           className="grid border-b border-border bg-abyss"
           style={{ gridTemplateColumns: gridTemplate }}
         >
-          <HeaderCell label="Week" />
+          <HeaderCell label={t('Week')} />
           {METRICS.map((m) => (
             <HeaderCell key={m.id} label={m.label} unit={m.unit} />
           ))}
@@ -64,7 +66,7 @@ export function PeriodHeatmap({ matrix }: Props) {
       {/* Legend */}
       <div className="flex items-center justify-end gap-3 border-t border-border px-3 py-2">
         <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-          low
+          {t('low')}
         </span>
         <div className="flex h-2 w-32 overflow-hidden rounded-full">
           {[0, 0.25, 0.5, 0.75, 1].map((v) => (
@@ -76,7 +78,7 @@ export function PeriodHeatmap({ matrix }: Props) {
           ))}
         </div>
         <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-          high
+          {t('high')}
         </span>
       </div>
     </div>
@@ -107,13 +109,14 @@ function Cell({
   max: number;
   metricId: Metric;
 }) {
+  const t = useT();
   const fraction = max > 0 ? value / max : 0;
   const isZero = value === 0;
   return (
     <div
       className="border-l border-border px-3 py-2 first:border-l-0"
       style={{ backgroundColor: isZero ? 'transparent' : colorForFraction(fraction) }}
-      title={`${formatValue(metricId, value)} (peak ${formatValue(metricId, max)})`}
+      title={`${formatValue(metricId, value)} (${t('peak')} ${formatValue(metricId, max)})`}
     >
       <span
         className={[

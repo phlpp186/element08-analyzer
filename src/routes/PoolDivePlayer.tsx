@@ -9,8 +9,10 @@ import { useBackupStore } from '../stores/useBackupStore';
 import { extractPoolDiveData } from '../lib/analytics/poolDiveProfile';
 import { PoolDiveTracks } from '../components/charts/PoolDiveTracks';
 import { formatDate } from '../lib/format';
+import { useT } from '../i18n';
 
 export function PoolDivePlayer() {
+  const t = useT();
   const { sessionId, diveIdx } = useParams<{ sessionId: string; diveIdx: string }>();
   const navigate = useNavigate();
   const backup = useBackupStore((s) => s.backup);
@@ -26,9 +28,9 @@ export function PoolDivePlayer() {
           to="/sessions"
           className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
         >
-          ← back to sessions
+          ← {t('back to sessions')}
         </Link>
-        <p className="mt-8 text-textDim">Pool dive not found.</p>
+        <p className="mt-8 text-textDim">{t('Pool dive not found.')}</p>
       </div>
     );
   }
@@ -43,9 +45,9 @@ export function PoolDivePlayer() {
           to={`/session/${session.id}`}
           className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
         >
-          ← back to session
+          ← {t('back to session')}
         </Link>
-        <p className="mt-8 text-textDim">Dive index out of range.</p>
+        <p className="mt-8 text-textDim">{t('Dive index out of range.')}</p>
       </div>
     );
   }
@@ -62,7 +64,7 @@ export function PoolDivePlayer() {
           to={`/session/${session.id}`}
           className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
         >
-          ← {session.name || 'session'}
+          ← {session.name || t('session')}
         </Link>
         <nav className="flex items-center gap-3 font-mono text-xs uppercase tracking-widest">
           <button
@@ -70,17 +72,17 @@ export function PoolDivePlayer() {
             onClick={() => navigate(`/session/${session.id}/pool/${idx - 1}`)}
             className={hasPrev ? 'text-textDim hover:text-accent' : 'text-textDim opacity-30'}
           >
-            ← prev
+            ← {t('prev')}
           </button>
           <span className="text-textDim">
-            Dive {idx + 1} of {dives.length}
+            {t('Dive')} {idx + 1} {t('of')} {dives.length}
           </span>
           <button
             disabled={!hasNext}
             onClick={() => navigate(`/session/${session.id}/pool/${idx + 1}`)}
             className={hasNext ? 'text-textDim hover:text-accent' : 'text-textDim opacity-30'}
           >
-            next →
+            {t('next')} →
           </button>
         </nav>
       </div>
@@ -94,12 +96,12 @@ export function PoolDivePlayer() {
         </h1>
 
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-          <Stat label="Dive time" value={fmtSec(dive.diveTime)} />
-          {dive.distance != null && <Stat label="Distance" value={`${dive.distance}m`} />}
-          {dive.turns != null && dive.turns > 0 && <Stat label="Turns" value={String(dive.turns)} />}
-          {dive.si > 0 && <Stat label="SI before" value={fmtSec(dive.si)} />}
-          {dive.hrHighest != null && <Stat label="HR high" value={`${dive.hrHighest}`} />}
-          {dive.hrLowest != null && <Stat label="HR low" value={`${dive.hrLowest}`} />}
+          <Stat label={t('Dive time')} value={fmtSec(dive.diveTime)} />
+          {dive.distance != null && <Stat label={t('Distance')} value={`${dive.distance}m`} />}
+          {dive.turns != null && dive.turns > 0 && <Stat label={t('Turns')} value={String(dive.turns)} />}
+          {dive.si > 0 && <Stat label={t('SI before')} value={fmtSec(dive.si)} />}
+          {dive.hrHighest != null && <Stat label={t('HR high')} value={`${dive.hrHighest}`} />}
+          {dive.hrLowest != null && <Stat label={t('HR low')} value={`${dive.hrLowest}`} />}
         </div>
       </header>
 

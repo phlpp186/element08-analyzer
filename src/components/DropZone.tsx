@@ -11,12 +11,14 @@
 import { useCallback, useRef, useState } from 'react';
 import { parseBackupFile } from '../lib/parseBackup';
 import type { ParsedBackup } from '../schema/backup';
+import { useT } from '../i18n';
 
 interface Props {
   onLoaded: (backup: ParsedBackup, filename: string) => void;
 }
 
 export function DropZone({ onLoaded }: Props) {
+  const t = useT();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -30,12 +32,12 @@ export function DropZone({ onLoaded }: Props) {
         const backup = await parseBackupFile(file);
         onLoaded(backup, file.name);
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Could not read the file.');
+        setError(e instanceof Error ? e.message : t('Could not read the file.'));
       } finally {
         setBusy(false);
       }
     },
-    [onLoaded],
+    [onLoaded, t],
   );
 
   function onClick() {
@@ -83,10 +85,10 @@ export function DropZone({ onLoaded }: Props) {
         ].join(' ')}
       >
         <p className="mb-2 font-heading text-xl tracking-wide text-text">
-          {busy ? 'Reading…' : 'Drop your backup file here'}
+          {busy ? t('Reading…') : t('Drop your backup file here')}
         </p>
         <p className="font-mono text-xs uppercase tracking-widest text-textDim">
-          or click to choose · .e08backup.json
+          {t('or click to choose')} · .e08backup.json
         </p>
       </div>
 

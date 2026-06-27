@@ -6,6 +6,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { DisciplineSeries } from '../../lib/analytics/depthInsights';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -14,14 +15,15 @@ interface Props {
 
 export function DisciplineProgressionChart({ series }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (series.length === 0) {
     return (
       <ChartCard
-        title="Discipline Progression"
-        description="Personal best depth over time, per discipline."
+        title={t('Discipline Progression')}
+        description={t('Personal best depth over time, per discipline.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No depth dives in this backup yet.
+          {t('No depth dives in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -92,8 +94,8 @@ export function DisciplineProgressionChart({ series }: Props) {
 
   return (
     <ChartCard
-      title="Discipline Progression"
-      description="Personal best depth over time, per discipline. Each dot is a new PB; the line plateaus until the next one."
+      title={t('Discipline Progression')}
+      description={t('Personal best depth over time, per discipline. Each dot is a new PB; the line plateaus until the next one.')}
     >
       <ReactECharts option={option} style={{ height: 240 }} notMerge />
     </ChartCard>

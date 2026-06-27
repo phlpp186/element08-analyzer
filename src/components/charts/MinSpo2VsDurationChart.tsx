@@ -13,6 +13,7 @@ import {
   type HoldMinSpo2Point,
 } from '../../lib/analytics/holdTrends';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -27,14 +28,15 @@ function fmtSec(s: number): string {
 
 export function MinSpo2VsDurationChart({ points }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (points.length === 0) {
     return (
       <ChartCard
-        title="Min SpO₂ vs Hold Duration"
-        description="Lowest SpO₂ per hold (including 30 s afterdrop) plotted against hold length."
+        title={t('Min SpO₂ vs Hold Duration')}
+        description={t('Lowest SpO₂ per hold (including 30 s afterdrop) plotted against hold length.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No holds with usable SpO₂ data in this filter.
+          {t('No holds with usable SpO₂ data in this filter.')}
         </p>
       </ChartCard>
     );
@@ -76,8 +78,8 @@ export function MinSpo2VsDurationChart({ points }: Props) {
         const dateStr = new Date(point.date).toLocaleDateString();
         const lv = point.lungVol ?? '—';
         return (
-          `<span style="color:${point.color}">●</span> Min SpO₂ ${point.minSpo2}%` +
-          `<br/>${fmtSec(point.holdSec)} hold · ${lv}` +
+          `<span style="color:${point.color}">●</span> ${t('Min SpO₂')} ${point.minSpo2}%` +
+          `<br/>${fmtSec(point.holdSec)} ${t('hold')} · ${lv}` +
           `<br/><span style="opacity:0.7">${dateStr} · ${point.sessionName}</span>`
         );
       },
@@ -95,7 +97,7 @@ export function MinSpo2VsDurationChart({ points }: Props) {
         formatter: (v: number) => fmtSec(v),
       },
       splitLine: { show: false },
-      name: 'hold duration',
+      name: t('hold duration'),
       nameLocation: 'middle',
       nameGap: 24,
       nameTextStyle: {
@@ -138,8 +140,8 @@ export function MinSpo2VsDurationChart({ points }: Props) {
 
   return (
     <ChartCard
-      title="Min SpO₂ vs Hold Duration"
-      description={`Lowest SpO₂ per hold (incl. 30 s afterdrop) vs. hold length. ${points.length} hold${points.length === 1 ? '' : 's'} shown.`}
+      title={t('Min SpO₂ vs Hold Duration')}
+      description={`${t('Lowest SpO₂ per hold (incl. 30 s afterdrop) vs. hold length.')} ${points.length} ${points.length === 1 ? t('hold shown.') : t('holds shown.')}`}
     >
       <ReactECharts option={option} style={{ height: 260 }} notMerge />
     </ChartCard>

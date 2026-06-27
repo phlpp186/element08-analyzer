@@ -11,6 +11,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { HrAroundContraction } from '../../lib/analytics/holdTrends';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -19,14 +20,15 @@ interface Props {
 
 export function HrAroundContractionsChart({ points }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (points.length === 0) {
     return (
       <ChartCard
-        title="HR Drop after Contractions"
-        description="Average HR change in the seconds around each contraction."
+        title={t('HR Drop after Contractions')}
+        description={t('Average HR change in the seconds around each contraction.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No contractions with surrounding HR data in this backup yet.
+          {t('No contractions with surrounding HR data in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -51,7 +53,7 @@ export function HrAroundContractionsChart({ points }: Props) {
       formatter: (p: any) => {
         const point = points[p.dataIndex];
         const sign = point.delta > 0 ? '+' : '';
-        return `<span style="color:${p.color}">●</span> ${point.t > 0 ? '+' : ''}${point.t}s vs contraction<br/>${sign}${point.delta.toFixed(1)} bpm vs baseline<br/><span style="opacity:0.7">${point.n} contraction${point.n === 1 ? '' : 's'}</span>`;
+        return `<span style="color:${p.color}">●</span> ${point.t > 0 ? '+' : ''}${point.t}s ${t('vs contraction')}<br/>${sign}${point.delta.toFixed(1)} bpm ${t('vs baseline')}<br/><span style="opacity:0.7">${point.n} ${point.n === 1 ? t('contraction') : t('contractions')}</span>`;
       },
     },
     xAxis: {
@@ -106,8 +108,8 @@ export function HrAroundContractionsChart({ points }: Props) {
 
   return (
     <ChartCard
-      title="HR Drop after Contractions"
-      description="Average HR change in a window around each contraction (baseline = HR at the contraction). Negative = dive reflex holding through it."
+      title={t('HR Drop after Contractions')}
+      description={t('Average HR change in a window around each contraction (baseline = HR at the contraction). Negative = dive reflex holding through it.')}
     >
       <ReactECharts option={option} style={{ height: 220 }} notMerge />
     </ChartCard>

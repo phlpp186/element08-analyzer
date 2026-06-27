@@ -7,6 +7,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { HrPoint } from '../../lib/analytics/poolHr';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -18,14 +19,15 @@ const HIGH_COLOR = '#ff5f9e';
 
 export function PoolHrChart({ points }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (points.length === 0) {
     return (
       <ChartCard
-        title="Heart Rate per Dive"
-        description="HR low and HR high per pool dive over time."
+        title={t('Heart Rate per Dive')}
+        description={t('HR low and HR high per pool dive over time.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No pool dives with HR data in this backup yet.
+          {t('No pool dives with HR data in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -59,7 +61,7 @@ export function PoolHrChart({ points }: Props) {
     },
     legend: {
       top: 0,
-      data: ['HR low', 'HR high'],
+      data: [t('HR low'), t('HR high')],
       textStyle: {
         color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
@@ -95,14 +97,14 @@ export function PoolHrChart({ points }: Props) {
     },
     series: [
       {
-        name: 'HR low',
+        name: t('HR low'),
         type: 'scatter',
         data: lows,
         symbolSize: 6,
         itemStyle: { color: LOW_COLOR, opacity: 0.75 },
       },
       {
-        name: 'HR high',
+        name: t('HR high'),
         type: 'scatter',
         data: highs,
         symbolSize: 6,
@@ -113,8 +115,8 @@ export function PoolHrChart({ points }: Props) {
 
   return (
     <ChartCard
-      title="Heart Rate per Dive"
-      description="HR low and HR high per pool dive. A lower 'low' over time means a stronger dive reflex."
+      title={t('Heart Rate per Dive')}
+      description={t("HR low and HR high per pool dive. A lower 'low' over time means a stronger dive reflex.")}
     >
       <ReactECharts option={option} style={{ height: 240 }} notMerge />
     </ChartCard>

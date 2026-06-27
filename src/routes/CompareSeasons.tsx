@@ -18,6 +18,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useT } from '../i18n';
 import { useBackupStore } from '../stores/useBackupStore';
 import { CompareModeHeader } from '../components/CompareModeHeader';
 import { useCompareStore } from '../stores/useCompareStore';
@@ -71,6 +72,7 @@ const EXERCISE_MODES: { id: ExerciseMode; label: string }[] = [
 ];
 
 export function CompareSeasons() {
+  const t = useT();
   const backup = useBackupStore((s) => s.backup);
   const periods = useCompareStore((s) => s.periods);
   const metric = useCompareStore((s) => s.metric);
@@ -131,25 +133,25 @@ export function CompareSeasons() {
     <div className="mx-auto max-w-6xl px-6 py-10">
       <CompareModeHeader
         mode="seasons"
-        description="Define one period per training cycle. The Overlay tab compares shapes across multiple periods; the Periodization tab zooms in on one period's week-by-week intensity profile."
+        description={t("Define one period per training cycle. The Overlay tab compares shapes across multiple periods; the Periodization tab zooms in on one period's week-by-week intensity profile.")}
       />
 
       <nav className="mb-6 flex gap-1 border-b border-border">
-        {TABS.map((t) => {
-          const active = tab === t.id;
+        {TABS.map((tab_) => {
+          const active = tab === tab_.id;
           return (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+              key={tab_.id}
+              onClick={() => setTab(tab_.id)}
               className={[
                 'border-b-2 px-4 py-3 font-mono text-xs uppercase tracking-widest transition-colors',
                 active
                   ? 'border-accent text-accent'
                   : 'border-transparent text-textDim hover:text-text',
               ].join(' ')}
-              title={t.description}
+              title={t(tab_.description)}
             >
-              {t.label}
+              {t(tab_.label)}
             </button>
           );
         })}
@@ -180,7 +182,7 @@ export function CompareSeasons() {
               {matrix && <PeriodHeatmap matrix={matrix} />}
               {!matrix && (
                 <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-16 text-center text-textDim">
-                  Add a period in the right panel to see its periodization.
+                  {t('Add a period in the right panel to see its periodization.')}
                 </div>
               )}
             </>
@@ -213,7 +215,7 @@ export function CompareSeasons() {
                           : 'border-border text-textDim hover:border-accent hover:text-accent',
                       ].join(' ')}
                     >
-                      {m.label}
+                      {t(m.label)}
                     </button>
                   );
                 })}
@@ -222,7 +224,7 @@ export function CompareSeasons() {
                 <ExerciseScatter data={exerciseData} mode={exerciseMode} />
               ) : (
                 <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-16 text-center text-textDim">
-                  Add a period in the right panel to see its exercises.
+                  {t('Add a period in the right panel to see its exercises.')}
                 </div>
               )}
             </>
@@ -241,6 +243,7 @@ function MetricSelector({
   value: Metric;
   onChange: (m: Metric) => void;
 }) {
+  const t = useT();
   return (
     <div className="flex flex-wrap gap-2">
       {METRICS.map((m) => {
@@ -256,7 +259,7 @@ function MetricSelector({
                 : 'border-border text-textDim hover:border-accent hover:text-accent',
             ].join(' ')}
           >
-            {m.label}
+            {t(m.label)}
           </button>
         );
       })}
@@ -273,10 +276,11 @@ function PeriodPicker({
   onChange: (id: string) => void;
   periods: { id: string; label: string; color: string }[];
 }) {
+  const t = useT();
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-        Showing:
+        {t('Showing:')}
       </span>
       {periods.map((p) => {
         const active = p.id === selectedId;

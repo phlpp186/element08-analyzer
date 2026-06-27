@@ -15,6 +15,7 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import ReactECharts from 'echarts-for-react';
+import { useT } from '../i18n';
 import { useBackupStore } from '../stores/useBackupStore';
 import {
   applyFilters,
@@ -142,6 +143,7 @@ function isoDaysAgo(days: number): string {
 }
 
 export function Playground() {
+  const t = useT();
   const backup = useBackupStore((s) => s.backup);
 
   const [presetId, setPresetId] = useState<string>('all');
@@ -261,29 +263,26 @@ export function Playground() {
     <div className="mx-auto max-w-6xl px-6 py-10">
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-light tracking-widest text-text">Playground</h1>
+          <h1 className="text-3xl font-light tracking-widest text-text">{t('Playground')}</h1>
           <p className="mt-1 max-w-xl text-sm text-textDim">
-            Cross-cut any subset of your training: pick a metric, a
-            dimension to pivot on, and a statistic. Toggle bars or box
-            plot to see distributions.
+            {t('Cross-cut any subset of your training: pick a metric, a dimension to pivot on, and a statistic. Toggle bars or box plot to see distributions.')}
           </p>
         </div>
         <Link
           to="/sessions"
           className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
         >
-          ← back to sessions
+          {t('← back to sessions')}
         </Link>
       </header>
 
       {/* Starter questions — one tap fills the pivot below. */}
       <section className="mb-5 rounded-lg border border-border bg-panel p-5">
         <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-textDim">
-          Starter questions
+          {t('Starter questions')}
         </div>
         <p className="mb-3 text-sm text-textDim">
-          Pick a topic, then tap a question to fill in the pivot below with the chart that best
-          answers it.
+          {t('Pick a topic, then tap a question to fill in the pivot below with the chart that best answers it.')}
         </p>
         <div className="mb-3 flex flex-wrap gap-2">
           {CATEGORY_ORDER.map((cat) => (
@@ -292,7 +291,7 @@ export function Playground() {
               active={questionCat === cat}
               onClick={() => setQuestionCat(questionCat === cat ? null : cat)}
             >
-              {cat}
+              {t(cat)}
             </Pill>
           ))}
         </div>
@@ -304,9 +303,9 @@ export function Playground() {
                 onClick={() => applyPreset(qp)}
                 className="rounded-full border border-border px-3 py-1.5 text-sm text-textDim transition-colors hover:border-accent hover:text-accent"
               >
-                {qp.q}
+                {t(qp.q)}
                 <span className="ml-1.5 font-mono text-[10px] opacity-50">
-                  {RENDER_SHORT[qp.render]}
+                  {t(RENDER_SHORT[qp.render])}
                 </span>
               </button>
             ))}
@@ -316,14 +315,14 @@ export function Playground() {
 
       {/* Filters */}
       <section className="space-y-5 rounded-lg border border-border bg-panel p-5">
-        <FieldRow label="Date range">
+        <FieldRow label={t('Date range')}>
           <div className="flex flex-wrap items-center gap-2">
             {PRESETS.map((p) => (
               <Pill key={p.id} active={presetId === p.id} onClick={() => setPresetId(p.id)}>
-                {p.label}
+                {t(p.label)}
               </Pill>
             ))}
-            <Pill active={presetId === 'custom'} onClick={() => setPresetId('custom')}>Custom</Pill>
+            <Pill active={presetId === 'custom'} onClick={() => setPresetId('custom')}>{t('Custom')}</Pill>
             {presetId === 'custom' && (
               <div className="flex items-center gap-2">
                 <input
@@ -344,22 +343,22 @@ export function Playground() {
           </div>
         </FieldRow>
 
-        <FieldRow label="Mode">
+        <FieldRow label={t('Mode')}>
           <div className="flex flex-wrap gap-2">
             {MODES.map((m) => (
               <Pill key={m.id} active={mode === m.id} onClick={() => setMode(m.id as SessionMode)}>
-                {m.label}
+                {t(m.label)}
               </Pill>
             ))}
           </div>
         </FieldRow>
 
         {mode === 'dry' && (
-          <FieldRow label="Session tag">
+          <FieldRow label={t('Session tag')}>
             <div className="flex flex-wrap gap-2">
-              {TAGS.map((t) => (
-                <Pill key={t.id} active={tags.includes(t.id)} onClick={() => setTags(toggle(tags, t.id))}>
-                  {t.label}
+              {TAGS.map((tag) => (
+                <Pill key={tag.id} active={tags.includes(tag.id)} onClick={() => setTags(toggle(tags, tag.id))}>
+                  {t(tag.label)}
                 </Pill>
               ))}
               {tags.length > 0 && (
@@ -367,7 +366,7 @@ export function Playground() {
                   onClick={() => setTags([])}
                   className="font-mono text-[10px] uppercase tracking-widest text-textDim hover:text-accent"
                 >
-                  clear
+                  {t('clear')}
                 </button>
               )}
             </div>
@@ -375,7 +374,7 @@ export function Playground() {
         )}
 
         {mode === 'dry' && (
-          <FieldRow label="Lung volume">
+          <FieldRow label={t('Lung volume')}>
             <div className="flex flex-wrap gap-2">
               {LUNG_VOLS.map((lv) => (
                 <Pill key={lv} active={lungVols.includes(lv)} onClick={() => setLungVols(toggle(lungVols, lv))}>
@@ -387,7 +386,7 @@ export function Playground() {
                   onClick={() => setLungVols([])}
                   className="font-mono text-[10px] uppercase tracking-widest text-textDim hover:text-accent"
                 >
-                  clear
+                  {t('clear')}
                 </button>
               )}
             </div>
@@ -398,30 +397,30 @@ export function Playground() {
       {/* Pivot knobs + chart */}
       <section className="mt-5 space-y-4 rounded-lg border border-border bg-panel p-5">
         <div className="grid gap-4 lg:grid-cols-3">
-          <PickerColumn label={effRender === 'xy' ? 'Y (metric)' : 'What (metric)'}>
+          <PickerColumn label={effRender === 'xy' ? t('Y (metric)') : t('What (metric)')}>
             <Dropdown value={metric?.id ?? ''} onChange={setMetricId} options={metricOptions} />
           </PickerColumn>
           {effRender === 'xy' ? (
-            <PickerColumn label="X (metric)">
+            <PickerColumn label={t('X (metric)')}>
               <Dropdown value={xMetric?.id ?? ''} onChange={setXMetricId} options={metricOptions} />
             </PickerColumn>
           ) : effRender === 'heatmap' ? (
-            <PickerColumn label="By (two dimensions)">
+            <PickerColumn label={t('By (two dimensions)')}>
               <Dropdown value={dim?.id ?? ''} onChange={setDimId} options={dimOptions} />
               <div className="mt-2">
                 <Dropdown value={dim2?.id ?? ''} onChange={setDim2Id} options={dimOptions} />
               </div>
             </PickerColumn>
           ) : (
-            <PickerColumn label="By (dimension)">
+            <PickerColumn label={t('By (dimension)')}>
               <Dropdown value={dim?.id ?? ''} onChange={setDimId} options={dimOptions} />
             </PickerColumn>
           )}
-          <PickerColumn label="Stat">
+          <PickerColumn label={t('Stat')}>
             <div className="flex flex-wrap gap-2">
               {STATS.map((s) => (
                 <Pill key={s.id} active={stat === s.id} onClick={() => setStat(s.id)}>
-                  {s.label}
+                  {t(s.label)}
                 </Pill>
               ))}
             </div>
@@ -430,11 +429,11 @@ export function Playground() {
 
         {/* Live explanation of what the current pivot actually shows. */}
         <PivotHelp
-          metricLabel={metric?.label ?? 'the metric'}
-          dimLabel={dim ? (DIM_GROUP_NOUN[dim.id] ?? dim.label) : 'group'}
-          rawDimLabel={dim?.label ?? 'group'}
-          xMetricLabel={xMetric?.label ?? 'another metric'}
-          dim2Label={dim2 ? (DIM_GROUP_NOUN[dim2.id] ?? dim2.label) : 'group'}
+          metricLabel={metric?.label ?? t('the metric')}
+          dimLabel={dim ? (DIM_GROUP_NOUN[dim.id] ?? dim.label) : t('group')}
+          rawDimLabel={dim?.label ?? t('group')}
+          xMetricLabel={xMetric?.label ?? t('another metric')}
+          dim2Label={dim2 ? (DIM_GROUP_NOUN[dim2.id] ?? dim2.label) : t('group')}
           stat={stat}
           render={effRender}
           mode={mode}
@@ -442,20 +441,20 @@ export function Playground() {
 
         <div className="flex items-center justify-between">
           <p className="font-mono text-[11px] text-textDim">
-            {filtered.length} session{filtered.length === 1 ? '' : 's'} · {items.length} item{items.length === 1 ? '' : 's'}
-            {buckets.length > 0 && ` · ${buckets.length} bucket${buckets.length === 1 ? '' : 's'}`}
+            {filtered.length} {t(filtered.length === 1 ? 'session' : 'sessions')} · {items.length} {t(items.length === 1 ? 'item' : 'items')}
+            {buckets.length > 0 && ` · ${buckets.length} ${t(buckets.length === 1 ? 'bucket' : 'buckets')}`}
           </p>
           <div className="flex gap-2">
-            <Pill active={effRender === 'bar'} onClick={() => setRender('bar')}>Bars</Pill>
-            <Pill active={effRender === 'box'} onClick={() => setRender('box')}>Box plot</Pill>
+            <Pill active={effRender === 'bar'} onClick={() => setRender('bar')}>{t('Bars')}</Pill>
+            <Pill active={effRender === 'box'} onClick={() => setRender('box')}>{t('Box plot')}</Pill>
             {dimIsNumeric && (
               <Pill active={effRender === 'scatter'} onClick={() => setRender('scatter')}>
-                Scatter
+                {t('Scatter')}
               </Pill>
             )}
-            <Pill active={effRender === 'hist'} onClick={() => setRender('hist')}>Histogram</Pill>
+            <Pill active={effRender === 'hist'} onClick={() => setRender('hist')}>{t('Histogram')}</Pill>
             <Pill active={effRender === 'xy'} onClick={() => setRender('xy')}>X &#10005; Y</Pill>
-            <Pill active={effRender === 'heatmap'} onClick={() => setRender('heatmap')}>Heatmap</Pill>
+            <Pill active={effRender === 'heatmap'} onClick={() => setRender('heatmap')}>{t('Heatmap')}</Pill>
           </div>
         </div>
 
@@ -469,21 +468,21 @@ export function Playground() {
           if (!hasData) {
             return (
               <p className="rounded-lg border border-dashed border-border bg-deep py-12 text-center text-textDim">
-                No data for this view. Try a different metric/dimension or widen the filters.
+                {t('No data for this view. Try a different metric/dimension or widen the filters.')}
               </p>
             );
           }
           const option =
             effRender === 'box'
-              ? buildBoxOption(buckets, metric, dim)
+              ? buildBoxOption(buckets, metric, dim, t)
               : effRender === 'scatter'
                 ? buildScatterOption(buckets, metric, dim, scatterFit)
                 : effRender === 'hist'
-                  ? buildHistogramOption(buckets, metric)
+                  ? buildHistogramOption(buckets, metric, t)
                   : effRender === 'xy'
                     ? buildXyOption(xyPts, xMetric, metric, xyFit)
                     : effRender === 'heatmap'
-                      ? buildHeatmapOption(heat, metric, dim, dim2, stat)
+                      ? buildHeatmapOption(heat, metric, dim, dim2, stat, t)
                       : buildBarOption(buckets, metric, dim, stat);
           const fit = effRender === 'scatter' ? scatterFit : effRender === 'xy' ? xyFit : null;
           return (
@@ -491,7 +490,7 @@ export function Playground() {
               <ReactECharts option={option} style={{ height: effRender === 'heatmap' ? 420 : 360 }} notMerge />
               {fit && (
                 <p className="mt-1 text-center font-mono text-[11px] text-textDim">
-                  {describeCorrelation(fit.r)} · r = {fit.r.toFixed(2)}
+                  {describeCorrelation(fit.r, t)} · r = {fit.r.toFixed(2)}
                 </p>
               )}
             </>
@@ -626,7 +625,8 @@ function PivotHelp({
   render: RenderMode;
   mode: SessionMode;
 }) {
-  const noun = mode === 'dry' ? 'sessions' : 'dives';
+  const t = useT();
+  const noun = mode === 'dry' ? t('sessions') : t('dives');
   const m = softLower(metricLabel);
   const d = softLower(dimLabel);
   const Em = ({ children }: { children: React.ReactNode }) => (
@@ -637,82 +637,84 @@ function PivotHelp({
   if (render === 'xy') {
     body = (
       <>
-        Each dot is one dive: <Em>{m}</Em> (vertical) against <Em>{softLower(xMetricLabel)}</Em>{' '}
-        (horizontal). The line is a linear fit, and the r below shows how tightly the two move
-        together. The dimension and Stat are ignored here.
+        {t('Each dot is one dive:')} <Em>{m}</Em> {t('(vertical) against')}{' '}
+        <Em>{softLower(xMetricLabel)}</Em>{' '}
+        {t('(horizontal). The line is a linear fit, and the r below shows how tightly the two move together. The dimension and Stat are ignored here.')}
       </>
     );
   } else if (render === 'heatmap') {
     const w =
       stat === 'avg'
-        ? 'average'
+        ? t('average')
         : stat === 'median'
-          ? 'median'
+          ? t('median')
           : stat === 'max'
-            ? 'highest'
+            ? t('highest')
             : stat === 'min'
-              ? 'lowest'
-              : 'count';
+              ? t('lowest')
+              : t('count');
     body =
       stat === 'count' ? (
         <>
-          Each cell counts the {noun} in that <Em>{d}</Em> × <Em>{softLower(dim2Label)}</Em>{' '}
-          combination; darker = more. Blank cells mean none.
+          {t('Each cell counts the')} {noun} {t('in that')} <Em>{d}</Em> ×{' '}
+          <Em>{softLower(dim2Label)}</Em>{' '}
+          {t('combination; darker = more. Blank cells mean none.')}
         </>
       ) : (
         <>
-          Each cell is the <Em>{w}</Em> {m} for the {noun} in that <Em>{d}</Em> ×{' '}
-          <Em>{softLower(dim2Label)}</Em> combination; darker = higher. Blank cells mean no {noun}{' '}
-          there.
+          {t('Each cell is the')} <Em>{w}</Em> {m} {t('for the')} {noun} {t('in that')} <Em>{d}</Em> ×{' '}
+          <Em>{softLower(dim2Label)}</Em>{' '}
+          {t('combination; darker = higher. Blank cells mean no {noun} there.').replace('{noun}', noun)}
         </>
       );
   } else if (render === 'scatter') {
     body = (
       <>
-        Each dot is one dive: <Em>{m}</Em> (vertical) against <Em>{softLower(rawDimLabel)}</Em>{' '}
-        (horizontal). The line is a linear fit, and the r below it shows how tightly they track
-        (±1 = perfect, 0 = none). The Stat toggle does not apply here.
+        {t('Each dot is one dive:')} <Em>{m}</Em> {t('(vertical) against')}{' '}
+        <Em>{softLower(rawDimLabel)}</Em>{' '}
+        {t('(horizontal). The line is a linear fit, and the r below it shows how tightly they track (±1 = perfect, 0 = none). The Stat toggle does not apply here.')}
       </>
     );
   } else if (render === 'hist') {
     body = (
       <>
-        Each bar counts how many {noun} fall in a <Em>{m}</Em> range, across every group. It shows
-        the overall shape and spread of {m}; the dimension and Stat are ignored.
+        {t('Each bar counts how many')} {noun} {t('fall in a')} <Em>{m}</Em>{' '}
+        {t('range, across every group. It shows the overall shape and spread of {m}; the dimension and Stat are ignored.').replace('{m}', m)}
       </>
     );
   } else if (render === 'box') {
     body = (
       <>
-        Each box shows the <Em>spread</Em> of {m} across the {noun}, grouped by {d}: the line is
-        the <Em>median</Em>, the box covers the middle 50% (Q1 to Q3), the whiskers reach the rest
-        within 1.5×IQR, and dots are outliers. The Stat toggle does not change the box; switch to
-        Bars to use it.
+        {t('Each box shows the')} <Em>{t('spread')}</Em>{' '}
+        {t('of {m} across the {noun}, grouped by {d}: the line is the').replace('{m}', m).replace('{noun}', noun).replace('{d}', d)}{' '}
+        <Em>{t('median')}</Em>,{' '}
+        {t('the box covers the middle 50% (Q1 to Q3), the whiskers reach the rest within 1.5×IQR, and dots are outliers. The Stat toggle does not change the box; switch to Bars to use it.')}
       </>
     );
   } else if (stat === 'count') {
     body = (
       <>
-        Each bar is the <Em>number of {noun}</Em>, grouped by {d}. The metric ({metricLabel}) is
-        ignored here; only the count matters.
+        {t('Each bar is the')} <Em>{t('number of {noun}').replace('{noun}', noun)}</Em>,{' '}
+        {t('grouped by {d}. The metric ({metricLabel}) is ignored here; only the count matters.').replace('{d}', d).replace('{metricLabel}', metricLabel)}
       </>
     );
   } else {
     const word =
       stat === 'avg'
-        ? 'average (mean)'
+        ? t('average (mean)')
         : stat === 'median'
-          ? 'median (middle value)'
+          ? t('median (middle value)')
           : stat === 'max'
-            ? 'single highest'
-            : 'single lowest';
+            ? t('single highest')
+            : t('single lowest');
     body = (
       <>
-        Each bar is the <Em>{word}</Em> {m} of the {noun}, grouped by {d}.
+        {t('Each bar is the')} <Em>{word}</Em>{' '}
+        {t('{m} of the {noun}, grouped by {d}.').replace('{m}', m).replace('{noun}', noun).replace('{d}', d)}
         {stat === 'median'
-          ? ' Half are higher and half lower, so it is less swayed by outliers than the average.'
+          ? ' ' + t('Half are higher and half lower, so it is less swayed by outliers than the average.')
           : ''}{' '}
-        <span className="opacity-70">n = number of {noun} per bar.</span>
+        <span className="opacity-70">{t('n = number of {noun} per bar.').replace('{noun}', noun)}</span>
       </>
     );
   }
@@ -826,6 +828,7 @@ function buildBoxOption(
   buckets: PivotBucket[],
   metric: PivotMetric,
   dim: PivotDimension,
+  t: (s: string) => string,
 ) {
   // ECharts boxplot data is [min, q1, median, q3, max] per bucket.
   const boxData = buckets.map((b) => {
@@ -867,14 +870,14 @@ function buildBoxOption(
         if (p.seriesType === 'boxplot') {
           const b = buckets[p.dataIndex];
           const [min, q1, med, q3, max] = p.data.slice(1) as number[];
-          return `${b.label}<br/>median <b>${fmt(med, metric.unit)}</b><br/>` +
-            `q1 ${fmt(q1, metric.unit)} · q3 ${fmt(q3, metric.unit)}<br/>` +
-            `min ${fmt(min, metric.unit)} · max ${fmt(max, metric.unit)}<br/>` +
+          return `${b.label}<br/>${t('median')} <b>${fmt(med, metric.unit)}</b><br/>` +
+            `${t('q1')} ${fmt(q1, metric.unit)} · ${t('q3')} ${fmt(q3, metric.unit)}<br/>` +
+            `${t('min')} ${fmt(min, metric.unit)} · ${t('max')} ${fmt(max, metric.unit)}<br/>` +
             `<span style="opacity:0.7">n = ${b.n}</span>`;
         }
         // Outlier scatter
         const b = buckets[p.data[0]];
-        return `${b.label}<br/>outlier <b>${fmt(p.data[1], metric.unit)}</b>`;
+        return `${b.label}<br/>${t('outlier')} <b>${fmt(p.data[1], metric.unit)}</b>`;
       },
     },
     xAxis: {
@@ -962,11 +965,11 @@ function linearFit(
   return { slope, intercept, r };
 }
 
-function describeCorrelation(r: number): string {
+function describeCorrelation(r: number, t: (s: string) => string): string {
   const a = Math.abs(r);
-  if (a < 0.2) return 'No correlation';
-  const strength = a < 0.4 ? 'Weak' : a < 0.7 ? 'Moderate' : 'Strong';
-  return `${strength} ${r > 0 ? 'positive' : 'negative'} correlation`;
+  if (a < 0.2) return t('No correlation');
+  const strength = a < 0.4 ? t('Weak') : a < 0.7 ? t('Moderate') : t('Strong');
+  return `${strength} ${r > 0 ? t('positive') : t('negative')} ${t('correlation')}`;
 }
 
 function buildScatterOption(
@@ -1033,7 +1036,7 @@ function buildScatterOption(
   };
 }
 
-function buildHistogramOption(buckets: PivotBucket[], metric: PivotMetric) {
+function buildHistogramOption(buckets: PivotBucket[], metric: PivotMetric, t: (s: string) => string) {
   const values = buckets.flatMap((b) => b.points);
   if (values.length === 0) {
     return { xAxis: { type: 'category', data: [] }, yAxis: { type: 'value' }, series: [] };
@@ -1061,7 +1064,7 @@ function buildHistogramOption(buckets: PivotBucket[], metric: PivotMetric) {
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const lo = min + p.dataIndex * width;
-        return `${fmt(lo, metric.unit)} to ${fmt(lo + width, metric.unit)} ${metric.unit}<br/><b>${p.value}</b> dive${p.value === 1 ? '' : 's'}`;
+        return `${fmt(lo, metric.unit)} ${t('to')} ${fmt(lo + width, metric.unit)} ${metric.unit}<br/><b>${p.value}</b> ${t(p.value === 1 ? 'dive' : 'dives')}`;
       },
     },
     xAxis: {
@@ -1082,7 +1085,7 @@ function buildHistogramOption(buckets: PivotBucket[], metric: PivotMetric) {
     },
     yAxis: {
       type: 'value',
-      name: 'dives',
+      name: t('dives'),
       nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
@@ -1163,13 +1166,14 @@ function buildHeatmapOption(
   dim: PivotDimension,
   dim2: PivotDimension,
   stat: Stat,
+  t: (s: string) => string,
 ) {
   if (!heat) return { xAxis: { type: 'category', data: [] }, yAxis: { type: 'category', data: [] }, series: [] };
   const data = heat.cells.map((c) => [c.x, c.y, c.value]);
   const vals = heat.cells.map((c) => c.value);
   const min = vals.length ? Math.min(...vals) : 0;
   const max = vals.length ? Math.max(...vals) : 1;
-  const unitLabel = stat === 'count' ? 'dives' : metric.unit;
+  const unitLabel = stat === 'count' ? t('dives') : metric.unit;
   return {
     grid: { left: 96, right: 16, top: 16, bottom: 96, containLabel: false },
     animation: false,

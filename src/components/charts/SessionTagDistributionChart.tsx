@@ -6,6 +6,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { TagCount } from '../../lib/analytics/balance';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -14,16 +15,17 @@ interface Props {
 
 export function SessionTagDistributionChart({ data }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   const rows = data.filter((d) => d.count > 0);
 
   if (rows.length === 0) {
     return (
       <ChartCard
-        title="Session-Type Distribution"
-        description="How your tagged sessions split across CO₂, O₂, comfort, PB, and recovery work."
+        title={t('Session-Type Distribution')}
+        description={t('How your tagged sessions split across CO₂, O₂, comfort, PB, and recovery work.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No tagged sessions in this backup yet.
+          {t('No tagged sessions in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -43,7 +45,7 @@ export function SessionTagDistributionChart({ data }: Props) {
       textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
-        return `${p.name}<br/>${p.value} session${p.value === 1 ? '' : 's'}`;
+        return `${p.name}<br/>${p.value} ${p.value === 1 ? t('session') : t('sessions')}`;
       },
     },
     xAxis: {
@@ -88,8 +90,8 @@ export function SessionTagDistributionChart({ data }: Props) {
 
   return (
     <ChartCard
-      title="Session-Type Distribution"
-      description="How your tagged sessions split across CO₂, O₂, comfort, PB, and recovery work. Untagged sessions are not counted."
+      title={t('Session-Type Distribution')}
+      description={t('How your tagged sessions split across CO₂, O₂, comfort, PB, and recovery work. Untagged sessions are not counted.')}
     >
       <ReactECharts option={option} style={{ height: 200 }} notMerge />
     </ChartCard>

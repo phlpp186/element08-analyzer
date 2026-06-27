@@ -17,6 +17,7 @@ import * as echarts from 'echarts/core';
 import ReactECharts from 'echarts-for-react';
 import type { PoolDiveData } from '../../lib/analytics/poolDiveProfile';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 
 interface Props {
   data: PoolDiveData;
@@ -29,6 +30,7 @@ const AXIS_POINTER_LINK = [{ xAxisIndex: 'all' as const }];
 
 export function PoolDiveTracks({ data, groupId }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   const lapLines = useMemo(
     () =>
       data.lapEndTimes.map((t, i) => ({
@@ -105,7 +107,7 @@ export function PoolDiveTracks({ data, groupId }: Props) {
     <div className="space-y-4">
       {data.hasHR && (
         <>
-          <TrackHeader label="Heart Rate" unit="bpm" hint={data.contractionTimes.length > 0 ? `${data.contractionTimes.length} contraction${data.contractionTimes.length === 1 ? '' : 's'} marked` : undefined} />
+          <TrackHeader label={t('Heart Rate')} unit="bpm" hint={data.contractionTimes.length > 0 ? `${data.contractionTimes.length} ${data.contractionTimes.length === 1 ? t('contraction') : t('contractions')} ${t('marked')}` : undefined} />
           <ReactECharts
             option={hrOption}
             style={{ height: 200 }}
@@ -117,7 +119,7 @@ export function PoolDiveTracks({ data, groupId }: Props) {
       )}
       {data.hasDepth && (
         <>
-          <TrackHeader label="Depth" unit="m" />
+          <TrackHeader label={t('Depth')} unit="m" />
           <ReactECharts
             option={depthOption}
             style={{ height: 160 }}
@@ -129,7 +131,7 @@ export function PoolDiveTracks({ data, groupId }: Props) {
       )}
       {data.hasSpeed && (
         <>
-          <TrackHeader label="Speed" unit="m/s" />
+          <TrackHeader label={t('Speed')} unit="m/s" />
           <ReactECharts
             option={speedOption}
             style={{ height: 140 }}
@@ -141,7 +143,7 @@ export function PoolDiveTracks({ data, groupId }: Props) {
       )}
       {!data.hasHR && !data.hasDepth && !data.hasSpeed && (
         <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-12 text-center text-textDim">
-          No profile data recorded for this dive.
+          {t('No profile data recorded for this dive.')}
         </div>
       )}
     </div>

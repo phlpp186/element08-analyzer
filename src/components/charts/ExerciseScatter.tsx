@@ -17,6 +17,7 @@ import type {
   ExerciseSource,
 } from '../../lib/analytics/periodExercises';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 
 interface Props {
   data: ExerciseScatterData;
@@ -70,16 +71,17 @@ const Y_LABEL: Record<ExerciseMode, string> = {
 
 export function ExerciseScatter({ data, mode }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (data.points.length === 0) {
     const what =
       mode === 'breathhold'
-        ? 'dry sessions or pool STA dives'
+        ? t('dry sessions or pool STA dives')
         : mode === 'depth'
-          ? 'depth sessions'
-          : 'pool distance dives';
+          ? t('depth sessions')
+          : t('pool distance dives');
     return (
       <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-16 text-center text-textDim">
-        No {what} in this period.
+        {t('No')} {what} {t('in this period.')}
       </div>
     );
   }
@@ -94,7 +96,7 @@ export function ExerciseScatter({ data, mode }: Props) {
   }
 
   const series = Array.from(bySource.entries()).map(([source, pts]) => ({
-    name: SOURCE_LABEL[source],
+    name: t(SOURCE_LABEL[source]),
     type: 'scatter' as const,
     symbolSize: 9,
     itemStyle: {
@@ -129,7 +131,7 @@ export function ExerciseScatter({ data, mode }: Props) {
       textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
       formatter: (p: any) => {
         const meta = p.data._meta as ExercisePoint;
-        const unit = meta.source === 'dry' ? 'Hold' : 'Dive';
+        const unit = meta.source === 'dry' ? t('Hold') : t('Dive');
         return (
           `<div style="font-weight:600;margin-bottom:2px">${fmtDate(meta.dateMs)}</div>` +
           `${meta.sessionName}<br/>` +
@@ -152,7 +154,7 @@ export function ExerciseScatter({ data, mode }: Props) {
     },
     yAxis: {
       type: 'value',
-      name: Y_LABEL[mode],
+      name: t(Y_LABEL[mode]),
       nameTextStyle: {
         color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
@@ -176,7 +178,7 @@ export function ExerciseScatter({ data, mode }: Props) {
   const count = data.points.length;
   const days = new Set(data.points.map((p) => new Date(p.dateMs).toDateString())).size;
   const best = data.points.reduce((m, p) => Math.max(m, p.value), 0);
-  const noun = mode === 'breathhold' ? 'hold/dive' : 'dive';
+  const noun = mode === 'breathhold' ? t('hold/dive') : t('dive');
 
   return (
     <div className="space-y-3">
@@ -185,9 +187,10 @@ export function ExerciseScatter({ data, mode }: Props) {
       </div>
       <p className="font-mono text-[11px] text-textDim">
         {count} {noun}
-        {count === 1 ? '' : 's'} across {days} training day{days === 1 ? '' : 's'}
-        {' · best '}
-        {fmtValue(mode, best)}
+        {count === 1 ? '' : 's'} {t('across')} {days}{' '}
+        {days === 1 ? t('training day') : t('training days')}
+        {' · '}
+        {t('best')} {fmtValue(mode, best)}
       </p>
     </div>
   );

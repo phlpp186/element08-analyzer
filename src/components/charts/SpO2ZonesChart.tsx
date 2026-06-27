@@ -17,6 +17,7 @@ import {
   type Spo2TrendData,
 } from '../../lib/analytics/spo2Zones';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -25,16 +26,17 @@ interface Props {
 
 export function SpO2ZonesChart({ data }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   const { points, summary } = data;
 
   if (points.length === 0) {
     return (
       <ChartCard
-        title="SpO₂ Trend"
-        description="Lowest SpO₂ reached per dry session, over time."
+        title={t('SpO₂ Trend')}
+        description={t('Lowest SpO₂ reached per dry session, over time.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No oximeter data in this backup yet.
+          {t('No oximeter data in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -80,9 +82,9 @@ export function SpO2ZonesChart({ data }: Props) {
         const dateStr = new Date(point.date).toLocaleDateString();
         const zone = zoneFor(point.lowest);
         return (
-          `<span style="color:${zone.color}">●</span> Min SpO₂ ${point.lowest}%` +
+          `<span style="color:${zone.color}">●</span> ${t('Min SpO₂')} ${point.lowest}%` +
           `<br/>${dateStr} · ${point.sessionName}` +
-          `<br/><span style="opacity:0.7">${point.holdCount} hold${point.holdCount === 1 ? '' : 's'} · ${fmtZoneDuration(point.secBelow89)} below 89%</span>`
+          `<br/><span style="opacity:0.7">${point.holdCount} ${point.holdCount === 1 ? t('hold') : t('holds')} · ${fmtZoneDuration(point.secBelow89)} ${t('below 89%')}</span>`
         );
       },
     },
@@ -129,7 +131,7 @@ export function SpO2ZonesChart({ data }: Props) {
     ],
   };
 
-  const sessionsTxt = `${summary.totalHolds} hold${summary.totalHolds === 1 ? '' : 's'} in ${summary.sessionsWithOxy} session${summary.sessionsWithOxy === 1 ? '' : 's'}`;
+  const sessionsTxt = `${summary.totalHolds} ${summary.totalHolds === 1 ? t('hold') : t('holds')} ${t('in')} ${summary.sessionsWithOxy} ${summary.sessionsWithOxy === 1 ? t('session') : t('sessions')}`;
 
   // Cumulative-below-threshold pills, one per zone boundary. We pair each
   // pill with the colour of the zone IT GATES (75-89 pill uses the mild
@@ -143,7 +145,7 @@ export function SpO2ZonesChart({ data }: Props) {
 
   const summaryNode =
     summary.sessionsWithOxy === 0 ? (
-      <p className="mt-1 text-sm text-textDim">No oximeter data in this filter.</p>
+      <p className="mt-1 text-sm text-textDim">{t('No oximeter data in this filter.')}</p>
     ) : (
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
         {thresholdPills.map((p) => (
@@ -164,7 +166,7 @@ export function SpO2ZonesChart({ data }: Props) {
     );
 
   return (
-    <ChartCard title="SpO₂ Trend" description={summaryNode}>
+    <ChartCard title={t('SpO₂ Trend')} description={summaryNode}>
       <ReactECharts option={option} style={{ height: 260 }} notMerge />
     </ChartCard>
   );

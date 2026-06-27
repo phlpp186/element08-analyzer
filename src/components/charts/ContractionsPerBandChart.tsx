@@ -7,6 +7,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { ContractionBand } from '../../lib/analytics/holdTrends';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -21,14 +22,15 @@ function fmtBand(from: number, to: number): string {
 
 export function ContractionsPerBandChart({ bands }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (bands.length === 0) {
     return (
       <ChartCard
-        title="Contractions per 30s Band"
-        description="When in a hold do contractions tend to start?"
+        title={t('Contractions per 30s Band')}
+        description={t('When in a hold do contractions tend to start?')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No contractions logged in this backup yet.
+          {t('No contractions logged in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -44,7 +46,7 @@ export function ContractionsPerBandChart({ bands }: Props) {
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const b = bands[p.dataIndex];
-        return `${fmtBand(b.from, b.to)}<br/>${p.value} contraction${p.value === 1 ? '' : 's'}`;
+        return `${fmtBand(b.from, b.to)}<br/>${p.value} ${p.value === 1 ? t('contraction') : t('contractions')}`;
       },
     },
     xAxis: {
@@ -58,7 +60,7 @@ export function ContractionsPerBandChart({ bands }: Props) {
         fontSize: 10,
         formatter: (val: string, idx: number) => (bands.length > 10 && idx % 2 !== 0 ? '' : val),
       },
-      name: 'seconds into hold',
+      name: t('seconds into hold'),
       nameLocation: 'middle',
       nameGap: 28,
       nameTextStyle: {
@@ -91,8 +93,8 @@ export function ContractionsPerBandChart({ bands }: Props) {
 
   return (
     <ChartCard
-      title="Contractions per 30s Band"
-      description="Aggregate count of recorded contractions by how far into the hold they fired."
+      title={t('Contractions per 30s Band')}
+      description={t('Aggregate count of recorded contractions by how far into the hold they fired.')}
     >
       <ReactECharts option={option} style={{ height: 220 }} notMerge />
     </ChartCard>

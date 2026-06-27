@@ -13,6 +13,7 @@
  */
 import { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
+import { useT } from '../i18n';
 import { useBackupStore } from '../stores/useBackupStore';
 import { spo2LowestPerSession } from '../lib/analytics/spo2Zones';
 import { minSpo2VsDuration, type LungVol } from '../lib/analytics/holdTrends';
@@ -76,6 +77,7 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 export function Insights() {
+  const t = useT();
   const backup = useBackupStore((s) => s.backup);
   const [tab, setTab] = useState<Tab>('breathhold');
   const [bandStep, setBandStep] = useState<BandStep>(10);
@@ -118,27 +120,27 @@ export function Insights() {
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-light tracking-widest text-text">
-            Insights
+            {t('Insights')}
           </h1>
           <p className="mt-1 font-mono text-xs text-textDim">
-            {sessions.length} session{sessions.length === 1 ? '' : 's'}
+            {sessions.length} {t(sessions.length === 1 ? 'session' : 'sessions')}
           </p>
         </div>
         <Link
           to="/sessions"
           className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
         >
-          ← back to sessions
+          ← {t('back to sessions')}
         </Link>
       </header>
 
       <nav className="mb-6 flex gap-1 border-b border-border">
-        {TABS.map((t) => {
-          const active = tab === t.id;
+        {TABS.map((tabItem) => {
+          const active = tab === tabItem.id;
           return (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+              key={tabItem.id}
+              onClick={() => setTab(tabItem.id)}
               className={[
                 'border-b-2 px-4 py-3 font-mono text-xs uppercase tracking-widest transition-colors',
                 active
@@ -146,7 +148,7 @@ export function Insights() {
                   : 'border-transparent text-textDim hover:text-text',
               ].join(' ')}
             >
-              {t.label}
+              {t(tabItem.label)}
             </button>
           );
         })}
@@ -216,7 +218,7 @@ export function Insights() {
               <WeeklyVolumeChart data={weekVol} />
             </div>
             <div className="lg:col-span-2">
-              <ComingSoon items={['Plan adherence']} />
+              <ComingSoon items={[t('Plan adherence')]} />
             </div>
           </>
         )}
@@ -232,6 +234,7 @@ function LungVolFilterPills({
   value: LungVol | null;
   onChange: (v: LungVol | null) => void;
 }) {
+  const t = useT();
   const opts: { id: LungVol | null; label: string }[] = [
     { id: null,  label: 'All' },
     { id: 'FL',  label: 'FL' },
@@ -241,7 +244,7 @@ function LungVolFilterPills({
   return (
     <div className="flex items-center gap-2">
       <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-        Lung volume:
+        {t('Lung volume:')}
       </span>
       {opts.map((o) => {
         const active = value === o.id;
@@ -256,7 +259,7 @@ function LungVolFilterPills({
                 : 'border-border text-textDim hover:border-accent hover:text-accent',
             ].join(' ')}
           >
-            {o.label}
+            {o.id === null ? t(o.label) : o.label}
           </button>
         );
       })}
@@ -265,10 +268,11 @@ function LungVolFilterPills({
 }
 
 function ComingSoon({ items }: { items: string[] }) {
+  const t = useT();
   return (
     <section className="mt-6 rounded-lg border border-dashed border-border bg-panel px-6 py-8">
       <p className="mb-3 font-mono text-[10px] uppercase tracking-widest text-textDim">
-        coming next
+        {t('coming next')}
       </p>
       <ul className="grid grid-cols-1 gap-1 text-sm text-textDim sm:grid-cols-2">
         {items.map((it) => (

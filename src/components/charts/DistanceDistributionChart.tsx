@@ -5,6 +5,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { DistanceBin } from '../../lib/analytics/poolDistance';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -13,14 +14,15 @@ interface Props {
 
 export function DistanceDistributionChart({ bins }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (bins.length === 0) {
     return (
       <ChartCard
-        title="Distance Distribution"
-        description="Per-dive distances bucketed by 25-metre bins."
+        title={t('Distance Distribution')}
+        description={t('Per-dive distances bucketed by 25-metre bins.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No pool dives with distance data in this backup yet.
+          {t('No pool dives with distance data in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -36,7 +38,7 @@ export function DistanceDistributionChart({ bins }: Props) {
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const bin = bins[p.dataIndex];
-        return `${bin.from}–${bin.to}m<br/>${p.value} dive${p.value === 1 ? '' : 's'}`;
+        return `${bin.from}–${bin.to}m<br/>${p.value} ${p.value === 1 ? t('dive') : t('dives')}`;
       },
     },
     xAxis: {
@@ -53,7 +55,7 @@ export function DistanceDistributionChart({ bins }: Props) {
           return bins.length > 12 && idx % 2 !== 0 ? '' : val;
         },
       },
-      name: 'metres',
+      name: t('metres'),
       nameLocation: 'middle',
       nameGap: 28,
       nameTextStyle: {
@@ -86,8 +88,8 @@ export function DistanceDistributionChart({ bins }: Props) {
 
   return (
     <ChartCard
-      title="Distance Distribution"
-      description="Per-dive distances bucketed by 25-metre bins. Shows the volume mix in your pool training."
+      title={t('Distance Distribution')}
+      description={t('Per-dive distances bucketed by 25-metre bins. Shows the volume mix in your pool training.')}
     >
       <ReactECharts option={option} style={{ height: 200 }} notMerge />
     </ChartCard>

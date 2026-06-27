@@ -6,6 +6,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { EffortCount } from '../../lib/analytics/balance';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -14,14 +15,15 @@ interface Props {
 
 export function EffortDistributionChart({ data }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (data.length === 0) {
     return (
       <ChartCard
-        title="Effort Distribution"
-        description="How your 1-5 self-rated session effort is spread across training."
+        title={t('Effort Distribution')}
+        description={t('How your 1-5 self-rated session effort is spread across training.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No rated sessions in this backup yet.
+          {t('No rated sessions in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -36,7 +38,7 @@ export function EffortDistributionChart({ data }: Props) {
       textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
-        return `Effort ${p.name}/5<br/>${p.value} session${p.value === 1 ? '' : 's'}`;
+        return `${t('Effort')} ${p.name}/5<br/>${p.value} ${p.value === 1 ? t('session') : t('sessions')}`;
       },
     },
     xAxis: {
@@ -49,7 +51,7 @@ export function EffortDistributionChart({ data }: Props) {
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
       },
-      name: 'effort rating',
+      name: t('effort rating'),
       nameLocation: 'middle',
       nameGap: 26,
       nameTextStyle: {
@@ -89,8 +91,8 @@ export function EffortDistributionChart({ data }: Props) {
 
   return (
     <ChartCard
-      title="Effort Distribution"
-      description="How your 1-5 self-rated session effort is spread across training. Unrated sessions are not counted."
+      title={t('Effort Distribution')}
+      description={t('How your 1-5 self-rated session effort is spread across training. Unrated sessions are not counted.')}
     >
       <ReactECharts option={option} style={{ height: 200 }} notMerge />
     </ChartCard>

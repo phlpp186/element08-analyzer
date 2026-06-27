@@ -5,6 +5,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { PaceSeries } from '../../lib/analytics/poolPace';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -21,14 +22,15 @@ function fmtPace(secsPer100m: number): string {
 
 export function PoolPaceChart({ series }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (series.length === 0) {
     return (
       <ChartCard
-        title="Pace per Dive"
-        description="Average pace per training dive. Lower is faster."
+        title={t('Pace per Dive')}
+        description={t('Average pace per training dive. Lower is faster.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No pool dives with distance data in this backup yet.
+          {t('No pool dives with distance data in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -52,7 +54,7 @@ export function PoolPaceChart({ series }: Props) {
       formatter: (p: any) => {
         const [date, pace, meta] = p.value as [string, number, { distance: number; diveTime: number }];
         const dateStr = new Date(date).toLocaleDateString();
-        return `<span style="color:${p.color}">●</span> ${p.seriesName}<br/>${dateStr} · ${fmtPace(pace)}<br/><span style="opacity:0.7">${meta.distance}m in ${Math.round(meta.diveTime)}s</span>`;
+        return `<span style="color:${p.color}">●</span> ${p.seriesName}<br/>${dateStr} · ${fmtPace(pace)}<br/><span style="opacity:0.7">${meta.distance}m ${t('in')} ${Math.round(meta.diveTime)}s</span>`;
       },
     },
     legend: {
@@ -106,8 +108,8 @@ export function PoolPaceChart({ series }: Props) {
 
   return (
     <ChartCard
-      title="Pace per Dive"
-      description="Average pace per training dive, over time. Lower on the chart = faster."
+      title={t('Pace per Dive')}
+      description={t('Average pace per training dive, over time. Lower on the chart = faster.')}
     >
       <ReactECharts option={option} style={{ height: 240 }} notMerge />
     </ChartCard>

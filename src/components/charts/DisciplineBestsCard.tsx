@@ -7,6 +7,7 @@ import {
   fmtBestValue,
   type BestRecord,
 } from '../../lib/analytics/poolBests';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 const DISC_LABELS: Record<BestRecord['discipline'], string> = {
@@ -30,14 +31,15 @@ interface Props {
 }
 
 export function DisciplineBestsCard({ bests }: Props) {
+  const t = useT();
   if (bests.length === 0) {
     return (
       <ChartCard
-        title="Discipline Bests"
-        description="Your longest hold (Static) or furthest distance (DYN-family) per discipline."
+        title={t('Discipline Bests')}
+        description={t('Your longest hold (Static) or furthest distance (DYN-family) per discipline.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No pool dives in this backup yet.
+          {t('No pool dives in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -45,8 +47,8 @@ export function DisciplineBestsCard({ bests }: Props) {
 
   return (
     <ChartCard
-      title="Discipline Bests"
-      description="Your longest hold (Static) or furthest distance (DYN-family) per discipline."
+      title={t('Discipline Bests')}
+      description={t('Your longest hold (Static) or furthest distance (DYN-family) per discipline.')}
     >
       <ul className="divide-y divide-border">
         {bests.map((b) => (
@@ -60,7 +62,11 @@ export function DisciplineBestsCard({ bests }: Props) {
                 style={{ backgroundColor: DISC_COLORS[b.discipline] }}
               />
               <span className="font-mono text-xs uppercase tracking-widest text-textDim">
-                {DISC_LABELS[b.discipline]}
+                {b.discipline === 'STA'
+                  ? t('Static')
+                  : b.discipline === 'other'
+                    ? t('Other')
+                    : DISC_LABELS[b.discipline]}
               </span>
             </div>
             <div className="text-right">

@@ -15,11 +15,13 @@ import { Playground } from './routes/Playground';
 import { ThemeToggle } from './components/ThemeToggle';
 import { AppFooter } from './components/AppFooter';
 import { AuthProvider } from './lib/supabase/AuthProvider';
+import { LanguageSwitcher } from './i18n/LanguageSwitcher';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
     <ThemeToggle />
+    <LanguageSwitcher />
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />

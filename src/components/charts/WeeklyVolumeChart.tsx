@@ -5,6 +5,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { WeekVolume } from '../../lib/analytics/balance';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -13,14 +14,15 @@ interface Props {
 
 export function WeeklyVolumeChart({ data }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (data.length === 0 || data.every((w) => w.minutes === 0)) {
     return (
       <ChartCard
-        title="Weekly Volume"
-        description="Total training hours per week."
+        title={t('Weekly Volume')}
+        description={t('Total training hours per week.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No session durations in this backup yet.
+          {t('No session durations in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -36,8 +38,8 @@ export function WeeklyVolumeChart({ data }: Props) {
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const w = data[p.dataIndex];
-        return `Week of ${fmtWeek(w.weekStart)}<br/>${fmtHm(w.minutes)} · ${w.sessions} session${
-          w.sessions === 1 ? '' : 's'
+        return `${t('Week of')} ${fmtWeek(w.weekStart)}<br/>${fmtHm(w.minutes)} · ${w.sessions} ${
+          w.sessions === 1 ? t('session') : t('sessions')
         }`;
       },
     },
@@ -79,8 +81,8 @@ export function WeeklyVolumeChart({ data }: Props) {
 
   return (
     <ChartCard
-      title="Weekly Volume"
-      description="Total training hours per week over the last 26 weeks. Shows how volume builds and tapers."
+      title={t('Weekly Volume')}
+      description={t('Total training hours per week over the last 26 weeks. Shows how volume builds and tapers.')}
     >
       <ReactECharts option={option} style={{ height: 220 }} notMerge />
     </ChartCard>

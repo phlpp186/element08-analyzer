@@ -14,6 +14,9 @@ import * as echarts from 'echarts/core';
 import ReactECharts from 'echarts-for-react';
 import type { DryBlock, DrySessionData } from '../../lib/analytics/drySessionProfile';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
+
+type TFn = (s: string) => string;
 
 interface Props {
   data: DrySessionData;
@@ -31,6 +34,7 @@ const BLOCK_COLORS = {
 
 export function DrySessionTracks({ data, groupId }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   const holdBands = useMemo(
     () =>
       data.blocks
@@ -107,9 +111,9 @@ export function DrySessionTracks({ data, groupId }: Props) {
       {data.hrSeries.length >= 2 && (
         <>
           <TrackHeader
-            label="Heart Rate"
+            label={t('Heart Rate')}
             unit="bpm"
-            hint={data.contractions.length > 0 ? `${data.contractions.length} contraction${data.contractions.length === 1 ? '' : 's'}` : undefined}
+            hint={data.contractions.length > 0 ? `${data.contractions.length} ${data.contractions.length === 1 ? t('contraction') : t('contractions')}` : undefined}
           />
           <ReactECharts
             option={hrOption}
@@ -123,14 +127,14 @@ export function DrySessionTracks({ data, groupId }: Props) {
 
       {data.blocks.length > 0 && (
         <>
-          <TrackHeader label="Block Timeline" unit="Rest / Hold / Recover" />
-          <BlockStrip blocks={data.blocks} startT={data.startT} endT={data.endT} />
+          <TrackHeader label={t('Block Timeline')} unit={`${t('Rest')} / ${t('Hold')} / ${t('Recover')}`} />
+          <BlockStrip blocks={data.blocks} startT={data.startT} endT={data.endT} t={t} />
         </>
       )}
 
       {!data.hasOxy && data.blocks.length === 0 && (
         <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-12 text-center text-textDim">
-          No oximeter readings or block timeline recorded for this session.
+          {t('No oximeter readings or block timeline recorded for this session.')}
         </div>
       )}
     </div>
@@ -158,10 +162,12 @@ function BlockStrip({
   blocks,
   startT,
   endT,
+  t,
 }: {
   blocks: DryBlock[];
   startT: number;
   endT: number;
+  t: TFn;
 }) {
   const total = Math.max(endT - startT, 1);
   // The strip is offset by the chart grid's left axis (56px) + right
@@ -179,7 +185,7 @@ function BlockStrip({
               key={i}
               className="flex items-center justify-center border-r border-deep last:border-r-0"
               style={{ width: `${pct}%`, backgroundColor: c.fill }}
-              title={`${b.type} · ${fmtSec(b.endT - b.startT)}`}
+              title={`${t(b.type)} · ${fmtSec(b.endT - b.startT)}`}
             >
               {pct > 4 && (
                 <span

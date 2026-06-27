@@ -10,6 +10,7 @@
  * The session-level header (date, name, summary) is the same across modes.
  */
 import { Link, Navigate, useParams } from 'react-router-dom';
+import { useT } from '../i18n';
 import { useBackupStore } from '../stores/useBackupStore';
 import {
   formatDate,
@@ -19,6 +20,7 @@ import {
 } from '../lib/format';
 
 export function SessionDetail() {
+  const t = useT();
   const { id } = useParams<{ id: string }>();
   const backup = useBackupStore((s) => s.backup);
   const getSession = useBackupStore((s) => s.getSession);
@@ -32,7 +34,7 @@ export function SessionDetail() {
     return (
       <div className="mx-auto max-w-3xl px-6 py-10">
         <BackLink />
-        <p className="mt-8 text-textDim">Session not found.</p>
+        <p className="mt-8 text-textDim">{t('Session not found.')}</p>
       </div>
     );
   }
@@ -51,7 +53,7 @@ export function SessionDetail() {
           {modeLabel(session.mode)} · {formatDate(session.date)}
         </span>
         <h1 className="mt-1 font-heading text-3xl tracking-wide text-text">
-          {session.name || 'Untitled session'}
+          {session.name || t('Untitled session')}
         </h1>
         <p className="mt-2 font-mono text-sm text-textDim">{summaryLine(session)}</p>
       </header>
@@ -64,12 +66,13 @@ export function SessionDetail() {
 }
 
 function BackLink() {
+  const t = useT();
   return (
     <Link
       to="/sessions"
       className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
     >
-      ← back to sessions
+      ← {t('back to sessions')}
     </Link>
   );
 }
@@ -88,11 +91,12 @@ interface DepthDiveRow {
 }
 
 function DepthDiveList({ session }: { session: any }) {
+  const t = useT();
   const dives: DepthDiveRow[] = session.dives ?? [];
   if (dives.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-border bg-panel py-12 text-center text-textDim">
-        This depth session has no dives recorded.
+        {t('This depth session has no dives recorded.')}
       </p>
     );
   }
@@ -105,14 +109,14 @@ function DepthDiveList({ session }: { session: any }) {
             className="flex items-center gap-4 bg-panel px-4 py-3 transition-colors hover:bg-abyss"
           >
             <div className="w-20 shrink-0 font-mono text-xs uppercase tracking-widest text-textDim">
-              Dive {idx + 1}
+              {t('Dive')} {idx + 1}
             </div>
             <div className="min-w-0 flex-1">
               <div className="font-heading text-lg tracking-wide text-accent">
                 {d.depth}m
               </div>
               <div className="font-mono text-xs text-textDim">
-                {fmtSec(d.diveTime)} · descent {fmtSec(d.descentTime ?? 0)} · hang {fmtSec(d.hangTime ?? 0)} · ascent {fmtSec(d.ascentTime ?? 0)}
+                {fmtSec(d.diveTime)} · {t('descent')} {fmtSec(d.descentTime ?? 0)} · {t('hang')} {fmtSec(d.hangTime ?? 0)} · {t('ascent')} {fmtSec(d.ascentTime ?? 0)}
                 {d.discipline ? ` · ${d.discipline}` : ''}
               </div>
             </div>
@@ -152,11 +156,12 @@ const POOL_DISC_COLORS: Record<PoolDiveRow['discipline'], string> = {
 };
 
 function PoolDiveList({ session }: { session: any }) {
+  const t = useT();
   const dives: PoolDiveRow[] = session.dives ?? [];
   if (dives.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-border bg-panel py-12 text-center text-textDim">
-        This pool session has no dives recorded.
+        {t('This pool session has no dives recorded.')}
       </p>
     );
   }
@@ -172,7 +177,7 @@ function PoolDiveList({ session }: { session: any }) {
               className="flex items-center gap-4 bg-panel px-4 py-3 transition-colors hover:bg-abyss"
             >
               <div className="w-20 shrink-0 font-mono text-xs uppercase tracking-widest text-textDim">
-                Dive {idx + 1}
+                {t('Dive')} {idx + 1}
               </div>
               <div className="min-w-0 flex-1">
                 <div
@@ -183,7 +188,7 @@ function PoolDiveList({ session }: { session: any }) {
                 </div>
                 <div className="font-mono text-xs text-textDim">
                   {!isSta && `${fmtSec(d.diveTime)} · `}
-                  {d.turns != null && d.turns > 0 ? `${d.turns} turn${d.turns === 1 ? '' : 's'} · ` : ''}
+                  {d.turns != null && d.turns > 0 ? `${d.turns} ${t(d.turns === 1 ? 'turn' : 'turns')} · ` : ''}
                   SI {fmtSec(d.si)}
                   {d.hrHighest != null && d.hrLowest != null && ` · HR ${d.hrLowest}–${d.hrHighest}`}
                 </div>
@@ -200,17 +205,17 @@ function PoolDiveList({ session }: { session: any }) {
 // ─── Dry ───────────────────────────────────────────────────────────────────
 
 function DryOpenPlayer({ sessionId }: { sessionId: number }) {
+  const t = useT();
   return (
     <div className="rounded-lg border border-border bg-panel p-6">
       <p className="text-sm text-textDim">
-        Dry sessions are a single continuous timeline, open the full
-        player to scrub through SpO₂, HR, and the block timeline.
+        {t('Dry sessions are a single continuous timeline, open the full player to scrub through SpO₂, HR, and the block timeline.')}
       </p>
       <Link
         to={`/session/${sessionId}/dry`}
         className="glow-accent mt-4 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 font-mono text-xs uppercase tracking-widest text-ink hover:opacity-95"
       >
-        Open timeline player →
+        {t('Open timeline player')} →
       </Link>
     </div>
   );

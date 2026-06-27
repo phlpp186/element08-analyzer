@@ -7,6 +7,7 @@
  * route through callbacks; persistence is the caller's responsibility.
  */
 import type { HangSegment } from '../lib/analytics/diveProfile';
+import { useT } from '../i18n';
 
 interface Props {
   hang: HangSegment;
@@ -30,6 +31,7 @@ export function HangEditorPopover({
   onDelete,
   onClose,
 }: Props) {
+  const t = useT();
   function nudgeStart(delta: number) {
     const next = Math.max(minT, Math.min(hang.endT - 1, hang.startT + delta));
     onChange({ ...hang, startT: next });
@@ -53,11 +55,11 @@ export function HangEditorPopover({
     >
       <div className="mb-2 flex items-center justify-between">
         <h4 className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-          Edit hang · {hang.type === 'bottom' ? 'bottom' : 'off-bottom'}
+          {t('Edit hang')} · {hang.type === 'bottom' ? t('bottom') : t('off-bottom')}
         </h4>
         <button
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t('Close')}
           className="font-mono text-sm text-textDim hover:text-text"
         >
           ×
@@ -66,19 +68,19 @@ export function HangEditorPopover({
 
       <div className="space-y-2">
         <Row
-          label="Start"
+          label={t('Start')}
           value={fmtSec(hang.startT)}
           onMinus={() => nudgeStart(-1)}
           onPlus={() => nudgeStart(+1)}
         />
         <Row
-          label="End"
+          label={t('End')}
           value={fmtSec(hang.endT)}
           onMinus={() => nudgeEnd(-1)}
           onPlus={() => nudgeEnd(+1)}
         />
         <div className="flex items-center justify-between border-t border-border/60 pt-2 font-mono text-[11px] text-textDim">
-          <span>Duration</span>
+          <span>{t('Duration')}</span>
           <span className="text-text">{duration}s</span>
         </div>
       </div>
@@ -88,13 +90,13 @@ export function HangEditorPopover({
           onClick={onDelete}
           className="font-mono text-[11px] uppercase tracking-widest text-red hover:opacity-80"
         >
-          Delete
+          {t('Delete')}
         </button>
         <button
           onClick={onClose}
           className="rounded-full border border-accent bg-accent/10 px-3 py-0.5 font-mono text-[11px] text-accent hover:bg-accent/20"
         >
-          Done
+          {t('Done')}
         </button>
       </div>
     </div>

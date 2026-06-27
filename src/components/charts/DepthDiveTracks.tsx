@@ -33,6 +33,9 @@ import type {
   ProfilePoint,
 } from '../../lib/analytics/diveProfile';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
+import { useT, useLangValue } from '../../i18n';
+
+type TFn = (s: string) => string;
 
 interface AlarmLite {
   type: 'depth' | 'time' | 'speed';
@@ -79,6 +82,8 @@ export function DepthDiveTracks({
   onHangClick,
 }: Props) {
   const ct = useChartTheme();
+  const t = useT();
+  const lang = useLangValue();
   const hangsClickable = !!onHangClick;
   const depthOption = useMemo(
     () =>
@@ -90,8 +95,9 @@ export function DepthDiveTracks({
         speedStep,
         ct,
         hangsClickable,
+        t,
       ),
-    [data, contractionOnset, alarms, showAlarms, speedStep, ct, hangsClickable],
+    [data, contractionOnset, alarms, showAlarms, speedStep, ct, hangsClickable, lang],
   );
   const depthEvents = useMemo(
     () =>
@@ -138,7 +144,7 @@ export function DepthDiveTracks({
 
   return (
     <div className="space-y-4">
-      <TrackHeader label="Depth" unit="m" />
+      <TrackHeader label={t('Depth')} unit="m" />
       <ReactECharts
         option={depthOption}
         style={{ height: 260 }}
@@ -150,7 +156,7 @@ export function DepthDiveTracks({
 
       {data.hasHR && (
         <>
-          <TrackHeader label="Heart Rate" unit="bpm" />
+          <TrackHeader label={t('Heart Rate')} unit="bpm" />
           <ReactECharts
             option={hrOption}
             style={{ height: 140 }}
@@ -163,7 +169,7 @@ export function DepthDiveTracks({
 
       {data.hasSpeed && (
         <>
-          <TrackHeader label="Vertical Speed" unit="m/s" hint="negative = descending" />
+          <TrackHeader label={t('Vertical Speed')} unit="m/s" hint={t('negative = descending')} />
           <ReactECharts
             option={speedOption}
             style={{ height: 140 }}
@@ -176,7 +182,7 @@ export function DepthDiveTracks({
 
       {data.hasTemp && (
         <>
-          <TrackHeader label="Temperature" unit="°C" />
+          <TrackHeader label={t('Temperature')} unit="°C" />
           <ReactECharts
             option={tempOption}
             style={{ height: 140 }}
@@ -337,12 +343,13 @@ function buildDepthOption(
   speedStep: number,
   ct: ChartTheme,
   hangsClickable: boolean,
+  t: TFn,
 ) {
   const hangBands = (data.hangs as HangSegment[]).map((h) => ({
     startT: h.startT,
     endT: h.endT,
     color: h.type === 'bottom' ? 'rgba(79, 195, 247, 0.12)' : 'rgba(255, 167, 38, 0.10)',
-    name: h.type === 'bottom' ? 'Bottom hang' : 'Off-bottom hang',
+    name: h.type === 'bottom' ? t('Bottom hang') : t('Off-bottom hang'),
   }));
 
   const splitT = maxDepthTime(data.depthSeries);
@@ -370,7 +377,7 @@ function buildDepthOption(
           symbolSize: 12,
           itemStyle: { color: '#ef5350' },
           label: {
-            formatter: 'First contraction',
+            formatter: t('First contraction'),
             position: 'top',
             color: '#ef5350',
             fontSize: 10,
@@ -420,7 +427,7 @@ function buildDepthOption(
     },
     series: [
       {
-        name: 'Depth',
+        name: t('Depth'),
         type: 'line',
         data: data.depthSeries,
         showSymbol: false,

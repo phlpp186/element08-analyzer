@@ -12,8 +12,10 @@ import { useBackupStore } from '../stores/useBackupStore';
 import { extractDrySessionData } from '../lib/analytics/drySessionProfile';
 import { DrySessionTracks } from '../components/charts/DrySessionTracks';
 import { formatDate } from '../lib/format';
+import { useT } from '../i18n';
 
 export function DrySessionPlayer() {
+  const t = useT();
   const { sessionId } = useParams<{ sessionId: string }>();
   const backup = useBackupStore((s) => s.backup);
   const getSession = useBackupStore((s) => s.getSession);
@@ -28,9 +30,9 @@ export function DrySessionPlayer() {
           to="/sessions"
           className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
         >
-          ← back to sessions
+          ← {t('back to sessions')}
         </Link>
-        <p className="mt-8 text-textDim">Dry session not found.</p>
+        <p className="mt-8 text-textDim">{t('Dry session not found.')}</p>
       </div>
     );
   }
@@ -59,25 +61,25 @@ export function DrySessionPlayer() {
         to="/sessions"
         className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
       >
-        ← back to sessions
+        ← {t('back to sessions')}
       </Link>
 
       <header className="mt-6 mb-8">
         <span className="font-mono text-[10px] uppercase tracking-widest text-recover">
-          Dry · {formatDate(session.date)}
+          {t('Dry')} · {formatDate(session.date)}
         </span>
         <h1 className="mt-1 font-heading text-4xl tracking-wide text-text">
-          {session.name || 'Untitled session'}
+          {session.name || t('Untitled session')}
         </h1>
 
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-          {cycles > 0 && <Stat label="Holds" value={String(cycles)} />}
-          <Stat label="Duration" value={(session as any).duration ?? '-'} />
-          {lungVol && <Stat label="Lung volume" value={lungVol} />}
-          {breathingStyle && <Stat label="Breathing" value={breathingStyle} />}
-          {minSpo2 != null && <Stat label="Min SpO₂" value={`${minSpo2}%`} />}
+          {cycles > 0 && <Stat label={t('Holds')} value={String(cycles)} />}
+          <Stat label={t('Duration')} value={(session as any).duration ?? '-'} />
+          {lungVol && <Stat label={t('Lung volume')} value={lungVol} />}
+          {breathingStyle && <Stat label={t('Breathing')} value={breathingStyle} />}
+          {minSpo2 != null && <Stat label={t('Min SpO₂')} value={`${minSpo2}%`} />}
           {minHr != null && maxHr != null && (
-            <Stat label="HR range" value={`${minHr}–${maxHr}`} />
+            <Stat label={t('HR range')} value={`${minHr}–${maxHr}`} />
           )}
         </div>
       </header>

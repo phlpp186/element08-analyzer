@@ -8,6 +8,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { HeatmapDay } from '../../lib/analytics/heatmap';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -16,13 +17,14 @@ interface Props {
 
 export function TrainingHeatmap({ series }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (series.length === 0) {
     return (
       <ChartCard
-        title="Training Days"
-        description="Sessions per day, past year."
+        title={t('Training Days')}
+        description={t('Sessions per day, past year.')}
       >
-        <p className="py-8 text-center text-sm text-textDim">No sessions yet.</p>
+        <p className="py-8 text-center text-sm text-textDim">{t('No sessions yet.')}</p>
       </ChartCard>
     );
   }
@@ -39,7 +41,7 @@ export function TrainingHeatmap({ series }: Props) {
       formatter: (p: any) => {
         const date = p.value[0];
         const count = p.value[1];
-        return `${date}<br/>${count} session${count === 1 ? '' : 's'}`;
+        return `${date}<br/>${count} ${count === 1 ? t('session') : t('sessions')}`;
       },
     },
     visualMap: {
@@ -70,8 +72,8 @@ export function TrainingHeatmap({ series }: Props) {
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 10,
         nameMap: [
-          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+          t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'),
+          t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec'),
         ],
       },
       dayLabel: {
@@ -79,7 +81,7 @@ export function TrainingHeatmap({ series }: Props) {
         color: ct.textDim,
         fontFamily: 'JetBrains Mono, ui-monospace, monospace',
         fontSize: 9,
-        nameMap: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        nameMap: [t('Sun'), t('Mon'), t('Tue'), t('Wed'), t('Thu'), t('Fri'), t('Sat')],
       },
     },
     series: [
@@ -110,14 +112,14 @@ export function TrainingHeatmap({ series }: Props) {
 
   return (
     <ChartCard
-      title="Training Days"
-      description="Sessions per day, past year."
+      title={t('Training Days')}
+      description={t('Sessions per day, past year.')}
     >
       <ReactECharts option={option} style={{ height: 180 }} notMerge />
       <dl className="mt-4 grid grid-cols-3 gap-4 border-t border-border pt-4 text-center">
-        <Stat label="Sessions" value={String(total)} />
-        <Stat label="Active days" value={String(activeDays)} />
-        <Stat label="Longest streak" value={`${longestStreak}d`} />
+        <Stat label={t('Sessions')} value={String(total)} />
+        <Stat label={t('Active days')} value={String(activeDays)} />
+        <Stat label={t('Longest streak')} value={`${longestStreak}d`} />
       </dl>
     </ChartCard>
   );

@@ -5,6 +5,7 @@
 import ReactECharts from 'echarts-for-react';
 import type { DepthBin } from '../../lib/analytics/depthInsights';
 import { useChartTheme } from '../../lib/chartTheme';
+import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
 interface Props {
@@ -13,14 +14,15 @@ interface Props {
 
 export function DepthDistributionChart({ bins }: Props) {
   const ct = useChartTheme();
+  const t = useT();
   if (bins.length === 0) {
     return (
       <ChartCard
-        title="Depth Distribution"
-        description="How your dives are distributed across the depth range."
+        title={t('Depth Distribution')}
+        description={t('How your dives are distributed across the depth range.')}
       >
         <p className="py-8 text-center text-sm text-textDim">
-          No depth dives in this backup yet.
+          {t('No depth dives in this backup yet.')}
         </p>
       </ChartCard>
     );
@@ -36,7 +38,7 @@ export function DepthDistributionChart({ bins }: Props) {
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const bin = bins[p.dataIndex];
-        return `${bin.from}–${bin.to}m<br/>${p.value} dive${p.value === 1 ? '' : 's'}`;
+        return `${bin.from}–${bin.to}m<br/>${p.value} ${p.value === 1 ? t('dive') : t('dives')}`;
       },
     },
     xAxis: {
@@ -51,7 +53,7 @@ export function DepthDistributionChart({ bins }: Props) {
         formatter: (val: string, idx: number) =>
           bins.length > 12 && idx % 2 !== 0 ? '' : val,
       },
-      name: 'metres',
+      name: t('metres'),
       nameLocation: 'middle',
       nameGap: 28,
       nameTextStyle: {
@@ -84,8 +86,8 @@ export function DepthDistributionChart({ bins }: Props) {
 
   return (
     <ChartCard
-      title="Depth Distribution"
-      description="Per-dive max depth bucketed by 5-metre bins. Warm-ups and safeties are excluded."
+      title={t('Depth Distribution')}
+      description={t('Per-dive max depth bucketed by 5-metre bins. Warm-ups and safeties are excluded.')}
     >
       <ReactECharts option={option} style={{ height: 200 }} notMerge />
     </ChartCard>

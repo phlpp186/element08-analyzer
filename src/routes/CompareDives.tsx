@@ -12,6 +12,7 @@
  */
 import { useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useT } from '../i18n';
 import type { ParsedSession } from '../schema/backup';
 import { useBackupStore } from '../stores/useBackupStore';
 import {
@@ -80,6 +81,7 @@ const METRIC_META: Record<
 };
 
 export function CompareDives() {
+  const t = useT();
   const backup = useBackupStore((s) => s.backup);
   const selections = useDiveCompareStore((s) => s.selections);
   const toggle = useDiveCompareStore((s) => s.toggle);
@@ -107,16 +109,16 @@ export function CompareDives() {
   }, [catalog, query]);
 
   const depthEntries = useMemo(
-    () => (mode === 'depth' ? resolveDepth(sessions, slots) : []),
-    [mode, sessions, slots],
+    () => (mode === 'depth' ? resolveDepth(sessions, slots, t) : []),
+    [mode, sessions, slots, t],
   );
   const poolEntries = useMemo(
-    () => (mode === 'pool' ? resolvePool(sessions, slots) : []),
-    [mode, sessions, slots],
+    () => (mode === 'pool' ? resolvePool(sessions, slots, t) : []),
+    [mode, sessions, slots, t],
   );
   const holdEntries = useMemo(
-    () => (mode === 'holds' ? resolveHolds(sessions, slots) : []),
-    [mode, sessions, slots],
+    () => (mode === 'holds' ? resolveHolds(sessions, slots, t) : []),
+    [mode, sessions, slots, t],
   );
 
   if (!backup) return <Navigate to="/" replace />;
@@ -127,7 +129,7 @@ export function CompareDives() {
     <div className="mx-auto max-w-6xl px-6 py-10">
       <CompareModeHeader
         mode="dives"
-        description="Overlay individual dives or holds from any session. Switch between depth profiles, breath holds, and pool dives below."
+        description={t('Overlay individual dives or holds from any session. Switch between depth profiles, breath holds, and pool dives below.')}
       />
 
       <div className="mb-6 flex gap-2">
@@ -145,7 +147,7 @@ export function CompareDives() {
                 : 'border-border text-textDim hover:border-accent hover:text-accent',
             ].join(' ')}
           >
-            {m.label}
+            {t(m.label)}
           </button>
         ))}
       </div>
@@ -154,51 +156,52 @@ export function CompareDives() {
         <div className="space-y-4">
           {slots.length === 0 ? (
             <Placeholder>
-              Pick {mode === 'holds' ? 'holds' : 'dives'} from the panel to
-              overlay them.
+              {mode === 'holds'
+                ? t('Pick holds from the panel to overlay them.')
+                : t('Pick dives from the panel to overlay them.')}
             </Placeholder>
           ) : mode === 'depth' ? (
             <>
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                 <PillToggle
-                  label="Align"
+                  label={t('Align')}
                   value={depthAlign}
                   onChange={setDepthAlign}
                   options={[
-                    { id: 'start', label: 'Start', hint: 'Aligned at t=0' },
-                    { id: 'maxdepth', label: 'Max depth', hint: 'Aligned at the deepest point' },
+                    { id: 'start', label: t('Start'), hint: t('Aligned at t=0') },
+                    { id: 'maxdepth', label: t('Max depth'), hint: t('Aligned at the deepest point') },
                   ]}
                 />
                 <PillToggle
-                  label="Show"
+                  label={t('Show')}
                   value={depthSecondary}
                   onChange={setDepthSecondary}
                   options={[
-                    { id: 'off', label: 'Off', hint: 'Just the depth profile' },
-                    { id: 'speed', label: 'Speed', hint: 'Add vertical speed under depth' },
-                    { id: 'hr', label: 'HR', hint: 'Add heart rate under depth' },
-                    { id: 'temp', label: 'Temp', hint: 'Add temperature under depth' },
+                    { id: 'off', label: t('Off'), hint: t('Just the depth profile') },
+                    { id: 'speed', label: t('Speed'), hint: t('Add vertical speed under depth') },
+                    { id: 'hr', label: 'HR', hint: t('Add heart rate under depth') },
+                    { id: 'temp', label: t('Temp'), hint: t('Add temperature under depth') },
                   ]}
                 />
                 <PillToggle
-                  label="Speed markers"
+                  label={t('Speed markers')}
                   value={depthSpeedStep}
                   onChange={setDepthSpeedStep}
                   options={[
-                    { id: 0, label: 'Off', hint: 'No speed read-outs on the depth curve' },
-                    { id: 5, label: '5m', hint: 'Mark every 5 m crossing with vertical speed' },
-                    { id: 10, label: '10m', hint: 'Mark every 10 m crossing with vertical speed' },
+                    { id: 0, label: t('Off'), hint: t('No speed read-outs on the depth curve') },
+                    { id: 5, label: '5m', hint: t('Mark every 5 m crossing with vertical speed') },
+                    { id: 10, label: '10m', hint: t('Mark every 10 m crossing with vertical speed') },
                   ]}
                 />
                 {depthSecondary === 'speed' && (
                   <PillToggle
-                    label="Speed smoothing"
+                    label={t('Speed smoothing')}
                     value={depthSpeedSmooth}
                     onChange={setDepthSpeedSmooth}
                     options={[
-                      { id: 0, label: 'Raw', hint: 'No smoothing — show the raw oscillation' },
-                      { id: 5, label: 'Light', hint: 'Light moving average' },
-                      { id: 15, label: 'Strong', hint: 'Strong moving average — flatten FIM cycles' },
+                      { id: 0, label: t('Raw'), hint: t('No smoothing, show the raw oscillation') },
+                      { id: 5, label: t('Light'), hint: t('Light moving average') },
+                      { id: 15, label: t('Strong'), hint: t('Strong moving average, flatten FIM cycles') },
                     ]}
                   />
                 )}
@@ -225,7 +228,7 @@ export function CompareDives() {
                 const hasData = depthEntries.some((e) => meta.has(e.data));
                 return (
                   <>
-                    <PanelHeader label="Depth" unit="m" />
+                    <PanelHeader label={t('Depth')} unit="m" />
                     <DiveOverlayChart
                       dives={overlay}
                       align={depthAlign}
@@ -234,7 +237,7 @@ export function CompareDives() {
                       groupId="compare-depth"
                       speedStep={depthSpeedStep}
                     />
-                    <PanelHeader label={meta.label} unit={meta.unit} hint={meta.hint} />
+                    <PanelHeader label={t(meta.label)} unit={meta.unit} hint={t(meta.hint)} />
                     {hasData ? (
                       <DiveOverlayChart
                         dives={overlay}
@@ -247,7 +250,7 @@ export function CompareDives() {
                       />
                     ) : (
                       <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-8 text-center text-sm text-textDim">
-                        No {meta.label.toLowerCase()} data on the selected dives.
+                        {t('No {metric} data on the selected dives.').replace('{metric}', t(meta.label).toLowerCase())}
                       </div>
                     )}
                   </>
@@ -255,18 +258,18 @@ export function CompareDives() {
               })()}
               <StatTable
                 columns={depthEntries}
-                rows={depthRows(depthEntries)}
+                rows={depthRows(depthEntries, t)}
               />
             </>
           ) : mode === 'holds' ? (
             <>
               <PillToggle
-                label="Align"
+                label={t('Align')}
                 value={holdAlign}
                 onChange={setHoldAlign}
                 options={[
-                  { id: 'start', label: 'Hold start', hint: 'Aligned at the hold start' },
-                  { id: 'end', label: 'Hold end', hint: 'Aligned at the hold end' },
+                  { id: 'start', label: t('Hold start'), hint: t('Aligned at the hold start') },
+                  { id: 'end', label: t('Hold end'), hint: t('Aligned at the hold end') },
                 ]}
               />
               <HoldOverlayChart
@@ -280,7 +283,7 @@ export function CompareDives() {
                 align={holdAlign}
                 groupId="compare-holds"
               />
-              <StatTable columns={holdEntries} rows={holdRows(holdEntries)} />
+              <StatTable columns={holdEntries} rows={holdRows(holdEntries, t)} />
             </>
           ) : (
             <>
@@ -292,7 +295,7 @@ export function CompareDives() {
                   avgSpeed: e.avgSpeed,
                 }))}
               />
-              <StatTable columns={poolEntries} rows={poolRows(poolEntries)} />
+              <StatTable columns={poolEntries} rows={poolRows(poolEntries, t)} />
             </>
           )}
         </div>
@@ -322,7 +325,7 @@ function dedupe(base: string, seen: Map<string, number>): string {
   return n > 0 ? `${base} (${n + 1})` : base;
 }
 
-function resolveDepth(sessions: ParsedSession[], slots: CompareSlot[]): DepthEntry[] {
+function resolveDepth(sessions: ParsedSession[], slots: CompareSlot[], t: (s: string) => string): DepthEntry[] {
   const seen = new Map<string, number>();
   const out: DepthEntry[] = [];
   for (const slot of slots) {
@@ -330,7 +333,7 @@ function resolveDepth(sessions: ParsedSession[], slots: CompareSlot[]): DepthEnt
     if (!session || session.mode !== 'depth') continue;
     const dive = (session as any).dives?.[slot.idx];
     if (!dive) continue;
-    const base = `${formatDate(session.date)} · ${dive.discipline || 'Depth'} · ${dive.depth}m`;
+    const base = `${formatDate(session.date)} · ${dive.discipline || t('Depth')} · ${dive.depth}m`;
     out.push({
       color: slot.color,
       label: dedupe(base, seen),
@@ -341,7 +344,7 @@ function resolveDepth(sessions: ParsedSession[], slots: CompareSlot[]): DepthEnt
   return out;
 }
 
-function resolvePool(sessions: ParsedSession[], slots: CompareSlot[]): PoolEntry[] {
+function resolvePool(sessions: ParsedSession[], slots: CompareSlot[], t: (s: string) => string): PoolEntry[] {
   const seen = new Map<string, number>();
   const out: PoolEntry[] = [];
   for (const slot of slots) {
@@ -352,8 +355,8 @@ function resolvePool(sessions: ParsedSession[], slots: CompareSlot[]): PoolEntry
     const distance = typeof dive.distance === 'number' ? dive.distance : null;
     const diveTime = typeof dive.diveTime === 'number' ? dive.diveTime : 0;
     const avgSpeed = distance != null && diveTime > 0 ? distance / diveTime : null;
-    const base = `${formatDate(session.date)} · ${dive.discipline || 'Pool'} · ${
-      distance != null ? `${distance}m` : 'static'
+    const base = `${formatDate(session.date)} · ${dive.discipline || t('Pool')} · ${
+      distance != null ? `${distance}m` : t('static')
     }`;
     out.push({
       color: slot.color,
@@ -366,7 +369,7 @@ function resolvePool(sessions: ParsedSession[], slots: CompareSlot[]): PoolEntry
   return out;
 }
 
-function resolveHolds(sessions: ParsedSession[], slots: CompareSlot[]): HoldEntry[] {
+function resolveHolds(sessions: ParsedSession[], slots: CompareSlot[], t: (s: string) => string): HoldEntry[] {
   const seen = new Map<string, number>();
   const out: HoldEntry[] = [];
   for (const slot of slots) {
@@ -374,7 +377,7 @@ function resolveHolds(sessions: ParsedSession[], slots: CompareSlot[]): HoldEntr
     if (!session || session.mode !== 'dry') continue;
     const slice = extractHoldSlice(session, slot.idx);
     if (!slice) continue;
-    const base = `${formatDate(session.date)} · Hold ${slot.idx + 1}`;
+    const base = `${formatDate(session.date)} · ${t('Hold')} ${slot.idx + 1}`;
     out.push({
       color: slot.color,
       label: dedupe(base, seen),
@@ -387,44 +390,44 @@ function resolveHolds(sessions: ParsedSession[], slots: CompareSlot[]): HoldEntr
 
 // ─── Stat rows ──────────────────────────────────────────────────────────────
 
-function depthRows(entries: DepthEntry[]): StatRow[] {
+function depthRows(entries: DepthEntry[], t: (s: string) => string): StatRow[] {
   return [
-    { label: 'Max depth', values: entries.map((e) => (e.dive.depth != null ? `${e.dive.depth}m` : '-')) },
-    { label: 'Dive time', values: entries.map((e) => fmtSec(e.dive.diveTime)) },
-    { label: 'Descent', values: entries.map((e) => fmtSec(e.dive.descentTime)) },
-    { label: 'Hang', values: entries.map((e) => fmtSec(e.dive.hangTime)) },
-    { label: 'Ascent', values: entries.map((e) => fmtSec(e.dive.ascentTime)) },
-    { label: 'Descent speed', values: entries.map((e) => fmtSpeed(e.dive.descentSpeed)) },
-    { label: 'Ascent speed', values: entries.map((e) => fmtSpeed(e.dive.ascentSpeed)) },
+    { label: t('Max depth'), values: entries.map((e) => (e.dive.depth != null ? `${e.dive.depth}m` : '-')) },
+    { label: t('Dive time'), values: entries.map((e) => fmtSec(e.dive.diveTime)) },
+    { label: t('Descent'), values: entries.map((e) => fmtSec(e.dive.descentTime)) },
+    { label: t('Hang'), values: entries.map((e) => fmtSec(e.dive.hangTime)) },
+    { label: t('Ascent'), values: entries.map((e) => fmtSec(e.dive.ascentTime)) },
+    { label: t('Descent speed'), values: entries.map((e) => fmtSpeed(e.dive.descentSpeed)) },
+    { label: t('Ascent speed'), values: entries.map((e) => fmtSpeed(e.dive.ascentSpeed)) },
   ];
 }
 
-function poolRows(entries: PoolEntry[]): StatRow[] {
+function poolRows(entries: PoolEntry[], t: (s: string) => string): StatRow[] {
   return [
-    { label: 'Discipline', values: entries.map((e) => e.dive.discipline || '-') },
+    { label: t('Discipline'), values: entries.map((e) => e.dive.discipline || '-') },
     {
-      label: 'Distance',
+      label: t('Distance'),
       values: entries.map((e) =>
-        typeof e.dive.distance === 'number' ? `${e.dive.distance}m` : 'static',
+        typeof e.dive.distance === 'number' ? `${e.dive.distance}m` : t('static'),
       ),
     },
-    { label: 'Dive time', values: entries.map((e) => fmtSec(e.dive.diveTime)) },
+    { label: t('Dive time'), values: entries.map((e) => fmtSec(e.dive.diveTime)) },
     {
-      label: 'Avg speed',
+      label: t('Avg speed'),
       values: entries.map((e) => (e.avgSpeed != null ? `${e.avgSpeed.toFixed(2)} m/s` : '-')),
     },
-    { label: 'Rating', values: entries.map((e) => fmtRating(e.dive.rating)) },
+    { label: t('Rating'), values: entries.map((e) => fmtRating(e.dive.rating)) },
   ];
 }
 
-function holdRows(entries: HoldEntry[]): StatRow[] {
+function holdRows(entries: HoldEntry[], t: (s: string) => string): StatRow[] {
   return [
-    { label: 'Duration', values: entries.map((e) => fmtSec(e.slice.durationSec)) },
-    { label: 'Contractions', values: entries.map((e) => String(e.slice.contractionCount)) },
-    { label: 'Rating', values: entries.map((e) => fmtRating(e.slice.rating)) },
+    { label: t('Duration'), values: entries.map((e) => fmtSec(e.slice.durationSec)) },
+    { label: t('Contractions'), values: entries.map((e) => String(e.slice.contractionCount)) },
+    { label: t('Rating'), values: entries.map((e) => fmtRating(e.slice.rating)) },
     { label: 'Min SpO₂', values: entries.map((e) => fmtPct(e.stats.minSpo2)) },
     { label: 'Min HR', values: entries.map((e) => fmtBpm(e.stats.minHr)) },
-    { label: 'HR at end', values: entries.map((e) => fmtBpm(e.stats.hrAtEnd)) },
+    { label: t('HR at end'), values: entries.map((e) => fmtBpm(e.stats.hrAtEnd)) },
     { label: 'SpO₂ +30s', values: entries.map((e) => fmtPct(e.stats.spo2Post30)) },
   ];
 }
@@ -443,13 +446,14 @@ function StatTable({
   columns: { color: string; label: string }[];
   rows: StatRow[];
 }) {
+  const t = useT();
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-panel">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border">
             <th className="px-4 py-2.5 text-left font-mono text-[10px] uppercase tracking-widest text-textDim">
-              Metric
+              {t('Metric')}
             </th>
             {columns.map((c, i) => (
               <th
@@ -559,9 +563,10 @@ function Picker({
   onToggle: (sessionId: number, idx: number) => void;
   onClear: () => void;
 }) {
+  const t = useT();
   const slotFor = (e: CatalogEntry) =>
     slots.find((s) => s.sessionId === e.sessionId && s.idx === e.idx);
-  const noun = mode === 'holds' ? 'Holds' : 'Dives';
+  const noun = mode === 'holds' ? t('Holds') : t('Dives');
 
   return (
     <div className="rounded-lg border border-border bg-panel p-4">
@@ -574,7 +579,7 @@ function Picker({
             onClick={onClear}
             className="font-mono text-[10px] uppercase tracking-widest text-textDim hover:text-accent"
           >
-            Clear
+            {t('Clear')}
           </button>
         )}
       </div>
@@ -583,17 +588,17 @@ function Picker({
         type="text"
         value={query}
         onChange={(e) => onQuery(e.target.value)}
-        placeholder="Filter by date, discipline…"
+        placeholder={t('Filter by date, discipline…')}
         className="mb-3 w-full rounded-md border border-border bg-abyss px-3 py-1.5 text-sm text-text placeholder:text-textDim/60 focus:border-accent focus:outline-none"
       />
 
       {totalCount === 0 ? (
         <p className="px-1 py-8 text-center text-sm text-textDim">
-          Nothing to compare in this backup.
+          {t('Nothing to compare in this backup.')}
         </p>
       ) : catalog.length === 0 ? (
         <p className="px-1 py-8 text-center text-sm text-textDim">
-          No matches for that filter.
+          {t('No matches for that filter.')}
         </p>
       ) : (
         <ul className="max-h-[480px] space-y-1 overflow-y-auto pr-1">
