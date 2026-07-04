@@ -67,6 +67,10 @@ interface Props {
   solo?: 'depth' | 'hr' | 'speed' | 'temp';
   /** Chart height override in px (used by the fullscreen view). */
   chartHeight?: number;
+  /** Speed track x-axis: over time (default) or over depth. Over depth
+   *  splits the dive at its deepest point into a descent and an ascent
+   *  branch (|v| vs depth), which is how coaches read pacing. */
+  speedAxis?: 'time' | 'depth';
 }
 
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
@@ -83,6 +87,7 @@ export function DepthDiveTracks({
   onHangClick,
   solo,
   chartHeight,
+  speedAxis = 'time',
 }: Props) {
   const ct = useChartTheme();
   const t = useT();
@@ -134,6 +139,10 @@ export function DepthDiveTracks({
     () => buildLineOption(data.tempSeries, ct.green, '°C', data.startT, data.endT, ct),
     [data, ct],
   );
+  const speedByDepthOption = useMemo(
+    () => buildSpeedByDepthOption(data, speedSmooth, ct, t),
+    [data, speedSmooth, ct, lang],
+  );
 
   const mountedRef = useRef(0);
   const handleReady = useCallback(
@@ -176,7 +185,7 @@ export function DepthDiveTracks({
         </>
       )}
 
-      {show('speed') && data.hasSpeed && (
+      {show('speed') && data.hasSpeed && speedAxis === 'time' && (
         <>
           <TrackHeader label={t('Vertical Speed')} unit="m/s" hint={t('negative = descending')} />
           <ReactECharts
@@ -184,6 +193,21 @@ export function DepthDiveTracks({
             style={{ height: chartHeight ?? 140 }}
             opts={{ renderer: 'canvas' }}
             onChartReady={handleReady}
+            notMerge
+          />
+        </>
+      )}
+
+      {show('speed') && data.hasSpeed && speedAxis === 'depth' && (
+        <>
+          <TrackHeader label={t('Speed by depth')} unit="m/s" hint={t('descent and ascent as separate branches')} />
+          {/* Depth runs down the y-axis here (profile orientation), so this
+              chart deliberately stays OUT of the shared time-crosshair group
+              and gets a taller default than the time-based tracks. */}
+          <ReactECharts
+            option={speedByDepthOption}
+            style={{ height: chartHeight ?? 340 }}
+            opts={{ renderer: 'canvas' }}
             notMerge
           />
         </>
@@ -576,6 +600,108 @@ function buildLineOption(
       splitLine: { lineStyle: { color: ct.splitLine } },
     },
     series: lineSeries,
+  };
+}
+
+/** Speed against depth, oriented like a dive profile: depth runs down the
+ *  VERTICAL axis (0 m at the top, inverted) and speed (m/s) runs along the
+ *  horizontal axis. The dive splits at its deepest point into a descent
+ *  branch and an ascent branch; smoothing applies to each independently so
+ *  the turn doesn't bleed between them. The crosshair rides the depth axis,
+ *  so hovering a depth reads out both branches' speeds at that depth. */
+function buildSpeedByDepthOption(
+  data: DepthDiveData,
+  smoothWindow: number,
+  ct: ChartTheme,
+  t: TFn,
+) {
+  const splitT = maxDepthTime(data.depthSeries);
+  // Collected as [depth, |speed|], ordered by depth, so the shared
+  // moving-average helper can smooth the speed values along depth.
+  const desc: [number, number][] = [];
+  const asc: [number, number][] = [];
+  for (const p of data.points) {
+    if (p.v == null) continue;
+    if (p.t <= splitT) desc.push([p.d, Math.abs(p.v)]);
+    else asc.push([p.d, Math.abs(p.v)]);
+  }
+  desc.sort((a, b) => a[0] - b[0]);
+  asc.sort((a, b) => a[0] - b[0]);
+  // Plot as [speed, depth]: x = m/s, y = metres.
+  const toPlot = (s: [number, number][]) => s.map(([d, v]) => [v, d] as [number, number]);
+
+  const branch = (name: string, byDepth: [number, number][], color: string) => {
+    const out: any[] = [];
+    if (byDepth.length < 2) return out;
+    if (smoothWindow > 1) {
+      out.push({
+        name,
+        type: 'line',
+        color,
+        data: toPlot(byDepth),
+        showSymbol: false,
+        smooth: 0.2,
+        silent: true,
+        legendHoverLink: false,
+        lineStyle: { color, width: 1, opacity: 0.22 },
+      });
+    }
+    out.push({
+      name,
+      type: 'line',
+      color,
+      data: toPlot(smoothWindow > 1 ? smoothSeries(byDepth, smoothWindow) : byDepth),
+      showSymbol: false,
+      smooth: 0.2,
+      lineStyle: { color, width: 2 },
+    });
+    return out;
+  };
+
+  return {
+    grid: { ...GRID, top: 28 },
+    animation: false,
+    legend: {
+      top: 0,
+      right: 16,
+      textStyle: { color: ct.textDim, fontSize: 10, fontFamily: 'Nunito, system-ui' },
+      itemWidth: 14,
+      data: [t('Descent'), t('Ascent')],
+    },
+    tooltip: {
+      ...baseTooltip(ct),
+      trigger: 'axis',
+      axisPointer: { type: 'line' as const, axis: 'y' as const },
+      formatter: (params: any) => {
+        const arr = Array.isArray(params) ? params : [params];
+        // With smoothing on, raw underlays duplicate the names — keep the
+        // last (bold/smoothed) entry per series name.
+        const byName = new Map<string, [number, number]>();
+        for (const p of arr) byName.set(p.seriesName, p.value as [number, number]);
+        const d = arr[0]?.value?.[1];
+        const lines = [...byName.entries()].map(
+          ([name, [v]]) => `${name}: ${typeof v === 'number' ? v.toFixed(2) : v} m/s`,
+        );
+        return `${typeof d === 'number' ? d.toFixed(1) : d} m<br/>${lines.join('<br/>')}`;
+      },
+    },
+    xAxis: {
+      type: 'value',
+      min: 0,
+      axisLabel: { formatter: '{value} m/s', color: ct.textDim, fontSize: 10 },
+      axisLine: { lineStyle: { color: ct.axisLine } },
+      splitLine: { lineStyle: { color: ct.splitLine } },
+    },
+    yAxis: {
+      type: 'value',
+      inverse: true,
+      min: 0,
+      max: Math.ceil(data.maxDepth * 1.02),
+      axisLabel: { formatter: '{value}m', color: ct.textDim, fontSize: 10 },
+      axisLine: { show: false },
+      splitLine: { show: false },
+    },
+    series: [...branch(t('Descent'), desc, ct.amber), ...branch(t('Ascent'), asc, ct.red)],
   };
 }
 

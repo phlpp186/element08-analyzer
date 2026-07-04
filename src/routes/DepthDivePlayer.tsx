@@ -31,9 +31,12 @@ export function DepthDivePlayer() {
   // detail). speedStep: 0 = off, else 5 or 10 metres.
   const [showAlarms, setShowAlarms] = useState(true);
   const [speedStep, setSpeedStep] = useState<0 | 5 | 10>(0);
-  // Vertical-speed smoothing window in samples. 0 = raw only; 5/15 overlay
-  // a moving average on the raw curve (FIM dives oscillate hard).
-  const [speedSmooth, setSpeedSmooth] = useState<0 | 5 | 15>(0);
+  // Vertical-speed smoothing window in samples, driven by a continuous
+  // slider: 0/1 = raw, up to 31 = heavy moving average (FIM dives
+  // oscillate hard). Odd values keep the average centred.
+  const [speedSmooth, setSpeedSmooth] = useState(0);
+  // Speed track x-axis: over time, or over depth (descent/ascent branches).
+  const [speedAxis, setSpeedAxis] = useState<'time' | 'depth'>('time');
   // Which hang band is currently being edited + the click position to
   // anchor the editor popover. Null = no popover.
   const [selectedHang, setSelectedHang] = useState<{
@@ -267,25 +270,12 @@ export function DepthDivePlayer() {
               ))}
             </div>
             {data.hasSpeed && (
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
-                  {t('Speed smoothing')}
-                </span>
-                {([0, 5, 15] as const).map((win) => (
-                  <button
-                    key={win}
-                    onClick={() => setSpeedSmooth(win)}
-                    className={[
-                      'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
-                      speedSmooth === win
-                        ? 'border-accent bg-accent/10 text-accent'
-                        : 'border-border text-textDim hover:border-accent hover:text-accent',
-                    ].join(' ')}
-                  >
-                    {win === 0 ? t('Raw') : win === 5 ? t('Light') : t('Strong')}
-                  </button>
-                ))}
-              </div>
+              <SpeedControls
+                axis={speedAxis}
+                onAxis={setSpeedAxis}
+                smooth={speedSmooth}
+                onSmooth={setSpeedSmooth}
+              />
             )}
             {/* Hangs — one chip per detected hang opens its editor, + Add
                 creates a new one, Reset drops manual corrections. The
@@ -346,6 +336,7 @@ export function DepthDivePlayer() {
             showAlarms={showAlarms}
             speedStep={speedStep}
             speedSmooth={speedSmooth}
+            speedAxis={speedAxis}
             groupId={`dive-${session.id}-${idx}`}
             onHangClick={handleHangClick}
           />
@@ -377,6 +368,16 @@ export function DepthDivePlayer() {
               active={fsTab}
               onTab={(id) => setFsTab(id as typeof fsTab)}
               onClose={() => setFullscreen(false)}
+              controls={
+                fsTab === 'speed' ? (
+                  <SpeedControls
+                    axis={speedAxis}
+                    onAxis={setSpeedAxis}
+                    smooth={speedSmooth}
+                    onSmooth={setSpeedSmooth}
+                  />
+                ) : undefined
+              }
             >
               {(h) => (
                 <DepthDiveTracks
@@ -386,6 +387,7 @@ export function DepthDivePlayer() {
                   showAlarms={showAlarms}
                   speedStep={speedStep}
                   speedSmooth={speedSmooth}
+                  speedAxis={speedAxis}
                   groupId={`dive-fs-${session.id}-${idx}`}
                   solo={fsTab}
                   chartHeight={Math.max(220, h - 32)}
@@ -407,6 +409,64 @@ function Stat({ label, value }: { label: string; value: string }) {
         {label}
       </div>
     </div>
+  );
+}
+
+/** Speed-track controls: x-axis toggle (over time / over depth) plus the
+ *  continuous smoothing slider (0 = raw, 31 = heavy moving average). Shared
+ *  by the page controls row and the fullscreen Speed tab. */
+function SpeedControls({
+  axis,
+  onAxis,
+  smooth,
+  onSmooth,
+}: {
+  axis: 'time' | 'depth';
+  onAxis: (a: 'time' | 'depth') => void;
+  smooth: number;
+  onSmooth: (n: number) => void;
+}) {
+  const t = useT();
+  return (
+    <>
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
+          {t('Speed')}
+        </span>
+        {(['time', 'depth'] as const).map((a) => (
+          <button
+            key={a}
+            onClick={() => onAxis(a)}
+            className={[
+              'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
+              axis === a
+                ? 'border-accent bg-accent/10 text-accent'
+                : 'border-border text-textDim hover:border-accent hover:text-accent',
+            ].join(' ')}
+          >
+            {a === 'time' ? t('Over time') : t('Over depth')}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
+          {t('Smoothing')}
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={31}
+          step={1}
+          value={smooth}
+          onChange={(e) => onSmooth(Number(e.target.value))}
+          className="w-28 accent-accent"
+          aria-label={t('Speed smoothing')}
+        />
+        <span className="w-12 font-mono text-[11px] text-textDim tabular-nums">
+          {smooth <= 1 ? t('Raw') : `${smooth}`}
+        </span>
+      </div>
+    </>
   );
 }
 

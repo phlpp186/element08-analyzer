@@ -22,6 +22,7 @@ export function FullscreenDive({
   active,
   onTab,
   onClose,
+  controls,
   children,
 }: {
   title: string;
@@ -30,6 +31,9 @@ export function FullscreenDive({
   active: string;
   onTab: (id: string) => void;
   onClose: () => void;
+  /** Optional controls row shown under the header (e.g. the speed-axis
+   *  toggle + smoothing slider while the Speed tab is active). */
+  controls?: ReactNode;
   /** Render prop: receives the pixel height available for the chart area. */
   children: (height: number) => ReactNode;
 }) {
@@ -104,6 +108,11 @@ export function FullscreenDive({
           ✕
         </button>
       </div>
+      {controls && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-border/60 px-4 py-2 sm:px-6">
+          {controls}
+        </div>
+      )}
       <div ref={bodyRef} className="min-h-0 flex-1 overflow-auto p-4 sm:px-6">
         {bodyHeight > 0 && children(chartHeight)}
       </div>
