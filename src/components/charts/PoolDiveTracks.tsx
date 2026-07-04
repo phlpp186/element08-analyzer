@@ -23,12 +23,16 @@ interface Props {
   data: PoolDiveData;
   /** Unique chart-group id (stable across re-renders for the same dive). */
   groupId: string;
+  /** Render just ONE track (fullscreen single-metric view). */
+  solo?: 'hr' | 'depth' | 'speed';
+  /** Chart height override in px (used by the fullscreen view). */
+  chartHeight?: number;
 }
 
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
 const AXIS_POINTER_LINK = [{ xAxisIndex: 'all' as const }];
 
-export function PoolDiveTracks({ data, groupId }: Props) {
+export function PoolDiveTracks({ data, groupId, solo, chartHeight }: Props) {
   const ct = useChartTheme();
   const t = useT();
   const lapLines = useMemo(
@@ -103,38 +107,40 @@ export function PoolDiveTracks({ data, groupId }: Props) {
     [groupId],
   );
 
+  const show = (track: 'hr' | 'depth' | 'speed') => !solo || solo === track;
+
   return (
     <div className="space-y-4">
-      {data.hasHR && (
+      {show('hr') && data.hasHR && (
         <>
           <TrackHeader label={t('Heart Rate')} unit="bpm" hint={data.contractionTimes.length > 0 ? `${data.contractionTimes.length} ${data.contractionTimes.length === 1 ? t('contraction') : t('contractions')} ${t('marked')}` : undefined} />
           <ReactECharts
             option={hrOption}
-            style={{ height: 200 }}
+            style={{ height: chartHeight ?? 200 }}
             opts={{ renderer: 'canvas' }}
             onChartReady={handleReady}
             notMerge
           />
         </>
       )}
-      {data.hasDepth && (
+      {show('depth') && data.hasDepth && (
         <>
           <TrackHeader label={t('Depth')} unit="m" />
           <ReactECharts
             option={depthOption}
-            style={{ height: 160 }}
+            style={{ height: chartHeight ?? 160 }}
             opts={{ renderer: 'canvas' }}
             onChartReady={handleReady}
             notMerge
           />
         </>
       )}
-      {data.hasSpeed && (
+      {show('speed') && data.hasSpeed && (
         <>
           <TrackHeader label={t('Speed')} unit="m/s" />
           <ReactECharts
             option={speedOption}
-            style={{ height: 140 }}
+            style={{ height: chartHeight ?? 140 }}
             opts={{ renderer: 'canvas' }}
             onChartReady={handleReady}
             notMerge

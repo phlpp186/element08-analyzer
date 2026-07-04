@@ -6,11 +6,12 @@
  * Dry sessions are a single continuous timeline (no per-dive concept),
  * so this route renders one player covering the whole session.
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
 import { extractDrySessionData } from '../lib/analytics/drySessionProfile';
 import { DrySessionTracks } from '../components/charts/DrySessionTracks';
+import { FullscreenDive, type FullscreenTab } from '../components/FullscreenDive';
 import { formatDate } from '../lib/format';
 import { useT } from '../i18n';
 
@@ -19,6 +20,8 @@ export function DrySessionPlayer() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const backup = useBackupStore((s) => s.backup);
   const getSession = useBackupStore((s) => s.getSession);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [fsTab, setFsTab] = useState<'spo2' | 'hr'>('spo2');
 
   if (!backup) return <Navigate to="/" replace />;
 
@@ -57,12 +60,26 @@ export function DrySessionPlayer() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      <Link
-        to="/sessions"
-        className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
-      >
-        ← {t('back to sessions')}
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          to="/sessions"
+          className="font-mono text-xs uppercase tracking-widest text-textDim hover:text-accent"
+        >
+          ← {t('back to sessions')}
+        </Link>
+        {(data.spo2Series.length >= 2 || data.hrSeries.length >= 2) && (
+          <button
+            onClick={() => {
+              setFsTab(data.spo2Series.length >= 2 ? 'spo2' : 'hr');
+              setFullscreen(true);
+            }}
+            title={t('Fullscreen analysis')}
+            className="rounded-full border border-border px-3 py-1 font-mono text-xs uppercase tracking-widest text-textDim transition-colors hover:border-accent hover:text-accent"
+          >
+            ⛶ {t('Fullscreen')}
+          </button>
+        )}
+      </div>
 
       <header className="mt-6 mb-8">
         <span className="font-mono text-[10px] uppercase tracking-widest text-recover">
@@ -85,6 +102,32 @@ export function DrySessionPlayer() {
       </header>
 
       <DrySessionTracks data={data} groupId={`dry-${session.id}`} />
+
+      {fullscreen && (
+        <FullscreenDive
+          title={session.name || t('Untitled session')}
+          subtitle={`${t('Dry')} · ${formatDate(session.date)}`}
+          tabs={
+            [
+              ...(data.spo2Series.length >= 2 ? [{ id: 'spo2', label: 'SpO₂' }] : []),
+              ...(data.hrSeries.length >= 2 ? [{ id: 'hr', label: t('Heart Rate') }] : []),
+            ] as FullscreenTab[]
+          }
+          active={fsTab}
+          onTab={(id) => setFsTab(id as typeof fsTab)}
+          onClose={() => setFullscreen(false)}
+        >
+          {(h) => (
+            <DrySessionTracks
+              data={data}
+              groupId={`dry-fs-${session.id}`}
+              solo={fsTab}
+              // Leave room for the block-timeline strip below the solo chart.
+              chartHeight={Math.max(220, h - (data.blocks.length > 0 ? 130 : 32))}
+            />
+          )}
+        </FullscreenDive>
+      )}
     </div>
   );
 }

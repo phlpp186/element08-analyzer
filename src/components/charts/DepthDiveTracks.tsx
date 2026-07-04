@@ -63,6 +63,10 @@ interface Props {
   /** When set, hang bands become clickable and this fires with the band
    *  index + the click's viewport coords (for popover anchoring). */
   onHangClick?: (hangIdx: number, clientX: number, clientY: number) => void;
+  /** Render just ONE track (fullscreen single-metric view). */
+  solo?: 'depth' | 'hr' | 'speed' | 'temp';
+  /** Chart height override in px (used by the fullscreen view). */
+  chartHeight?: number;
 }
 
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
@@ -77,6 +81,8 @@ export function DepthDiveTracks({
   speedSmooth,
   groupId,
   onHangClick,
+  solo,
+  chartHeight,
 }: Props) {
   const ct = useChartTheme();
   const t = useT();
@@ -139,24 +145,30 @@ export function DepthDiveTracks({
     [groupId],
   );
 
+  const show = (track: 'depth' | 'hr' | 'speed' | 'temp') => !solo || solo === track;
+
   return (
     <div className="space-y-4">
-      <TrackHeader label={t('Depth')} unit="m" />
-      <ReactECharts
-        option={depthOption}
-        style={{ height: 260 }}
-        opts={{ renderer: 'canvas' }}
-        onChartReady={handleReady}
-        onEvents={depthEvents}
-        notMerge
-      />
+      {show('depth') && (
+        <>
+          <TrackHeader label={t('Depth')} unit="m" />
+          <ReactECharts
+            option={depthOption}
+            style={{ height: chartHeight ?? 260 }}
+            opts={{ renderer: 'canvas' }}
+            onChartReady={handleReady}
+            onEvents={depthEvents}
+            notMerge
+          />
+        </>
+      )}
 
-      {data.hasHR && (
+      {show('hr') && data.hasHR && (
         <>
           <TrackHeader label={t('Heart Rate')} unit="bpm" />
           <ReactECharts
             option={hrOption}
-            style={{ height: 140 }}
+            style={{ height: chartHeight ?? 140 }}
             opts={{ renderer: 'canvas' }}
             onChartReady={handleReady}
             notMerge
@@ -164,12 +176,12 @@ export function DepthDiveTracks({
         </>
       )}
 
-      {data.hasSpeed && (
+      {show('speed') && data.hasSpeed && (
         <>
           <TrackHeader label={t('Vertical Speed')} unit="m/s" hint={t('negative = descending')} />
           <ReactECharts
             option={speedOption}
-            style={{ height: 140 }}
+            style={{ height: chartHeight ?? 140 }}
             opts={{ renderer: 'canvas' }}
             onChartReady={handleReady}
             notMerge
@@ -177,12 +189,12 @@ export function DepthDiveTracks({
         </>
       )}
 
-      {data.hasTemp && (
+      {show('temp') && data.hasTemp && (
         <>
           <TrackHeader label={t('Temperature')} unit="°C" />
           <ReactECharts
             option={tempOption}
-            style={{ height: 140 }}
+            style={{ height: chartHeight ?? 140 }}
             opts={{ renderer: 'canvas' }}
             onChartReady={handleReady}
             notMerge

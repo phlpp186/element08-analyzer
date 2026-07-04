@@ -15,6 +15,7 @@ import { extractDiveData, type HangSegment } from '../lib/analytics/diveProfile'
 import { effectiveHangs, diveTimes } from '../lib/analytics/effectiveHangs';
 import { DepthDiveTracks } from '../components/charts/DepthDiveTracks';
 import { HangEditorPopover } from '../components/HangEditorPopover';
+import { FullscreenDive, type FullscreenTab } from '../components/FullscreenDive';
 import { formatDate } from '../lib/format';
 import { useT } from '../i18n';
 
@@ -40,6 +41,9 @@ export function DepthDivePlayer() {
     x: number;
     y: number;
   } | null>(null);
+  // Fullscreen single-metric view + the metric it shows.
+  const [fullscreen, setFullscreen] = useState(false);
+  const [fsTab, setFsTab] = useState<'depth' | 'speed' | 'hr' | 'temp'>('depth');
 
   // Manual hang overrides — persisted to localStorage so user corrections
   // survive a page reload as long as the same backup is re-imported.
@@ -185,6 +189,15 @@ export function DepthDivePlayer() {
           >
             {t('next')} →
           </button>
+          {data.points.length >= 2 && (
+            <button
+              onClick={() => setFullscreen(true)}
+              title={t('Fullscreen analysis')}
+              className="rounded-full border border-border px-3 py-1 text-textDim transition-colors hover:border-accent hover:text-accent"
+            >
+              ⛶ {t('Fullscreen')}
+            </button>
+          )}
         </nav>
       </div>
 
@@ -347,6 +360,38 @@ export function DepthDivePlayer() {
               onDelete={handleDeleteHang}
               onClose={() => setSelectedHang(null)}
             />
+          )}
+
+          {fullscreen && (
+            <FullscreenDive
+              title={`${dive.discipline ?? t('Depth dive')} · ${dive.depth}m`}
+              subtitle={`${formatDate(session.date)} · ${t('Dive')} ${idx + 1} ${t('of')} ${dives.length}`}
+              tabs={
+                [
+                  { id: 'depth', label: t('Dive profile') },
+                  ...(data.hasSpeed ? [{ id: 'speed', label: t('Speed') }] : []),
+                  ...(data.hasHR ? [{ id: 'hr', label: t('Heart Rate') }] : []),
+                  ...(data.hasTemp ? [{ id: 'temp', label: t('Temperature') }] : []),
+                ] as FullscreenTab[]
+              }
+              active={fsTab}
+              onTab={(id) => setFsTab(id as typeof fsTab)}
+              onClose={() => setFullscreen(false)}
+            >
+              {(h) => (
+                <DepthDiveTracks
+                  data={dataWithHangs}
+                  contractionOnset={dive.contractionOnset ?? null}
+                  alarms={(session as any).alarms ?? []}
+                  showAlarms={showAlarms}
+                  speedStep={speedStep}
+                  speedSmooth={speedSmooth}
+                  groupId={`dive-fs-${session.id}-${idx}`}
+                  solo={fsTab}
+                  chartHeight={Math.max(220, h - 32)}
+                />
+              )}
+            </FullscreenDive>
           )}
         </>
       )}

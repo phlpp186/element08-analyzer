@@ -3,11 +3,12 @@
  *
  * URL: /session/:sessionId/pool/:diveIdx
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
 import { extractPoolDiveData } from '../lib/analytics/poolDiveProfile';
 import { PoolDiveTracks } from '../components/charts/PoolDiveTracks';
+import { FullscreenDive, type FullscreenTab } from '../components/FullscreenDive';
 import { formatDate } from '../lib/format';
 import { useT } from '../i18n';
 
@@ -17,6 +18,8 @@ export function PoolDivePlayer() {
   const navigate = useNavigate();
   const backup = useBackupStore((s) => s.backup);
   const getSession = useBackupStore((s) => s.getSession);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [fsTab, setFsTab] = useState<'hr' | 'depth' | 'speed'>('hr');
 
   if (!backup) return <Navigate to="/" replace />;
 
@@ -84,6 +87,18 @@ export function PoolDivePlayer() {
           >
             {t('next')} →
           </button>
+          {(data.hasHR || data.hasDepth || data.hasSpeed) && (
+            <button
+              onClick={() => {
+                setFsTab(data.hasHR ? 'hr' : data.hasDepth ? 'depth' : 'speed');
+                setFullscreen(true);
+              }}
+              title={t('Fullscreen analysis')}
+              className="rounded-full border border-border px-3 py-1 text-textDim transition-colors hover:border-accent hover:text-accent"
+            >
+              ⛶ {t('Fullscreen')}
+            </button>
+          )}
         </nav>
       </div>
 
@@ -106,6 +121,32 @@ export function PoolDivePlayer() {
       </header>
 
       <PoolDiveTracks data={data} groupId={`pool-${session.id}-${idx}`} />
+
+      {fullscreen && (
+        <FullscreenDive
+          title={`${dive.discipline} · ${isSta ? fmtSec(dive.diveTime) : `${dive.distance ?? 0}m`}`}
+          subtitle={`${formatDate(session.date)} · ${t('Dive')} ${idx + 1} ${t('of')} ${dives.length}`}
+          tabs={
+            [
+              ...(data.hasHR ? [{ id: 'hr', label: t('Heart Rate') }] : []),
+              ...(data.hasDepth ? [{ id: 'depth', label: t('Depth') }] : []),
+              ...(data.hasSpeed ? [{ id: 'speed', label: t('Speed') }] : []),
+            ] as FullscreenTab[]
+          }
+          active={fsTab}
+          onTab={(id) => setFsTab(id as typeof fsTab)}
+          onClose={() => setFullscreen(false)}
+        >
+          {(h) => (
+            <PoolDiveTracks
+              data={data}
+              groupId={`pool-fs-${session.id}-${idx}`}
+              solo={fsTab}
+              chartHeight={Math.max(220, h - 32)}
+            />
+          )}
+        </FullscreenDive>
+      )}
     </div>
   );
 }

@@ -21,6 +21,11 @@ type TFn = (s: string) => string;
 interface Props {
   data: DrySessionData;
   groupId: string;
+  /** Render just ONE chart (fullscreen single-metric view). The block strip
+   *  stays visible below the solo chart for timeline context. */
+  solo?: 'spo2' | 'hr';
+  /** Chart height override in px (used by the fullscreen view). */
+  chartHeight?: number;
 }
 
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
@@ -36,7 +41,7 @@ function blockColors(ct: ChartTheme) {
   } as const;
 }
 
-export function DrySessionTracks({ data, groupId }: Props) {
+export function DrySessionTracks({ data, groupId, solo, chartHeight }: Props) {
   const ct = useChartTheme();
   const t = useT();
   const holdBands = useMemo(
@@ -97,14 +102,16 @@ export function DrySessionTracks({ data, groupId }: Props) {
     [groupId],
   );
 
+  const show = (track: 'spo2' | 'hr') => !solo || solo === track;
+
   return (
     <div className="space-y-4">
-      {data.spo2Series.length >= 2 && (
+      {show('spo2') && data.spo2Series.length >= 2 && (
         <>
           <TrackHeader label="SpO₂" unit="%" />
           <ReactECharts
             option={spo2Option}
-            style={{ height: 220 }}
+            style={{ height: chartHeight ?? 220 }}
             opts={{ renderer: 'canvas' }}
             onChartReady={handleReady}
             notMerge
@@ -112,7 +119,7 @@ export function DrySessionTracks({ data, groupId }: Props) {
         </>
       )}
 
-      {data.hrSeries.length >= 2 && (
+      {show('hr') && data.hrSeries.length >= 2 && (
         <>
           <TrackHeader
             label={t('Heart Rate')}
@@ -121,7 +128,7 @@ export function DrySessionTracks({ data, groupId }: Props) {
           />
           <ReactECharts
             option={hrOption}
-            style={{ height: 180 }}
+            style={{ height: chartHeight ?? 180 }}
             opts={{ renderer: 'canvas' }}
             onChartReady={handleReady}
             notMerge
