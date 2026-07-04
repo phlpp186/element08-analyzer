@@ -36,11 +36,11 @@ export interface PaceSeries {
 }
 
 const COLORS: Record<PoolDiscipline, string> = {
-  STA:   '#ffd166',
-  DYN:   '#00e5cc',
-  DYNB:  '#9aa5ff',
-  DNF:   '#ff5f9e',
-  other: '#888888',
+  STA:   '#e8c04a',
+  DYN:   '#1fb894',
+  DYNB:  '#8a5fd6',
+  DNF:   '#e84393',
+  other: '#5e828a',
 };
 
 const ORDER: PoolDiscipline[] = ['DYN', 'DYNB', 'DNF', 'other'];

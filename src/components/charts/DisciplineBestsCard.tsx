@@ -7,6 +7,7 @@ import {
   fmtBestValue,
   type BestRecord,
 } from '../../lib/analytics/poolBests';
+import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
@@ -18,13 +19,16 @@ const DISC_LABELS: Record<BestRecord['discipline'], string> = {
   other: 'Other',
 };
 
-const DISC_COLORS: Record<BestRecord['discipline'], string> = {
-  STA:   '#00b4ff',
-  DYN:   '#00e5cc',
-  DYNB:  '#a89fff',
-  DNF:   '#f5a623',
-  other: '#8a8a8a',
-};
+/** Per-discipline dot colours from the chart theme. */
+function discColors(ct: ChartTheme): Record<BestRecord['discipline'], string> {
+  return {
+    STA:   ct.accent,
+    DYN:   ct.green,
+    DYNB:  ct.highlight,
+    DNF:   ct.amber,
+    other: ct.textDim,
+  };
+}
 
 interface Props {
   bests: BestRecord[];
@@ -32,6 +36,7 @@ interface Props {
 
 export function DisciplineBestsCard({ bests }: Props) {
   const t = useT();
+  const DISC_COLORS = discColors(useChartTheme());
   if (bests.length === 0) {
     return (
       <ChartCard

@@ -40,7 +40,7 @@ export function PoolSessionTypeMixChart({ buckets }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (p: any) => {
         const b = ordered[p.dataIndex];
         const pct = total > 0 ? Math.round((b.count / total) * 100) : 0;
@@ -54,7 +54,7 @@ export function PoolSessionTypeMixChart({ buckets }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       minInterval: 1,
@@ -66,7 +66,7 @@ export function PoolSessionTypeMixChart({ buckets }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 11,
       },
     },
@@ -82,7 +82,7 @@ export function PoolSessionTypeMixChart({ buckets }: Props) {
           show: true,
           position: 'right',
           color: ct.textDim,
-          fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+          fontFamily: 'Nunito, system-ui',
           fontSize: 10,
         },
       },

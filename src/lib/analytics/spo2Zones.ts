@@ -17,12 +17,15 @@
 import { cleanOxyReadings, type OxyReading } from './cleanOxyReadings';
 import type { ParsedSession } from '../../schema/backup';
 
-/** Zone thresholds — labels read "lowest reading was this zone or below". */
+/** Zone thresholds — labels read "lowest reading was this zone or below".
+ *  Colours are SEMANTIC (ok → critical), so they stay static rather than
+ *  following the UI theme; hexes are picked to read on both the white
+ *  Caribbean cards and the Chalk Dark panels. */
 export const SPO2_ZONES = [
-  { from: 90, to: 101, label: '>89%',   color: '#4fc3f7' }, // baseline / blue
-  { from: 75, to: 90,  label: '75–89%', color: '#ffd54f' }, // mild
-  { from: 65, to: 75,  label: '65–74%', color: '#ffa726' }, // moderate
-  { from: 55, to: 65,  label: '55–64%', color: '#ef5350' }, // severe
+  { from: 90, to: 101, label: '>89%',   color: '#1fb894' }, // baseline / ok green
+  { from: 75, to: 90,  label: '75–89%', color: '#e8c04a' }, // mild
+  { from: 65, to: 75,  label: '65–74%', color: '#f0a500' }, // moderate
+  { from: 55, to: 65,  label: '55–64%', color: '#e24b3c' }, // severe
   { from: 0,  to: 55,  label: '<55%',   color: '#b71c1c' }, // critical
 ] as const;
 

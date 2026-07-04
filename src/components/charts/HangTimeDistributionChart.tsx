@@ -40,7 +40,7 @@ export function HangTimeDistributionChart({ stats }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const bin = stats.bins[p.dataIndex];
@@ -54,7 +54,7 @@ export function HangTimeDistributionChart({ stats }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -65,7 +65,7 @@ export function HangTimeDistributionChart({ stats }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       minInterval: 1,
@@ -78,7 +78,7 @@ export function HangTimeDistributionChart({ stats }: Props) {
         // so the "actual hang" buckets stand out.
         itemStyle: {
           color: (params: any) =>
-            params.dataIndex === 0 ? '#3a3a3a' : '#a89fff',
+            params.dataIndex === 0 ? ct.splitLine : ct.highlight,
           borderRadius: [3, 3, 0, 0],
         },
         barWidth: '64%',
@@ -86,7 +86,7 @@ export function HangTimeDistributionChart({ stats }: Props) {
           show: true,
           position: 'top',
           color: ct.textDim,
-          fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+          fontFamily: 'Nunito, system-ui',
           fontSize: 10,
         },
       },

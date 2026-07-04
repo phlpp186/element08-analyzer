@@ -150,8 +150,8 @@ function buildOptions(holds: OverlayHold[], align: HoldAlign, ct: ChartTheme) {
   return {
     hasHr: hrPanel.length > 0,
     hasSpo2: spo2Panel.length > 0,
-    hrOption: buildPanel(hrPanel, (s) => s.hr, '#ff5f9e', 'bpm', xMin, xMax, false, ct),
-    spo2Option: buildPanel(spo2Panel, (s) => s.spo2, '#4fc3f7', '%', xMin, xMax, true, ct),
+    hrOption: buildPanel(hrPanel, (s) => s.hr, ct.highlight, 'bpm', xMin, xMax, false, ct),
+    spo2Option: buildPanel(spo2Panel, (s) => s.spo2, ct.accent, '%', xMin, xMax, true, ct),
   };
 }
 
@@ -188,7 +188,7 @@ function buildPanel(
     },
     legend: {
       top: 0,
-      textStyle: { color: ct.textDim, fontFamily: 'Inter, system-ui', fontSize: 11 },
+      textStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 11 },
       itemWidth: 12,
       itemHeight: 6,
     },
@@ -196,7 +196,7 @@ function buildPanel(
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];

@@ -296,7 +296,7 @@ export function defaultPeriod(sessions: ParsedSession[]): Period | null {
   return {
     id: 'default',
     label: 'Last 12 weeks',
-    color: '#4fc3f7',
+    color: '#1bafe0',
     anchorDate: isoDate(latest),
     weeksBefore: 12,
   };

@@ -11,6 +11,7 @@
  */
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useT } from '../i18n';
+import { useChartTheme, type ChartTheme } from '../lib/chartTheme';
 import { useBackupStore } from '../stores/useBackupStore';
 import {
   formatDate,
@@ -147,16 +148,20 @@ interface PoolDiveRow {
   hrLowest?: number | null;
 }
 
-const POOL_DISC_COLORS: Record<PoolDiveRow['discipline'], string> = {
-  STA:   '#00b4ff',
-  DYN:   '#00e5cc',
-  DYNB:  '#a89fff',
-  DNF:   '#f5a623',
-  other: '#8a8a8a',
-};
+/** Per-discipline colours from the chart theme — matches DisciplineBestsCard. */
+function poolDiscColors(ct: ChartTheme): Record<PoolDiveRow['discipline'], string> {
+  return {
+    STA:   ct.accent,
+    DYN:   ct.green,
+    DYNB:  ct.highlight,
+    DNF:   ct.amber,
+    other: ct.textDim,
+  };
+}
 
 function PoolDiveList({ session }: { session: any }) {
   const t = useT();
+  const POOL_DISC_COLORS = poolDiscColors(useChartTheme());
   const dives: PoolDiveRow[] = session.dives ?? [];
   if (dives.length === 0) {
     return (

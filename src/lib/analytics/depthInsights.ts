@@ -195,12 +195,12 @@ export interface DisciplineSeries {
 }
 
 const DISCIPLINE_COLORS: Record<string, string> = {
-  CWT:  '#4fc3f7', // blue (matches the depth accent)
-  CWTB: '#a89fff', // violet
-  FIM:  '#66bb6a', // green
-  CNF:  '#ffa726', // amber
-  VWT:  '#ff5f9e', // pink (rare, just in case)
-  NLT:  '#ef5350', // red (rare)
+  CWT:  '#1bafe0', // sky cyan
+  CWTB: '#8a5fd6', // violet
+  FIM:  '#1fb894', // teal green
+  CNF:  '#f0a500', // amber
+  VWT:  '#e84393', // pink (rare, just in case)
+  NLT:  '#e24b3c', // red (rare)
 };
 
 export function disciplineProgression(
@@ -235,7 +235,7 @@ export function disciplineProgression(
     }
     out.push({
       discipline,
-      color: DISCIPLINE_COLORS[discipline] ?? '#9a9a9e',
+      color: DISCIPLINE_COLORS[discipline] ?? '#5e828a',
       points,
     });
   }

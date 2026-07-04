@@ -1,69 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Theme palettes. Tokens are RGB triplets (no #, no commas) so Tailwind's
- * `<alpha-value>` opacity modifiers work directly — see tailwind.config.js. */
+/* Open Water design system — two themes. Tokens are RGB triplets (no #, no
+ * commas) so Tailwind's `<alpha-value>` opacity modifiers work directly —
+ * see tailwind.config.js.
+ *
+ * Default (:root) is Chalk Dark; the `light` class on <html> swaps in
+ * Caribbean. New visitors follow the OS `prefers-color-scheme` (resolved by
+ * the FOUC script in index.html); an explicit toggle choice persists. */
 :root {
-  /* Dark — default. Deep-ocean blue-tinted elevation ramp (page < input field
-   * < card) with a VISIBLE border, so surfaces read as distinct layers. The
-   * cool tint ties into the cyan accent and the freediving theme. */
-  --c-deep:      9 12 18;  /* page background — darkest */
-  --c-abyss:     20 26 36; /* input fields / recessed insets — a step up */
-  --c-panel:     28 35 47; /* cards / panels — highest surface */
-  --c-border:    56 66 82; /* now actually visible against every surface */
-  --c-text:      240 243 248;
-  --c-textDim:   150 160 176;
-  --c-accent:    91 205 250;
-  --c-highlight: 255 95 158;
-  --c-recover:   102 200 124;
-  --c-amber:     255 178 54;
-  --c-red:       239 83 80;
-  /* Text on an accent fill — always dark (accent is a light cyan in both modes). */
-  --c-ink:       8 13 18;
-  /* Ambient background glows (see body::before). */
-  --glow-1:      91 205 250; /* cyan, top */
-  --glow-2:      255 95 158; /* pink, lower */
+  /* Chalk Dark — warm charcoal surfaces, sky-cyan accent, pink highlight. */
+  --c-deep:      31 29 26;   /* page background */
+  --c-abyss:     22 20 18;   /* input fields / recessed insets */
+  --c-panel:     42 39 36;   /* cards / panels */
+  --c-border:    74 70 63;
+  --c-text:      237 233 226;
+  --c-textDim:   138 133 124;
+  --c-accent:    27 175 224;  /* sky cyan */
+  --c-highlight: 232 67 147;  /* pink */
+  --c-recover:   61 201 107;
+  --c-amber:     240 165 0;
+  --c-red:       232 67 147;  /* chalk-dark uses pink as its red */
+  /* Text on an accent fill — dark ink on the cyan accent. */
+  --c-ink:       16 34 43;
   color-scheme: dark;
 }
 
 :root.light {
-  /* Chalk — near-white, slightly-elevated fields on a warm-paper page. */
-  --c-deep:      244 242 236;
-  --c-abyss:     252 251 248;
-  --c-panel:     255 254 252;
-  --c-border:    206 200 190;
-  --c-text:      52 50 45;
-  --c-textDim:   120 114 106;
-  --c-accent:    22 165 214;
-  --c-highlight: 232 67 147;
-  --c-recover:   52 184 96;
-  --c-amber:     190 128 0;
-  --c-red:       198 40 40;
-  --c-ink:       11 15 18;
-  --glow-1:      22 165 214;
-  --glow-2:      232 67 147;
+  /* Caribbean — pale aqua page, white cards, coral accent, golden sand. */
+  --c-deep:      217 241 246;
+  --c-abyss:     240 250 252;
+  --c-panel:     255 255 255;
+  --c-border:    185 220 227;
+  --c-text:      12 59 69;
+  --c-textDim:   94 130 138;
+  --c-accent:    242 118 79;  /* coral */
+  --c-highlight: 232 169 58;  /* golden sand */
+  --c-recover:   31 184 148;
+  --c-amber:     232 148 42;
+  --c-red:       226 75 60;
+  /* Text on an accent fill — white on coral. */
+  --c-ink:       255 255 255;
   color-scheme: light;
-}
-
-:root.neon {
-  /* Neon — a dark theme with an electric-green accent and a violet highlight.
-   * Dark-family like the default, with a faint green cast to the surfaces. */
-  --c-deep:      8 11 9;
-  --c-abyss:     18 25 20;
-  --c-panel:     25 34 28;
-  --c-border:    54 70 58;
-  --c-text:      238 245 240;
-  --c-textDim:   150 170 156;
-  --c-accent:    132 240 104; /* electric green */
-  --c-highlight: 167 139 250; /* violet */
-  --c-recover:   102 220 130;
-  --c-amber:     255 190 70;
-  --c-red:       248 113 113;
-  --c-ink:       8 16 8; /* dark text on the green accent fill */
-  --glow-1:      132 240 104; /* green, top */
-  --glow-2:      167 139 250; /* violet, lower */
-  color-scheme: dark;
 }
 
 /* Brand-level baseline. Tailwind tokens defined in tailwind.config.js. */
@@ -83,77 +64,66 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Ambient color wash — two soft, fixed radial glows so the page isn't a flat
- * slab. Very low alpha keeps it subtle and never fights the content. */
+/* Ambient wash. Chalk Dark stays flat; Caribbean gets a single soft white
+ * "sun" radial at the top of the page. */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    radial-gradient(60% 50% at 15% -5%, rgb(var(--glow-1) / 0.1), transparent 70%),
-    radial-gradient(55% 45% at 100% 8%, rgb(var(--glow-2) / 0.07), transparent 70%);
+  background: none;
 }
 :root.light body::before {
-  background:
-    radial-gradient(60% 50% at 15% -5%, rgb(var(--glow-1) / 0.12), transparent 70%),
-    radial-gradient(55% 45% at 100% 8%, rgb(var(--glow-2) / 0.08), transparent 70%);
+  background: radial-gradient(90% 55% at 50% -8%, rgba(255, 255, 255, 0.85), transparent 60%);
 }
-:root.neon body::before {
-  background:
-    radial-gradient(58% 48% at 12% -5%, rgb(var(--glow-1) / 0.14), transparent 70%),
-    radial-gradient(55% 45% at 100% 6%, rgb(var(--glow-2) / 0.12), transparent 70%);
-}
-/* Keep app content above the glow layer. */
+/* Keep app content above the wash layer. */
 #root {
   position: relative;
   z-index: 1;
   background: transparent;
 }
 
-/* Accent CTA glow — a soft halo on primary action buttons. Pair with bg-accent. */
+/* Accent CTA shadow — a soft elevation shadow on primary action buttons
+ * (the neon halo is retired). Pair with bg-accent. */
 .glow-accent {
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.14) inset,
-    0 0 18px -4px rgb(var(--c-accent) / 0.6),
-    0 4px 14px -6px rgb(var(--c-accent) / 0.5);
+  box-shadow: 0 4px 14px -4px rgb(var(--c-accent) / 0.45);
   transition: box-shadow 0.18s ease, filter 0.18s ease, transform 0.05s ease;
 }
 .glow-accent:hover {
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.18) inset,
-    0 0 26px -2px rgb(var(--c-accent) / 0.85),
-    0 6px 18px -6px rgb(var(--c-accent) / 0.6);
+  box-shadow: 0 6px 18px -4px rgb(var(--c-accent) / 0.55);
   filter: brightness(1.04);
 }
 .glow-accent:active { transform: translateY(0.5px); }
 .glow-accent:disabled { box-shadow: none; filter: none; }
 
-/* Frosted-glass card — translucent panel + backdrop blur + a hairline top
- * highlight, so prominent cards float and the ambient glow bleeds through.
- * Owns its own background + border; use INSTEAD of `bg-panel border
- * border-border`. hover:border-accent utilities still win. */
+/* Prominent card — solid panel + soft shadow (the frosted-glass blur is
+ * retired with the neon glows). Owns its own background + border; use
+ * INSTEAD of `bg-panel border border-border`. hover:border-accent
+ * utilities still win. */
 .glass-card {
-  background: rgb(var(--c-panel) / 0.62);
-  -webkit-backdrop-filter: blur(12px) saturate(1.1);
-  backdrop-filter: blur(12px) saturate(1.1);
+  background: rgb(var(--c-panel));
   border: 1px solid rgb(var(--c-border) / 0.85);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.06),
-    0 10px 30px -16px rgb(0 0 0 / 0.55);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
 }
 :root.light .glass-card {
-  background: rgb(var(--c-panel) / 0.7);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.7),
-    0 10px 26px -16px rgb(0 0 0 / 0.18);
+  box-shadow: 0 6px 22px rgba(12, 59, 69, 0.09);
 }
 
-/* Hero / section headings borrow the app's condensed display face. */
+/* Headings — Nunito 800 replaces the old condensed display face, so the
+ * wide tracking it needed is dialled back. */
 h1,
 h2,
 h3 {
   font-family: theme('fontFamily.heading');
-  letter-spacing: 0.04em;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+/* Data / "mono" contexts render in Nunito too — tabular figures keep
+ * columns of numbers aligned. */
+@layer utilities {
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
 }

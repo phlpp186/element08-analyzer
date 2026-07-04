@@ -34,7 +34,7 @@ export function WeeklyVolumeChart({ data }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const w = data[p.dataIndex];
@@ -50,7 +50,7 @@ export function WeeklyVolumeChart({ data }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         // Sparse labels — every 4th week plus the last — keep 26 bars readable.
         interval: (idx: number) => idx % 4 === 0 || idx === data.length - 1,
@@ -64,7 +64,7 @@ export function WeeklyVolumeChart({ data }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value}h',
       },
@@ -73,7 +73,7 @@ export function WeeklyVolumeChart({ data }: Props) {
       {
         type: 'bar',
         data: data.map((w) => Math.round((w.minutes / 60) * 10) / 10),
-        itemStyle: { color: '#4fc3f7', borderRadius: [3, 3, 0, 0] },
+        itemStyle: { color: ct.accent, borderRadius: [3, 3, 0, 0] },
         barWidth: '64%',
       },
     ],

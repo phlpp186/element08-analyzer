@@ -34,7 +34,7 @@ export function DistanceDistributionChart({ bins }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const bin = bins[p.dataIndex];
@@ -48,7 +48,7 @@ export function DistanceDistributionChart({ bins }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (val: string, idx: number) => {
           // Show every other label when bins are dense.
@@ -60,7 +60,7 @@ export function DistanceDistributionChart({ bins }: Props) {
       nameGap: 28,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -71,7 +71,7 @@ export function DistanceDistributionChart({ bins }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       minInterval: 1,
@@ -80,7 +80,7 @@ export function DistanceDistributionChart({ bins }: Props) {
       {
         type: 'bar',
         data: bins.map((b) => b.count),
-        itemStyle: { color: '#00e5cc', borderRadius: [3, 3, 0, 0] },
+        itemStyle: { color: ct.green, borderRadius: [3, 3, 0, 0] },
         barWidth: '70%',
       },
     ],

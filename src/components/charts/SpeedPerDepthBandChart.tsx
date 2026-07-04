@@ -18,8 +18,6 @@ interface Props {
   onStepChange: (s: BandStep) => void;
 }
 
-const DESCENT_COLOR = '#ffa726'; // amber — matches the depth player
-const ASCENT_COLOR = '#ef5350'; // red
 
 export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
   const ct = useChartTheme();
@@ -47,7 +45,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];
         const idx = arr[0]?.dataIndex ?? 0;
@@ -69,7 +67,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       right: 0,
       textStyle: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       itemWidth: 12,
@@ -82,7 +80,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       name: t('metres'),
@@ -90,7 +88,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       nameGap: 24,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -101,7 +99,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value}',
       },
@@ -111,7 +109,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
         name: t('Descent'),
         type: 'bar',
         data: bands.map((b) => round2(b.descentSpeed)),
-        itemStyle: { color: DESCENT_COLOR, borderRadius: [3, 3, 0, 0] },
+        itemStyle: { color: ct.amber, borderRadius: [3, 3, 0, 0] }, // amber descent — matches the depth player
         barWidth: '36%',
         barGap: '15%',
       },
@@ -119,7 +117,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
         name: t('Ascent'),
         type: 'bar',
         data: bands.map((b) => round2(b.ascentSpeed)),
-        itemStyle: { color: ASCENT_COLOR, borderRadius: [3, 3, 0, 0] },
+        itemStyle: { color: ct.red, borderRadius: [3, 3, 0, 0] }, // red ascent
         barWidth: '36%',
       },
     ],

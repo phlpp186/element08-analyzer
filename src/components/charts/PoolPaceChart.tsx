@@ -50,7 +50,7 @@ export function PoolPaceChart({ series }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (p: any) => {
         const [date, pace, meta] = p.value as [string, number, { distance: number; diveTime: number }];
         const dateStr = new Date(date).toLocaleDateString();
@@ -61,7 +61,7 @@ export function PoolPaceChart({ series }: Props) {
       top: 0,
       textStyle: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       itemWidth: 14,
@@ -73,7 +73,7 @@ export function PoolPaceChart({ series }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       splitLine: { show: false },
@@ -88,7 +88,7 @@ export function PoolPaceChart({ series }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => fmtPace(v),
       },

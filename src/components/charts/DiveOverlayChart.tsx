@@ -171,12 +171,12 @@ function buildOption(
     animation: false,
     axisPointer: {
       link: AXIS_POINTER_LINK,
-      lineStyle: { color: '#4fc3f7', opacity: 0.4 },
+      lineStyle: { color: ct.accent, opacity: 0.4 },
     },
     legend: showLegend
       ? {
           top: 0,
-          textStyle: { color: ct.textDim, fontFamily: 'Inter, system-ui', fontSize: 12 },
+          textStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 12 },
           itemWidth: 14,
           itemHeight: 8,
         }
@@ -185,7 +185,7 @@ function buildOption(
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];

@@ -39,7 +39,7 @@ export function EarlyTurnCard({ stats }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.tooltipBorder,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         return `${p.name}<br/>${p.value} ${p.value === 1 ? t('early turn') : t('early turns')}`;
@@ -51,7 +51,7 @@ export function EarlyTurnCard({ stats }: Props) {
       axisLine: { show: false },
       axisTick: { show: false },
       splitLine: { lineStyle: { color: ct.splitLine } },
-      axisLabel: { color: ct.textDim, fontFamily: 'JetBrains Mono, monospace', fontSize: 10 },
+      axisLabel: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 10 },
     },
     yAxis: {
       type: 'category',
@@ -59,7 +59,7 @@ export function EarlyTurnCard({ stats }: Props) {
       inverse: true,
       axisLine: { lineStyle: { color: ct.axisLine } },
       axisTick: { show: false },
-      axisLabel: { color: ct.textDim, fontFamily: 'JetBrains Mono, monospace', fontSize: 11 },
+      axisLabel: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 11 },
     },
     series: [
       {
@@ -71,7 +71,7 @@ export function EarlyTurnCard({ stats }: Props) {
           show: true,
           position: 'right',
           color: ct.textDim,
-          fontFamily: 'JetBrains Mono, monospace',
+          fontFamily: 'Nunito, system-ui',
           fontSize: 10,
         },
       },

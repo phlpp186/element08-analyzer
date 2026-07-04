@@ -16,14 +16,17 @@ import type { Period } from '../lib/analytics/periodCompare';
 import { useCompareStore } from '../stores/useCompareStore';
 import { useT } from '../i18n';
 
+/** Period colours are stored on the period itself, so this palette is
+ *  theme-agnostic: Open Water mid-tones that read on both the white
+ *  Caribbean cards and the Chalk Dark panels. */
 const PALETTE = [
-  '#4fc3f7', // accent blue
-  '#ff5f9e', // highlight pink
-  '#66bb6a', // recover green
-  '#ffa726', // amber
-  '#ef5350', // red
-  '#a89fff', // violet
-  '#00e5cc', // teal
+  '#1bafe0', // sky cyan
+  '#f2764f', // coral
+  '#1fb894', // teal green
+  '#e8a93a', // golden sand
+  '#8a5fd6', // violet
+  '#e84393', // pink
+  '#e24b3c', // red
 ];
 
 function nextColor(existing: Period[]): string {

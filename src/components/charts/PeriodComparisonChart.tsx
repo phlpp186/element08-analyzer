@@ -40,9 +40,9 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
     tooltip: {
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
       trigger: 'axis',
-      axisPointer: { type: 'line', lineStyle: { color: '#4fc3f7', opacity: 0.4 } },
+      axisPointer: { type: 'line', lineStyle: { color: ct.accent, opacity: 0.4 } },
       formatter: (params: any) => {
         if (!Array.isArray(params) || params.length === 0) return '';
         const wk = params[0].axisValue;
@@ -67,7 +67,7 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
     legend: {
       bottom: 4,
       left: 'center',
-      textStyle: { color: ct.textDim, fontFamily: 'Inter, system-ui', fontSize: 11 },
+      textStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 11 },
       itemWidth: 16,
       itemHeight: 8,
       icon: 'rect',
@@ -79,7 +79,7 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (val: string, idx: number) => {
           // Reduce density when the period is long.
@@ -93,12 +93,12 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
       name: metric.unit,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         // Duration metrics format the tick as m:ss.
         ...(metric.format ? { formatter: (v: number) => metric.format!(v) } : {}),

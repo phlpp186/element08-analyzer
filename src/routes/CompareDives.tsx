@@ -624,7 +624,7 @@ function Picker({
                     className="h-2.5 w-2.5 shrink-0 rounded-full border"
                     style={{
                       backgroundColor: slot?.color ?? 'transparent',
-                      borderColor: slot?.color ?? '#3a3a3a',
+                      borderColor: slot?.color ?? 'rgb(var(--c-border))',
                     }}
                   />
                   <span className="min-w-0 flex-1">

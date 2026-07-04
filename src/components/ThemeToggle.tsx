@@ -1,35 +1,27 @@
 /**
- * ThemeToggle — fixed-position dark/light theme switch.
+ * ThemeToggle — fixed-position Caribbean (light) / Chalk Dark switch.
  *
  * Mounted once at the app root (see main.tsx). Floats at the top-right
  * across every route so the user can flip without leaving the page.
  */
 import { useThemeStore, type ThemeMode } from '../stores/useThemeStore';
 
-const LABEL: Record<ThemeMode, string> = { dark: 'Dark', light: 'Light', neon: 'Neon' };
-const NEXT: Record<ThemeMode, ThemeMode> = { dark: 'light', light: 'neon', neon: 'dark' };
+const LABEL: Record<ThemeMode, string> = { dark: 'Chalk Dark', light: 'Caribbean' };
 
 export function ThemeToggle() {
   const theme = useThemeStore((s) => s.theme);
   const toggle = useThemeStore((s) => s.toggle);
+  const next = theme === 'light' ? 'dark' : 'light';
 
   return (
     <button
       onClick={toggle}
-      aria-label={`Theme: ${LABEL[theme]}. Switch to ${LABEL[NEXT[theme]]}.`}
-      title={`Theme: ${LABEL[theme]}, switch to ${LABEL[NEXT[theme]]}`}
+      aria-label={`Theme: ${LABEL[theme]}. Switch to ${LABEL[next]}.`}
+      title={`Theme: ${LABEL[theme]}, switch to ${LABEL[next]}`}
       className="fixed right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-panel/80 text-textDim backdrop-blur transition-colors hover:border-accent hover:text-accent"
     >
-      {theme === 'light' ? <SunIcon /> : theme === 'neon' ? <BoltIcon /> : <MoonIcon />}
+      {theme === 'light' ? <SunIcon /> : <MoonIcon />}
     </button>
-  );
-}
-
-function BoltIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" />
-    </svg>
   );
 }
 

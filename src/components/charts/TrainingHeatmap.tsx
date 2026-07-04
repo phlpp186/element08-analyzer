@@ -37,7 +37,7 @@ export function TrainingHeatmap({ series }: Props) {
     tooltip: {
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (p: any) => {
         const date = p.value[0];
         const count = p.value[1];
@@ -49,8 +49,8 @@ export function TrainingHeatmap({ series }: Props) {
       min: 0,
       max,
       inRange: {
-        // Brand-aligned ramp: dim panel → bright accent
-        color: [ct.splitLine, '#1f3a4d', '#2a5f7d', '#3a8cbf', '#4fc3f7'],
+        // Brand-aligned ramp: dim split-line → full accent
+        color: ct.heatRamp,
       },
     },
     calendar: {
@@ -62,14 +62,14 @@ export function TrainingHeatmap({ series }: Props) {
       orient: 'horizontal',
       splitLine: { show: false },
       itemStyle: {
-        color: ct.tooltipBg,
-        borderColor: '#080808',
+        color: ct.splitLine,
+        borderColor: ct.surface,
         borderWidth: 2,
       },
       yearLabel: { show: false },
       monthLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         nameMap: [
           t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'),
@@ -79,7 +79,7 @@ export function TrainingHeatmap({ series }: Props) {
       dayLabel: {
         firstDay: 1, // Monday first
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 9,
         nameMap: [t('Sun'), t('Mon'), t('Tue'), t('Wed'), t('Thu'), t('Fri'), t('Sat')],
       },

@@ -13,7 +13,7 @@ import { useCallback, useMemo } from 'react';
 import * as echarts from 'echarts/core';
 import ReactECharts from 'echarts-for-react';
 import type { DryBlock, DrySessionData } from '../../lib/analytics/drySessionProfile';
-import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
+import { useChartTheme, withAlpha, type ChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 
 type TFn = (s: string) => string;
@@ -26,11 +26,15 @@ interface Props {
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
 const AXIS_POINTER_LINK = [{ xAxisIndex: 'all' as const }];
 
-const BLOCK_COLORS = {
-  Rest:    { fill: 'rgba(79, 195, 247, 0.10)', label: '#4fc3f7' },
-  Hold:    { fill: 'rgba(239, 83, 80, 0.14)',  label: '#ef5350' },
-  Recover: { fill: 'rgba(102, 187, 106, 0.10)', label: '#66bb6a' },
-} as const;
+/** Block colours derived from the chart theme: Rest = accent, Hold = red,
+ *  Recover = green. Fills stay translucent so the bands read as background. */
+function blockColors(ct: ChartTheme) {
+  return {
+    Rest:    { fill: withAlpha(ct.accent, 0.10), label: ct.accent },
+    Hold:    { fill: withAlpha(ct.red, 0.14),    label: ct.red },
+    Recover: { fill: withAlpha(ct.green, 0.10),  label: ct.green },
+  } as const;
+}
 
 export function DrySessionTracks({ data, groupId }: Props) {
   const ct = useChartTheme();
@@ -42,9 +46,9 @@ export function DrySessionTracks({ data, groupId }: Props) {
         .map((b) => ({
           startT: b.startT,
           endT: b.endT,
-          color: BLOCK_COLORS.Hold.fill,
+          color: withAlpha(ct.red, 0.14),
         })),
-    [data.blocks],
+    [data.blocks, ct],
   );
 
   // Anchor contraction markers onto the HR series at the matching time
@@ -55,15 +59,15 @@ export function DrySessionTracks({ data, groupId }: Props) {
         coord: pickValueAt(data.hrSeries, c.t) ?? [c.t, 0],
         symbol: 'diamond',
         symbolSize: 10,
-        itemStyle: { color: '#ef5350' },
+        itemStyle: { color: ct.red },
       })),
-    [data.contractions, data.hrSeries],
+    [data.contractions, data.hrSeries, ct],
   );
 
   const spo2Option = useMemo(
     () => buildLineOption({
       series: data.spo2Series,
-      color: '#4fc3f7',
+      color: ct.accent,
       unit: '%',
       startT: data.startT,
       endT: data.endT,
@@ -75,7 +79,7 @@ export function DrySessionTracks({ data, groupId }: Props) {
   const hrOption = useMemo(
     () => buildLineOption({
       series: data.hrSeries,
-      color: '#ff5f9e',
+      color: ct.highlight,
       unit: 'bpm',
       startT: data.startT,
       endT: data.endT,
@@ -169,6 +173,7 @@ function BlockStrip({
   endT: number;
   t: TFn;
 }) {
+  const colors = blockColors(useChartTheme());
   const total = Math.max(endT - startT, 1);
   // The strip is offset by the chart grid's left axis (56px) + right
   // padding (16px) so that block boundaries line up vertically with the
@@ -179,7 +184,7 @@ function BlockStrip({
       <div className="flex h-8 overflow-hidden rounded">
         {blocks.map((b, i) => {
           const pct = ((b.endT - b.startT) / total) * 100;
-          const c = BLOCK_COLORS[b.type];
+          const c = colors[b.type];
           return (
             <div
               key={i}
@@ -226,7 +231,7 @@ function buildLineOption(p: LineOptionParams, ct: ChartTheme) {
     tooltip: {
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
       trigger: 'axis',
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {

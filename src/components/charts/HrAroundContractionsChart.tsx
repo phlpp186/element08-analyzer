@@ -49,7 +49,7 @@ export function HrAroundContractionsChart({ points }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (p: any) => {
         const point = points[p.dataIndex];
         const sign = point.delta > 0 ? '+' : '';
@@ -65,7 +65,7 @@ export function HrAroundContractionsChart({ points }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => (v > 0 ? `+${v}s` : `${v}s`),
       },
@@ -80,7 +80,7 @@ export function HrAroundContractionsChart({ points }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => `${v > 0 ? '+' : ''}${v} bpm`,
       },
@@ -91,8 +91,8 @@ export function HrAroundContractionsChart({ points }: Props) {
         data: points.map((p) => [p.t, p.delta]),
         showSymbol: false,
         smooth: 0.3,
-        lineStyle: { color: '#ffa726', width: 2 },
-        itemStyle: { color: '#ffa726' },
+        lineStyle: { color: ct.amber, width: 2 },
+        itemStyle: { color: ct.amber },
         markLine: {
           symbol: 'none',
           silent: true,

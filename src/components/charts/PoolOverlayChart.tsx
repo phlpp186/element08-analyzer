@@ -129,7 +129,7 @@ function buildHrOption(dives: OverlayPoolDive[], ct: ChartTheme) {
     animation: false,
     legend: {
       top: 0,
-      textStyle: { color: ct.textDim, fontFamily: 'Inter, system-ui', fontSize: 11 },
+      textStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 11 },
       itemWidth: 12,
       itemHeight: 6,
     },
@@ -137,7 +137,7 @@ function buildHrOption(dives: OverlayPoolDive[], ct: ChartTheme) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];

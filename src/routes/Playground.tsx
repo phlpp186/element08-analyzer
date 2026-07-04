@@ -16,6 +16,7 @@ import { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import ReactECharts from 'echarts-for-react';
 import { useT } from '../i18n';
+import { useChartTheme, type ChartTheme } from '../lib/chartTheme';
 import { useBackupStore } from '../stores/useBackupStore';
 import {
   applyFilters,
@@ -144,6 +145,7 @@ function isoDaysAgo(days: number): string {
 
 export function Playground() {
   const t = useT();
+  const cm = commonOf(useChartTheme());
   const backup = useBackupStore((s) => s.backup);
 
   const [presetId, setPresetId] = useState<string>('all');
@@ -474,16 +476,16 @@ export function Playground() {
           }
           const option =
             effRender === 'box'
-              ? buildBoxOption(buckets, metric, dim, t)
+              ? buildBoxOption(buckets, metric, dim, t, cm)
               : effRender === 'scatter'
-                ? buildScatterOption(buckets, metric, dim, scatterFit)
+                ? buildScatterOption(buckets, metric, dim, scatterFit, cm)
                 : effRender === 'hist'
-                  ? buildHistogramOption(buckets, metric, t)
+                  ? buildHistogramOption(buckets, metric, t, cm)
                   : effRender === 'xy'
-                    ? buildXyOption(xyPts, xMetric, metric, xyFit)
+                    ? buildXyOption(xyPts, xMetric, metric, xyFit, cm)
                     : effRender === 'heatmap'
-                      ? buildHeatmapOption(heat, metric, dim, dim2, stat, t)
-                      : buildBarOption(buckets, metric, dim, stat);
+                      ? buildHeatmapOption(heat, metric, dim, dim2, stat, t, cm)
+                      : buildBarOption(buckets, metric, dim, stat, cm);
           const fit = effRender === 'scatter' ? scatterFit : effRender === 'xy' ? xyFit : null;
           return (
             <>
@@ -728,15 +730,23 @@ function PivotHelp({
 
 // ── Chart builders ──────────────────────────────────────────────────────────
 
-const COMMON = {
-  tooltipBg: '#101010',
-  axisLine: '#262626',
-  splitLine: '#1a1a1a',
-  text: '#f4f4f5',
-  textDim: '#9a9a9e',
-  mono: 'JetBrains Mono, ui-monospace, monospace',
-  inter: 'Inter, system-ui',
-};
+/** Chart chrome + series colours for the playground builders, derived
+ *  from the active theme so the pivots follow Caribbean / Chalk Dark. */
+function commonOf(ct: ChartTheme) {
+  return {
+    tooltipBg: ct.tooltipBg,
+    axisLine: ct.axisLine,
+    splitLine: ct.splitLine,
+    text: ct.text,
+    textDim: ct.textDim,
+    accent: ct.accent,
+    highlight: ct.highlight,
+    heatRamp: ct.heatRamp,
+    mono: 'Nunito, system-ui',
+    inter: 'Nunito, system-ui',
+  };
+}
+type PlaygroundTheme = ReturnType<typeof commonOf>;
 
 function fmt(v: number, unit: string): string {
   if (unit === 's' || unit === 's/100m') {
@@ -754,15 +764,16 @@ function buildBarOption(
   metric: PivotMetric,
   dim: PivotDimension,
   stat: Stat,
+  cm: PlaygroundTheme,
 ) {
   return {
     grid: { left: 56, right: 16, top: 16, bottom: 64, containLabel: false },
     animation: false,
     tooltip: {
       trigger: 'axis',
-      backgroundColor: COMMON.tooltipBg,
-      borderColor: COMMON.axisLine,
-      textStyle: { color: COMMON.text, fontFamily: COMMON.inter, fontSize: 12 },
+      backgroundColor: cm.tooltipBg,
+      borderColor: cm.axisLine,
+      textStyle: { color: cm.text, fontFamily: cm.inter, fontSize: 12 },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const b = buckets[p.dataIndex];
@@ -772,11 +783,11 @@ function buildBarOption(
     xAxis: {
       type: 'category',
       data: buckets.map((b) => b.label),
-      axisLine: { lineStyle: { color: COMMON.axisLine } },
+      axisLine: { lineStyle: { color: cm.axisLine } },
       axisTick: { show: false },
       axisLabel: {
-        color: COMMON.textDim,
-        fontFamily: COMMON.mono,
+        color: cm.textDim,
+        fontFamily: cm.mono,
         fontSize: 10,
         interval: 0,
         rotate: buckets.length > 6 ? 30 : 0,
@@ -784,28 +795,28 @@ function buildBarOption(
       name: dim.label,
       nameLocation: 'middle',
       nameGap: 44,
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     yAxis: {
       type: 'value',
       name: `${stat} · ${metric.unit}`,
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: COMMON.splitLine } },
-      axisLabel: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      splitLine: { lineStyle: { color: cm.splitLine } },
+      axisLabel: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     series: [
       {
         type: 'bar',
         data: buckets.map((b) => b.value),
-        itemStyle: { color: '#4fc3f7', borderRadius: [3, 3, 0, 0] },
+        itemStyle: { color: cm.accent, borderRadius: [3, 3, 0, 0] },
         barWidth: '70%',
         label: {
           show: true,
           position: 'top',
-          color: COMMON.textDim,
-          fontFamily: COMMON.mono,
+          color: cm.textDim,
+          fontFamily: cm.mono,
           fontSize: 9,
           formatter: (p: any) => `n=${buckets[p.dataIndex].n}`,
         },
@@ -829,6 +840,7 @@ function buildBoxOption(
   metric: PivotMetric,
   dim: PivotDimension,
   t: (s: string) => string,
+  cm: PlaygroundTheme,
 ) {
   // ECharts boxplot data is [min, q1, median, q3, max] per bucket.
   const boxData = buckets.map((b) => {
@@ -863,9 +875,9 @@ function buildBoxOption(
     animation: false,
     tooltip: {
       trigger: 'item',
-      backgroundColor: COMMON.tooltipBg,
-      borderColor: COMMON.axisLine,
-      textStyle: { color: COMMON.text, fontFamily: COMMON.inter, fontSize: 12 },
+      backgroundColor: cm.tooltipBg,
+      borderColor: cm.axisLine,
+      textStyle: { color: cm.text, fontFamily: cm.inter, fontSize: 12 },
       formatter: (p: any) => {
         if (p.seriesType === 'boxplot') {
           const b = buckets[p.dataIndex];
@@ -883,11 +895,11 @@ function buildBoxOption(
     xAxis: {
       type: 'category',
       data: buckets.map((b) => b.label),
-      axisLine: { lineStyle: { color: COMMON.axisLine } },
+      axisLine: { lineStyle: { color: cm.axisLine } },
       axisTick: { show: false },
       axisLabel: {
-        color: COMMON.textDim,
-        fontFamily: COMMON.mono,
+        color: cm.textDim,
+        fontFamily: cm.mono,
         fontSize: 10,
         interval: 0,
         rotate: buckets.length > 6 ? 30 : 0,
@@ -895,28 +907,28 @@ function buildBoxOption(
       name: dim.label,
       nameLocation: 'middle',
       nameGap: 44,
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     yAxis: {
       type: 'value',
       name: metric.unit,
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: COMMON.splitLine } },
-      axisLabel: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      splitLine: { lineStyle: { color: cm.splitLine } },
+      axisLabel: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     series: [
       {
         type: 'boxplot',
         data: boxData,
-        itemStyle: { color: '#4fc3f7', borderColor: '#4fc3f7' },
+        itemStyle: { color: cm.accent, borderColor: cm.accent },
       },
       {
         type: 'scatter',
         data: outliers,
         symbolSize: 5,
-        itemStyle: { color: '#ff5f9e', opacity: 0.7 },
+        itemStyle: { color: cm.highlight, opacity: 0.7 },
       },
     ],
   };
@@ -977,6 +989,7 @@ function buildScatterOption(
   metric: PivotMetric,
   dim: PivotDimension,
   fit: { slope: number; intercept: number; r: number } | null,
+  cm: PlaygroundTheme,
 ) {
   const pts = scatterData(buckets);
   const xs = pts.map((p) => p[0]);
@@ -993,9 +1006,9 @@ function buildScatterOption(
     animation: false,
     tooltip: {
       trigger: 'item',
-      backgroundColor: COMMON.tooltipBg,
-      borderColor: COMMON.axisLine,
-      textStyle: { color: COMMON.text, fontFamily: COMMON.inter, fontSize: 12 },
+      backgroundColor: cm.tooltipBg,
+      borderColor: cm.axisLine,
+      textStyle: { color: cm.text, fontFamily: cm.inter, fontSize: 12 },
       formatter: (p: any) =>
         `${dim.label}: ${p.data[0]}<br/>${metric.label}: <b>${fmt(p.data[1], metric.unit)}</b> ${metric.unit}`,
     },
@@ -1004,30 +1017,30 @@ function buildScatterOption(
       name: dim.label,
       nameLocation: 'middle',
       nameGap: 32,
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
-      axisLine: { lineStyle: { color: COMMON.axisLine } },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
+      axisLine: { lineStyle: { color: cm.axisLine } },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: COMMON.splitLine } },
-      axisLabel: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      splitLine: { lineStyle: { color: cm.splitLine } },
+      axisLabel: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     yAxis: {
       type: 'value',
       name: metric.unit,
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: COMMON.splitLine } },
-      axisLabel: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      splitLine: { lineStyle: { color: cm.splitLine } },
+      axisLabel: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     series: [
-      { type: 'scatter', data: pts, symbolSize: 7, itemStyle: { color: '#4fc3f7', opacity: 0.55 } },
+      { type: 'scatter', data: pts, symbolSize: 7, itemStyle: { color: cm.accent, opacity: 0.55 } },
       ...(fit
         ? [
             {
               type: 'line',
               data: lineData,
               showSymbol: false,
-              lineStyle: { color: '#ff5f9e', width: 2 },
+              lineStyle: { color: cm.highlight, width: 2 },
               tooltip: { show: false },
             },
           ]
@@ -1036,7 +1049,7 @@ function buildScatterOption(
   };
 }
 
-function buildHistogramOption(buckets: PivotBucket[], metric: PivotMetric, t: (s: string) => string) {
+function buildHistogramOption(buckets: PivotBucket[], metric: PivotMetric, t: (s: string) => string, cm: PlaygroundTheme) {
   const values = buckets.flatMap((b) => b.points);
   if (values.length === 0) {
     return { xAxis: { type: 'category', data: [] }, yAxis: { type: 'value' }, series: [] };
@@ -1058,9 +1071,9 @@ function buildHistogramOption(buckets: PivotBucket[], metric: PivotMetric, t: (s
     animation: false,
     tooltip: {
       trigger: 'axis',
-      backgroundColor: COMMON.tooltipBg,
-      borderColor: COMMON.axisLine,
-      textStyle: { color: COMMON.text, fontFamily: COMMON.inter, fontSize: 12 },
+      backgroundColor: cm.tooltipBg,
+      borderColor: cm.axisLine,
+      textStyle: { color: cm.text, fontFamily: cm.inter, fontSize: 12 },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const lo = min + p.dataIndex * width;
@@ -1073,12 +1086,12 @@ function buildHistogramOption(buckets: PivotBucket[], metric: PivotMetric, t: (s
       name: metric.unit,
       nameLocation: 'middle',
       nameGap: 30,
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
-      axisLine: { lineStyle: { color: COMMON.axisLine } },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
+      axisLine: { lineStyle: { color: cm.axisLine } },
       axisTick: { show: false },
       axisLabel: {
-        color: COMMON.textDim,
-        fontFamily: COMMON.mono,
+        color: cm.textDim,
+        fontFamily: cm.mono,
         fontSize: 9,
         interval: Math.max(0, Math.floor(binCount / 8)),
       },
@@ -1086,13 +1099,13 @@ function buildHistogramOption(buckets: PivotBucket[], metric: PivotMetric, t: (s
     yAxis: {
       type: 'value',
       name: t('dives'),
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: COMMON.splitLine } },
-      axisLabel: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      splitLine: { lineStyle: { color: cm.splitLine } },
+      axisLabel: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
-    series: [{ type: 'bar', data: counts, itemStyle: { color: '#4fc3f7' }, barWidth: '98%' }],
+    series: [{ type: 'bar', data: counts, itemStyle: { color: cm.accent }, barWidth: '98%' }],
   };
 }
 
@@ -1101,6 +1114,7 @@ function buildXyOption(
   xMetric: PivotMetric,
   yMetric: PivotMetric,
   fit: { slope: number; intercept: number; r: number } | null,
+  cm: PlaygroundTheme,
 ) {
   const xs = pts.map((p) => p[0]);
   const minX = xs.length ? Math.min(...xs) : 0;
@@ -1116,9 +1130,9 @@ function buildXyOption(
     animation: false,
     tooltip: {
       trigger: 'item',
-      backgroundColor: COMMON.tooltipBg,
-      borderColor: COMMON.axisLine,
-      textStyle: { color: COMMON.text, fontFamily: COMMON.inter, fontSize: 12 },
+      backgroundColor: cm.tooltipBg,
+      borderColor: cm.axisLine,
+      textStyle: { color: cm.text, fontFamily: cm.inter, fontSize: 12 },
       formatter: (p: any) =>
         `${xMetric.label}: <b>${fmt(p.data[0], xMetric.unit)}</b> ${xMetric.unit}<br/>` +
         `${yMetric.label}: <b>${fmt(p.data[1], yMetric.unit)}</b> ${yMetric.unit}`,
@@ -1128,30 +1142,30 @@ function buildXyOption(
       name: `${xMetric.label} (${xMetric.unit})`,
       nameLocation: 'middle',
       nameGap: 32,
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
-      axisLine: { lineStyle: { color: COMMON.axisLine } },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
+      axisLine: { lineStyle: { color: cm.axisLine } },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: COMMON.splitLine } },
-      axisLabel: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      splitLine: { lineStyle: { color: cm.splitLine } },
+      axisLabel: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     yAxis: {
       type: 'value',
       name: `${yMetric.label} (${yMetric.unit})`,
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: COMMON.splitLine } },
-      axisLabel: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      splitLine: { lineStyle: { color: cm.splitLine } },
+      axisLabel: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     series: [
-      { type: 'scatter', data: pts, symbolSize: 7, itemStyle: { color: '#4fc3f7', opacity: 0.55 } },
+      { type: 'scatter', data: pts, symbolSize: 7, itemStyle: { color: cm.accent, opacity: 0.55 } },
       ...(fit
         ? [
             {
               type: 'line',
               data: lineData,
               showSymbol: false,
-              lineStyle: { color: '#ff5f9e', width: 2 },
+              lineStyle: { color: cm.highlight, width: 2 },
               tooltip: { show: false },
             },
           ]
@@ -1167,6 +1181,7 @@ function buildHeatmapOption(
   dim2: PivotDimension,
   stat: Stat,
   t: (s: string) => string,
+  cm: PlaygroundTheme,
 ) {
   if (!heat) return { xAxis: { type: 'category', data: [] }, yAxis: { type: 'category', data: [] }, series: [] };
   const data = heat.cells.map((c) => [c.x, c.y, c.value]);
@@ -1179,9 +1194,9 @@ function buildHeatmapOption(
     animation: false,
     tooltip: {
       trigger: 'item',
-      backgroundColor: COMMON.tooltipBg,
-      borderColor: COMMON.axisLine,
-      textStyle: { color: COMMON.text, fontFamily: COMMON.inter, fontSize: 12 },
+      backgroundColor: cm.tooltipBg,
+      borderColor: cm.axisLine,
+      textStyle: { color: cm.text, fontFamily: cm.inter, fontSize: 12 },
       formatter: (p: any) => {
         const c = heat.cells[p.dataIndex];
         return (
@@ -1197,12 +1212,12 @@ function buildHeatmapOption(
       name: dim.label,
       nameLocation: 'middle',
       nameGap: 56,
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
-      axisLine: { lineStyle: { color: COMMON.axisLine } },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
+      axisLine: { lineStyle: { color: cm.axisLine } },
       axisTick: { show: false },
       axisLabel: {
-        color: COMMON.textDim,
-        fontFamily: COMMON.mono,
+        color: cm.textDim,
+        fontFamily: cm.mono,
         fontSize: 9,
         interval: 0,
         rotate: heat.xKeys.length > 5 ? 30 : 0,
@@ -1212,10 +1227,10 @@ function buildHeatmapOption(
       type: 'category',
       data: heat.yKeys,
       name: dim2.label,
-      nameTextStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
-      axisLine: { lineStyle: { color: COMMON.axisLine } },
+      nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
+      axisLine: { lineStyle: { color: cm.axisLine } },
       axisTick: { show: false },
-      axisLabel: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 10 },
+      axisLabel: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     visualMap: {
       min,
@@ -1224,8 +1239,8 @@ function buildHeatmapOption(
       orient: 'horizontal',
       left: 'center',
       bottom: 4,
-      inRange: { color: ['#0e2a36', '#1f6f8c', '#4fc3f7'] },
-      textStyle: { color: COMMON.textDim, fontFamily: COMMON.mono, fontSize: 9 },
+      inRange: { color: [cm.heatRamp[0], cm.heatRamp[2], cm.heatRamp[4]] },
+      textStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 9 },
     },
     series: [
       {
@@ -1233,12 +1248,12 @@ function buildHeatmapOption(
         data,
         label: {
           show: true,
-          color: COMMON.text,
-          fontFamily: COMMON.mono,
+          color: cm.text,
+          fontFamily: cm.mono,
           fontSize: 9,
           formatter: (p: any) => fmt(p.data[2], metric.unit),
         },
-        emphasis: { itemStyle: { borderColor: COMMON.text, borderWidth: 1 } },
+        emphasis: { itemStyle: { borderColor: cm.text, borderWidth: 1 } },
       },
     ],
   };

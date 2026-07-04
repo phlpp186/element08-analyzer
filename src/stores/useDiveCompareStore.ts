@@ -12,16 +12,19 @@ import { create } from 'zustand';
 
 export type CompareMode = 'depth' | 'holds' | 'pool';
 
-/** Slot colours, in assignment order. Distinct on the dark surface. */
+/** Slot colours, in assignment order. A slot's colour is assigned once and
+ *  stays stable while selected, so these are intentionally theme-agnostic:
+ *  Open Water mid-tones picked to stay distinct on both the white Caribbean
+ *  cards and the Chalk Dark panels. */
 export const COMPARE_COLORS = [
-  '#4fc3f7', // accent blue
-  '#ff5f9e', // pink
-  '#66bb6a', // green
-  '#ffa726', // amber
-  '#a89fff', // violet
-  '#00e5cc', // teal
-  '#ef5350', // red
-  '#fbc02d', // yellow
+  '#1bafe0', // sky cyan (Chalk Dark accent)
+  '#f2764f', // coral (Caribbean accent)
+  '#1fb894', // teal green
+  '#e8a93a', // golden sand
+  '#8a5fd6', // violet
+  '#e84393', // pink
+  '#e24b3c', // red
+  '#5e828a', // slate
 ];
 
 /** Per-mode cap. Depth curves are dense (3 reads cleanly); holds mirror

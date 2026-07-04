@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark light" />
     <script>
-      // FOUC prevention — apply the saved theme class before first paint
-      // so the page doesn't flash dark before flipping to the user's
-      // chosen light theme.
+      // FOUC prevention — resolve the theme before first paint. An explicit
+      // stored choice ('light' = Caribbean / 'dark' = Chalk Dark) wins;
+      // anything else (no preference, or a retired value like 'neon'/'sky')
+      // falls back to the OS prefers-color-scheme.
       (function () {
-        try {
-          var t = localStorage.getItem('element08.theme');
-          if (t === 'light') document.documentElement.classList.add('light');
-          else if (t === 'neon') document.documentElement.classList.add('neon');
-        } catch (e) { /* localStorage blocked, stay on default */ }
+        var t = null;
+        try { t = localStorage.getItem('element08.theme'); } catch (e) { /* localStorage blocked */ }
+        var light = (t === 'light' || t === 'dark')
+          ? t === 'light'
+          : !(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (light) document.documentElement.classList.add('light');
       })();
     </script>
     <meta

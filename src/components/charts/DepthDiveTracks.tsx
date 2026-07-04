@@ -32,7 +32,7 @@ import type {
   HangSegment,
   ProfilePoint,
 } from '../../lib/analytics/diveProfile';
-import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
+import { useChartTheme, withAlpha, type ChartTheme } from '../../lib/chartTheme';
 import { useT, useLangValue } from '../../i18n';
 
 type TFn = (s: string) => string;
@@ -67,9 +67,6 @@ interface Props {
 
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
 const AXIS_POINTER_LINK = [{ xAxisIndex: 'all' as const }];
-
-const DESCENT_COLOR = '#ffa726'; // amber — going down
-const ASCENT_COLOR = '#ef5350'; // red — coming up
 
 export function DepthDiveTracks({
   data,
@@ -116,19 +113,19 @@ export function DepthDiveTracks({
     [onHangClick],
   );
   const hrOption = useMemo(
-    () => buildLineOption(data.hrSeries, '#ff5f9e', 'bpm', data.startT, data.endT, ct),
+    () => buildLineOption(data.hrSeries, ct.highlight, 'bpm', data.startT, data.endT, ct),
     [data, ct],
   );
   const speedOption = useMemo(
     () =>
-      buildLineOption(data.speedSeries, '#ffa726', 'm/s', data.startT, data.endT, ct, {
+      buildLineOption(data.speedSeries, ct.amber, 'm/s', data.startT, data.endT, ct, {
         allowNegative: true,
         smoothWindow: speedSmooth,
       }),
     [data, speedSmooth, ct],
   );
   const tempOption = useMemo(
-    () => buildLineOption(data.tempSeries, '#66bb6a', '°C', data.startT, data.endT, ct),
+    () => buildLineOption(data.tempSeries, ct.green, '°C', data.startT, data.endT, ct),
     [data, ct],
   );
 
@@ -252,7 +249,7 @@ function buildAlarmMarkers(
       for (let i = 1; i < series.length; i++) {
         if (series[i][0] > splitT) break;
         if (series[i - 1][1] < d && series[i][1] >= d) {
-          markers.push(alarmDot(series[i][0], d, DESCENT_COLOR, 'top', ct));
+          markers.push(alarmDot(series[i][0], d, ct.amber, 'top', ct));
           break;
         }
       }
@@ -261,7 +258,7 @@ function buildAlarmMarkers(
       for (let i = 1; i < series.length; i++) {
         if (series[i][0] < splitT) continue;
         if (series[i - 1][1] > d && series[i][1] <= d) {
-          markers.push(alarmDot(series[i][0], d, ASCENT_COLOR, 'bottom', ct));
+          markers.push(alarmDot(series[i][0], d, ct.red, 'bottom', ct));
           break;
         }
       }
@@ -288,7 +285,7 @@ function alarmDot(t: number, d: number, color: string, position: 'top' | 'bottom
 
 /** Vertical-speed readouts at each `step`-metre depth crossing, on both
  *  the descent and the ascent. */
-function buildSpeedMarkers(points: ProfilePoint[], step: number, splitT: number) {
+function buildSpeedMarkers(points: ProfilePoint[], step: number, splitT: number, ct: ChartTheme) {
   if (step <= 0 || points.length < 2) return [];
   const maxDepth = points.reduce((m, p) => Math.max(m, p.d), 0);
   const markers: any[] = [];
@@ -297,7 +294,7 @@ function buildSpeedMarkers(points: ProfilePoint[], step: number, splitT: number)
     for (let i = 1; i < points.length; i++) {
       if (points[i].t > splitT) break;
       if (points[i - 1].d < threshold && points[i].d >= threshold) {
-        pushSpeedMarker(markers, points[i], DESCENT_COLOR, 'right');
+        pushSpeedMarker(markers, points[i], ct.amber, 'right');
         break;
       }
     }
@@ -305,7 +302,7 @@ function buildSpeedMarkers(points: ProfilePoint[], step: number, splitT: number)
     for (let i = 1; i < points.length; i++) {
       if (points[i].t < splitT) continue;
       if (points[i - 1].d > threshold && points[i].d <= threshold) {
-        pushSpeedMarker(markers, points[i], ASCENT_COLOR, 'left');
+        pushSpeedMarker(markers, points[i], ct.red, 'left');
         break;
       }
     }
@@ -348,7 +345,7 @@ function buildDepthOption(
   const hangBands = (data.hangs as HangSegment[]).map((h) => ({
     startT: h.startT,
     endT: h.endT,
-    color: h.type === 'bottom' ? 'rgba(79, 195, 247, 0.12)' : 'rgba(255, 167, 38, 0.10)',
+    color: h.type === 'bottom' ? withAlpha(ct.accent, 0.12) : withAlpha(ct.amber, 0.10),
     name: h.type === 'bottom' ? t('Bottom hang') : t('Off-bottom hang'),
   }));
 
@@ -358,7 +355,7 @@ function buildDepthOption(
     ? buildAlarmMarkers(alarms, data.depthSeries, splitT, ct)
     : [];
 
-  const speedMarkers = buildSpeedMarkers(data.points, speedStep, splitT);
+  const speedMarkers = buildSpeedMarkers(data.points, speedStep, splitT, ct);
 
   // Contraction marker — we have only the depth, not the timestamp.
   let contractionMarker: any = null;
@@ -375,11 +372,11 @@ function buildDepthOption(
           coord: [data.depthSeries[i][0], data.depthSeries[i][1]],
           symbol: 'diamond',
           symbolSize: 12,
-          itemStyle: { color: '#ef5350' },
+          itemStyle: { color: ct.red },
           label: {
             formatter: t('First contraction'),
             position: 'top',
-            color: '#ef5350',
+            color: ct.red,
             fontSize: 10,
           },
         };
@@ -398,7 +395,7 @@ function buildDepthOption(
   return {
     grid: GRID,
     animation: false,
-    axisPointer: { link: AXIS_POINTER_LINK, lineStyle: { color: '#4fc3f7', opacity: 0.4 } },
+    axisPointer: { link: AXIS_POINTER_LINK, lineStyle: { color: ct.accent, opacity: 0.4 } },
     tooltip: {
       ...baseTooltip(ct),
       trigger: 'axis',
@@ -432,14 +429,14 @@ function buildDepthOption(
         data: data.depthSeries,
         showSymbol: false,
         smooth: 0.2,
-        lineStyle: { color: '#4fc3f7', width: 2 },
+        lineStyle: { color: ct.accent, width: 2 },
         areaStyle: {
           color: {
             type: 'linear',
             x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(79, 195, 247, 0.4)' },
-              { offset: 1, color: 'rgba(79, 195, 247, 0.02)' },
+              { offset: 0, color: withAlpha(ct.accent, 0.4) },
+              { offset: 1, color: withAlpha(ct.accent, 0.02) },
             ],
           },
         },
@@ -456,7 +453,7 @@ function buildDepthOption(
                 position: 'insideTop',
                 color: ct.textDim,
                 fontSize: 10,
-                fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+                fontFamily: 'Nunito, system-ui',
               },
               data: hangBands.map((b) => [
                 { xAxis: b.startT, itemStyle: { color: b.color }, name: b.name },
@@ -574,7 +571,7 @@ function baseTooltip(ct: ChartTheme) {
   return {
     backgroundColor: ct.tooltipBg,
     borderColor: ct.axisLine,
-    textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
+    textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
     axisPointer: { type: 'line' as const },
   };
 }

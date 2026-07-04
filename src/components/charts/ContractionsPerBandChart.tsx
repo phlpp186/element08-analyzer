@@ -42,7 +42,7 @@ export function ContractionsPerBandChart({ bands }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const b = bands[p.dataIndex];
@@ -56,7 +56,7 @@ export function ContractionsPerBandChart({ bands }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (val: string, idx: number) => (bands.length > 10 && idx % 2 !== 0 ? '' : val),
       },
@@ -65,7 +65,7 @@ export function ContractionsPerBandChart({ bands }: Props) {
       nameGap: 28,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -76,7 +76,7 @@ export function ContractionsPerBandChart({ bands }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       minInterval: 1,
@@ -85,7 +85,7 @@ export function ContractionsPerBandChart({ bands }: Props) {
       {
         type: 'bar',
         data: bands.map((b) => b.count),
-        itemStyle: { color: '#ff5f9e', borderRadius: [3, 3, 0, 0] },
+        itemStyle: { color: ct.highlight, borderRadius: [3, 3, 0, 0] },
         barWidth: '70%',
       },
     ],

@@ -39,11 +39,11 @@ function depthDives(sessions: ParsedSession[]): TechDive[] {
 // ─── Early turn ──────────────────────────────────────────────────────────────
 
 export const EARLY_TURN_REASONS = [
-  { id: 'squeeze', label: 'Squeeze', color: '#ef5350' },
-  { id: 'eq', label: 'Equalization', color: '#ff9800' },
-  { id: 'hypoxia', label: 'Hypoxia', color: '#ab47bc' },
-  { id: 'mental', label: 'Mental', color: '#42a5f5' },
-  { id: 'time-safety', label: 'Time / safety', color: '#78909c' },
+  { id: 'squeeze', label: 'Squeeze', color: '#e24b3c' },
+  { id: 'eq', label: 'Equalization', color: '#e8a93a' },
+  { id: 'hypoxia', label: 'Hypoxia', color: '#8a5fd6' },
+  { id: 'mental', label: 'Mental', color: '#1bafe0' },
+  { id: 'time-safety', label: 'Time / safety', color: '#5e828a' },
 ] as const;
 
 export interface EarlyTurnReasonBand {

@@ -1,41 +1,32 @@
 /**
- * useThemeStore — light / dark UI preference.
+ * useThemeStore — Caribbean (light) / Chalk Dark (dark) UI preference.
  *
  * Theme is a UI preference, not user data, so persisting it to localStorage
  * is outside the analyzer's "your data never leaves the browser" promise.
  * The store also applies the right class to <html> whenever it changes so
  * the Tailwind CSS-variable palette swaps in.
+ *
+ * With no stored preference the app follows the OS `prefers-color-scheme`;
+ * that resolution happens in the FOUC-prevention script in index.html
+ * before first paint, so the initial read just honours the <html> class.
+ * Retired stored values ('neon'/'sky') are treated as no preference there.
  */
 import { create } from 'zustand';
 
-export type ThemeMode = 'dark' | 'light' | 'neon';
-
-/** Cycle order for the toggle: Dark → Light → Neon → Dark. */
-const ORDER: ThemeMode[] = ['dark', 'light', 'neon'];
+export type ThemeMode = 'dark' | 'light';
 
 const STORAGE_KEY = 'element08.theme';
 
 function readInitial(): ThemeMode {
   if (typeof document === 'undefined') return 'dark';
-  // Honour whatever the FOUC-prevention script in index.html set, falling
-  // back to a fresh localStorage read.
-  const cls = document.documentElement.classList;
-  if (cls.contains('light')) return 'light';
-  if (cls.contains('neon')) return 'neon';
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'light' || stored === 'dark' || stored === 'neon') return stored;
-  } catch {
-    /* localStorage blocked — stay on default */
-  }
-  return 'dark';
+  // The index.html script already resolved stored preference vs OS
+  // preference into the <html> class — treat it as the source of truth.
+  return document.documentElement.classList.contains('light') ? 'light' : 'dark';
 }
 
 function applyClass(theme: ThemeMode) {
   if (typeof document === 'undefined') return;
-  const cls = document.documentElement.classList;
-  cls.toggle('light', theme === 'light');
-  cls.toggle('neon', theme === 'neon');
+  document.documentElement.classList.toggle('light', theme === 'light');
 }
 
 interface ThemeState {
@@ -52,7 +43,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set({ theme });
   },
   toggle: () => {
-    const next = ORDER[(ORDER.indexOf(get().theme) + 1) % ORDER.length];
+    const next: ThemeMode = get().theme === 'dark' ? 'light' : 'dark';
     applyClass(next);
     try { localStorage.setItem(STORAGE_KEY, next); } catch { /* blocked */ }
     set({ theme: next });

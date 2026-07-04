@@ -42,7 +42,7 @@ export function SessionTagDistributionChart({ data }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         return `${p.name}<br/>${p.value} ${p.value === 1 ? t('session') : t('sessions')}`;
@@ -56,7 +56,7 @@ export function SessionTagDistributionChart({ data }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -67,7 +67,7 @@ export function SessionTagDistributionChart({ data }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -75,13 +75,13 @@ export function SessionTagDistributionChart({ data }: Props) {
       {
         type: 'bar',
         data: counts,
-        itemStyle: { color: '#a89fff', borderRadius: [0, 3, 3, 0] },
+        itemStyle: { color: ct.highlight, borderRadius: [0, 3, 3, 0] },
         barWidth: '58%',
         label: {
           show: true,
           position: 'right',
           color: ct.textDim,
-          fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+          fontFamily: 'Nunito, system-ui',
           fontSize: 10,
         },
       },

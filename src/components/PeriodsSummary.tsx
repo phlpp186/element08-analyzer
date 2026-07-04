@@ -9,17 +9,18 @@
  * sorting; v1 keeps the order users typed.
  */
 import type { PeriodSummary } from '../lib/analytics/periodSummary';
+import { useChartTheme, type ChartTheme } from '../lib/chartTheme';
 import { useT } from '../i18n';
 
 interface Props {
   summaries: PeriodSummary[];
 }
 
-const MODE_COLORS = {
-  dry: '#66bb6a',   // recover green
-  depth: '#4fc3f7', // accent blue
-  pool: '#ff5f9e',  // highlight pink
-} as const;
+/** Mode identity colours from the chart theme — matches ExerciseScatter:
+ *  green = dry, accent = depth, highlight = pool. */
+function modeColors(ct: ChartTheme) {
+  return { dry: ct.green, depth: ct.accent, pool: ct.highlight } as const;
+}
 
 const MODE_LABELS = {
   dry: 'Dry',
@@ -123,6 +124,7 @@ type ModeKey = 'dry' | 'depth' | 'pool';
 
 function ModeMixBar({ mix }: { mix: { dry: number; depth: number; pool: number } }) {
   const t = useT();
+  const MODE_COLORS = modeColors(useChartTheme());
   const total = mix.dry + mix.depth + mix.pool;
   if (total === 0) {
     return <span className="font-mono text-xs text-textDim">-</span>;

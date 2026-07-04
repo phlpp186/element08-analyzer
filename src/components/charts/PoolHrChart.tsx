@@ -14,11 +14,11 @@ interface Props {
   points: HrPoint[];
 }
 
-const LOW_COLOR = '#00e5cc';
-const HIGH_COLOR = '#ff5f9e';
-
 export function PoolHrChart({ points }: Props) {
   const ct = useChartTheme();
+  // Semantic endpoints: lows read as recovery green, highs as alarm red.
+  const LOW_COLOR = ct.green;
+  const HIGH_COLOR = ct.red;
   const t = useT();
   if (points.length === 0) {
     return (
@@ -51,7 +51,7 @@ export function PoolHrChart({ points }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (p: any) => {
         const [date, hr, meta] = p.value as [string, number, HrPoint];
         const dateStr = new Date(date).toLocaleDateString();
@@ -64,7 +64,7 @@ export function PoolHrChart({ points }: Props) {
       data: [t('HR low'), t('HR high')],
       textStyle: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       itemWidth: 14,
@@ -76,7 +76,7 @@ export function PoolHrChart({ points }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       splitLine: { show: false },
@@ -90,7 +90,7 @@ export function PoolHrChart({ points }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value} bpm',
       },

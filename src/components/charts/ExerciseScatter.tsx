@@ -16,7 +16,7 @@ import type {
   ExerciseScatterData,
   ExerciseSource,
 } from '../../lib/analytics/periodExercises';
-import { useChartTheme } from '../../lib/chartTheme';
+import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 
 interface Props {
@@ -24,15 +24,18 @@ interface Props {
   mode: ExerciseMode;
 }
 
-const SOURCE_COLOR: Record<ExerciseSource, string> = {
-  dry: '#66bb6a',       // green — dry holds
-  'pool-sta': '#ff5f9e', // pink — pool STA. "Pink = pool" stays consistent
-                         // with Pool-distance mode, and it's clearly
-                         // distinct from the green dry holds it shares the
-                         // breath-hold chart with.
-  depth: '#4fc3f7',     // blue — depth
-  pool: '#ff5f9e',      // pink — pool distance
-};
+/** Mode identity colours from the chart theme: green = dry holds,
+ *  highlight = pool (STA and distance — stays consistent across modes and
+ *  clearly distinct from the green dry holds it shares the breath-hold
+ *  chart with), accent = depth. */
+function sourceColors(ct: ChartTheme): Record<ExerciseSource, string> {
+  return {
+    dry: ct.green,
+    'pool-sta': ct.highlight,
+    depth: ct.accent,
+    pool: ct.highlight,
+  };
+}
 
 const SOURCE_LABEL: Record<ExerciseSource, string> = {
   dry: 'Dry holds',
@@ -95,14 +98,15 @@ export function ExerciseScatter({ data, mode }: Props) {
     bySource.set(pt.source, arr);
   }
 
+  const sourceColor = sourceColors(ct);
   const series = Array.from(bySource.entries()).map(([source, pts]) => ({
     name: t(SOURCE_LABEL[source]),
     type: 'scatter' as const,
     symbolSize: 9,
     itemStyle: {
-      color: SOURCE_COLOR[source],
+      color: sourceColor[source],
       opacity: 0.72,
-      borderColor: SOURCE_COLOR[source],
+      borderColor: sourceColor[source],
       borderWidth: 1,
     },
     emphasis: { itemStyle: { opacity: 1 } },
@@ -118,7 +122,7 @@ export function ExerciseScatter({ data, mode }: Props) {
       ? {
           top: 0,
           right: 0,
-          textStyle: { color: ct.textDim, fontFamily: 'Inter, system-ui', fontSize: 11 },
+          textStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 11 },
           itemWidth: 10,
           itemHeight: 10,
           icon: 'circle',
@@ -128,7 +132,7 @@ export function ExerciseScatter({ data, mode }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
       formatter: (p: any) => {
         const meta = p.data._meta as ExercisePoint;
         const unit = meta.source === 'dry' ? t('Hold') : t('Dive');
@@ -147,7 +151,7 @@ export function ExerciseScatter({ data, mode }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       splitLine: { lineStyle: { color: ct.splitLine } },
@@ -157,7 +161,7 @@ export function ExerciseScatter({ data, mode }: Props) {
       name: t(Y_LABEL[mode]),
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       min: 0,
@@ -166,7 +170,7 @@ export function ExerciseScatter({ data, mode }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => fmtValue(mode, v),
       },

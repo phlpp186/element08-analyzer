@@ -33,11 +33,11 @@ const TAG_LABELS: Record<SessionTag, string> = {
   recovery:   'Recovery',
 };
 const TAG_COLORS: Record<SessionTag, string> = {
-  co2_table:  '#ff5f9e',
-  o2_table:   '#00e5cc',
-  comfy:      '#9aa5ff',
-  pb_attempt: '#ffa726',
-  recovery:   '#66bb6a',
+  co2_table:  '#e84393',
+  o2_table:   '#1fb894',
+  comfy:      '#8a5fd6',
+  pb_attempt: '#f0a500',
+  recovery:   '#3dc96b',
 };
 
 // ── Hold Duration trend ─────────────────────────────────────────────────────

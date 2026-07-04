@@ -12,6 +12,7 @@
  */
 import type { PeriodMatrix } from '../../lib/analytics/periodMatrix';
 import { METRICS, type Metric } from '../../lib/analytics/periodCompare';
+import { mixHex, useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 
 interface Props {
@@ -20,6 +21,7 @@ interface Props {
 
 export function PeriodHeatmap({ matrix }: Props) {
   const t = useT();
+  const ct = useChartTheme();
   const cellColumns = METRICS.length;
   // Grid template: 80px for the week label, then equal columns for metrics.
   const gridTemplate = `80px repeat(${cellColumns}, minmax(80px, 1fr))`;
@@ -73,7 +75,7 @@ export function PeriodHeatmap({ matrix }: Props) {
             <div
               key={v}
               className="h-full flex-1"
-              style={{ backgroundColor: colorForFraction(v) }}
+              style={{ backgroundColor: colorForFraction(v, ct) }}
             />
           ))}
         </div>
@@ -110,12 +112,13 @@ function Cell({
   metricId: Metric;
 }) {
   const t = useT();
+  const ct = useChartTheme();
   const fraction = max > 0 ? value / max : 0;
   const isZero = value === 0;
   return (
     <div
       className="border-l border-border px-3 py-2 first:border-l-0"
-      style={{ backgroundColor: isZero ? 'transparent' : colorForFraction(fraction) }}
+      style={{ backgroundColor: isZero ? 'transparent' : colorForFraction(fraction, ct) }}
       title={`${formatValue(metricId, value)} (${t('peak')} ${formatValue(metricId, max)})`}
     >
       <span
@@ -130,18 +133,11 @@ function Cell({
   );
 }
 
-/** Map [0..1] → hex color along a dim → accent ramp. The lowest value
- *  is nearly invisible (panel color) and the highest is the accent blue,
- *  matching the brand palette used elsewhere. */
-function colorForFraction(f: number): string {
-  // RGB lerp from #1a1a1a (panel) to #4fc3f7 (accent)
-  const from = [0x1a, 0x1a, 0x1a];
-  const to = [0x4f, 0xc3, 0xf7];
-  const clamped = Math.max(0, Math.min(1, f));
-  const r = Math.round(from[0] + (to[0] - from[0]) * clamped);
-  const g = Math.round(from[1] + (to[1] - from[1]) * clamped);
-  const b = Math.round(from[2] + (to[2] - from[2]) * clamped);
-  return `rgb(${r}, ${g}, ${b})`;
+/** Map [0..1] → color along a dim → accent ramp. The lowest value is
+ *  nearly invisible (split-line color) and the highest is the theme
+ *  accent, matching the brand palette used elsewhere. */
+function colorForFraction(f: number, ct: ChartTheme): string {
+  return mixHex(ct.splitLine, ct.accent, f);
 }
 
 function formatValue(metric: Metric, v: number): string {

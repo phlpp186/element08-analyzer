@@ -64,7 +64,7 @@ export function RecoveryTimeChart({ points }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (p: any) => {
         const point = p.data.p as RecoveryPoint;
         const dateStr = new Date(point.date).toLocaleDateString();
@@ -77,7 +77,7 @@ export function RecoveryTimeChart({ points }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       splitLine: { show: false },
@@ -91,7 +91,7 @@ export function RecoveryTimeChart({ points }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => fmtSec(v),
       },
@@ -100,7 +100,7 @@ export function RecoveryTimeChart({ points }: Props) {
       {
         type: 'scatter',
         data,
-        itemStyle: { color: '#00e5cc', opacity: 0.7 },
+        itemStyle: { color: ct.green, opacity: 0.7 },
       },
     ],
   };

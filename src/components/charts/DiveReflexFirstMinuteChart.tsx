@@ -9,7 +9,7 @@
  */
 import ReactECharts from 'echarts-for-react';
 import type { FirstMinutePoint } from '../../lib/analytics/holdTrends';
-import { useChartTheme } from '../../lib/chartTheme';
+import { useChartTheme, withAlpha } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
 
@@ -48,7 +48,7 @@ export function DiveReflexFirstMinuteChart({ points }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (p: any) => {
         const point = points[p.dataIndex];
         return `<span style="color:${p.color}">●</span> ${point.t}s ${t('into hold')}<br/>${Math.round(point.hr)} bpm<br/><span style="opacity:0.7">${point.n} ${point.n === 1 ? t('hold') : t('holds')}</span>`;
@@ -63,7 +63,7 @@ export function DiveReflexFirstMinuteChart({ points }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value}s',
       },
@@ -78,7 +78,7 @@ export function DiveReflexFirstMinuteChart({ points }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value} bpm',
       },
@@ -91,9 +91,9 @@ export function DiveReflexFirstMinuteChart({ points }: Props) {
         symbol: 'circle',
         symbolSize: 6,
         smooth: 0.3,
-        lineStyle: { color: '#ff5f9e', width: 2 },
-        itemStyle: { color: '#ff5f9e' },
-        areaStyle: { color: '#ff5f9e22' },
+        lineStyle: { color: ct.highlight, width: 2 },
+        itemStyle: { color: ct.highlight },
+        areaStyle: { color: withAlpha(ct.highlight, 0.13) },
       },
     ],
   };

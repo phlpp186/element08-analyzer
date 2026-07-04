@@ -23,14 +23,14 @@ const TYPE_LABELS: Record<PoolSessionType, string> = {
 };
 
 const TYPE_COLORS: Record<PoolSessionType, string> = {
-  CO2: '#ff5f9e',
-  O2:  '#00e5cc',
-  VOL: '#9aa5ff',
-  SP:  '#ffa726',
-  TE:  '#66bb6a',
-  MAX: '#ef5350',
-  FUN: '#ffd166',
-  RC:  '#8e9aaf',
+  CO2: '#e84393',
+  O2:  '#1fb894',
+  VOL: '#8a5fd6',
+  SP:  '#f0a500',
+  TE:  '#3dc96b',
+  MAX: '#e24b3c',
+  FUN: '#e8c04a',
+  RC:  '#5e828a',
 };
 
 const ORDER: PoolSessionType[] = ['CO2', 'O2', 'VOL', 'SP', 'TE', 'MAX', 'FUN', 'RC'];
@@ -59,7 +59,7 @@ export function poolSessionTypeMix(sessions: ParsedSession[]): PoolTypeBucket[] 
   }
   const untagged = counts.get('untagged');
   if (untagged) {
-    out.push({ type: 'untagged', label: 'Untagged', count: untagged, color: '#555' });
+    out.push({ type: 'untagged', label: 'Untagged', count: untagged, color: '#8a857c' });
   }
   return out;
 }

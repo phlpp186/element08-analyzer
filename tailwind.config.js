@@ -22,9 +22,11 @@ export default {
         red:       'rgb(var(--c-red) / <alpha-value>)',
       },
       fontFamily: {
-        body:    ['"Inter"', 'system-ui', 'sans-serif'],
-        heading: ['"Barlow Condensed"', 'sans-serif'],
-        mono:    ['"Share Tech Mono"', 'ui-monospace', 'monospace'],
+        // Open Water: Nunito everywhere. `heading` renders at weight 800
+        // (see index.css); `mono` is Nunito with tabular numerals.
+        body:    ['"Nunito"', 'system-ui', 'sans-serif'],
+        heading: ['"Nunito"', 'system-ui', 'sans-serif'],
+        mono:    ['"Nunito"', 'system-ui', 'sans-serif'],
       },
     },
   },

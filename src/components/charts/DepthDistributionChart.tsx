@@ -34,7 +34,7 @@ export function DepthDistributionChart({ bins }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Inter, system-ui' },
+      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const bin = bins[p.dataIndex];
@@ -48,7 +48,7 @@ export function DepthDistributionChart({ bins }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (val: string, idx: number) =>
           bins.length > 12 && idx % 2 !== 0 ? '' : val,
@@ -58,7 +58,7 @@ export function DepthDistributionChart({ bins }: Props) {
       nameGap: 28,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -69,7 +69,7 @@ export function DepthDistributionChart({ bins }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       minInterval: 1,
@@ -78,7 +78,7 @@ export function DepthDistributionChart({ bins }: Props) {
       {
         type: 'bar',
         data: bins.map((b) => b.count),
-        itemStyle: { color: '#4fc3f7', borderRadius: [3, 3, 0, 0] },
+        itemStyle: { color: ct.accent, borderRadius: [3, 3, 0, 0] },
         barWidth: '70%',
       },
     ],
