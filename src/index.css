@@ -47,6 +47,24 @@
   color-scheme: light;
 }
 
+:root.mid {
+  /* Misty — the ELEMENT 08 theme: light-mid muted teal, coral accent, sea
+   * ink text. The middle stop between Caribbean (.light) and Chalk Dark. */
+  --c-deep:      127 160 170;
+  --c-abyss:     220 234 237;
+  --c-panel:     234 242 243;
+  --c-border:    166 192 198;
+  --c-text:      18 59 68;
+  --c-textDim:   78 110 118;
+  --c-accent:    232 98 58;   /* coral-orange */
+  --c-highlight: 224 102 153; /* dusk rose */
+  --c-recover:   18 140 106;
+  --c-amber:     227 154 42;
+  --c-red:       226 75 60;
+  --c-ink:       255 255 255;
+  color-scheme: light;
+}
+
 /* Brand-level baseline. Tailwind tokens defined in tailwind.config.js. */
 html,
 body,
@@ -77,6 +95,9 @@ body::before {
 :root.light body::before {
   background: radial-gradient(90% 55% at 50% -8%, rgba(255, 255, 255, 0.85), transparent 60%);
 }
+:root.mid body::before {
+  background: radial-gradient(90% 55% at 50% -8%, rgba(255, 255, 255, 0.5), transparent 60%);
+}
 /* Keep app content above the wash layer. */
 #root {
   position: relative;
@@ -106,8 +127,9 @@ body::before {
   border: 1px solid rgb(var(--c-border) / 0.85);
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
 }
-:root.light .glass-card {
-  box-shadow: 0 6px 22px rgba(12, 59, 69, 0.09);
+:root.light .glass-card,
+:root.mid .glass-card {
+  box-shadow: 0 6px 22px rgba(15, 48, 56, 0.10);
 }
 
 /* Headings — Nunito 800 replaces the old condensed display face, so the

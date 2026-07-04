@@ -13,20 +13,26 @@
  */
 import { create } from 'zustand';
 
-export type ThemeMode = 'dark' | 'light';
+export type ThemeMode = 'light' | 'mid' | 'dark';
 
+const ORDER: ThemeMode[] = ['light', 'mid', 'dark'];
 const STORAGE_KEY = 'element08.theme';
 
 function readInitial(): ThemeMode {
   if (typeof document === 'undefined') return 'dark';
   // The index.html script already resolved stored preference vs OS
   // preference into the <html> class — treat it as the source of truth.
-  return document.documentElement.classList.contains('light') ? 'light' : 'dark';
+  const cl = document.documentElement.classList;
+  if (cl.contains('light')) return 'light';
+  if (cl.contains('mid')) return 'mid';
+  return 'dark';
 }
 
 function applyClass(theme: ThemeMode) {
   if (typeof document === 'undefined') return;
-  document.documentElement.classList.toggle('light', theme === 'light');
+  const cl = document.documentElement.classList;
+  cl.toggle('light', theme === 'light');
+  cl.toggle('mid', theme === 'mid');
 }
 
 interface ThemeState {
@@ -43,7 +49,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     set({ theme });
   },
   toggle: () => {
-    const next: ThemeMode = get().theme === 'dark' ? 'light' : 'dark';
+    const next = ORDER[(ORDER.indexOf(get().theme) + 1) % ORDER.length];
     applyClass(next);
     try { localStorage.setItem(STORAGE_KEY, next); } catch { /* blocked */ }
     set({ theme: next });
