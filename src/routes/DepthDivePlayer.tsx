@@ -7,7 +7,7 @@
  * a header stat bar and prev/next dive navigation. Sources come from the
  * loaded backup in useBackupStore — no fetches, all local.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
 import { useHangOverridesStore } from '../stores/useHangOverridesStore';
@@ -164,6 +164,20 @@ export function DepthDivePlayer() {
 
   const hasPrev = idx > 0;
   const hasNext = idx < dives.length - 1;
+
+  // Arrow keys step between dives (disabled while fullscreen is open or a
+  // form control has focus, so the smoothing slider keeps its own keys).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (fullscreen) return;
+      const el = document.activeElement;
+      if (el && ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) return;
+      if (e.key === 'ArrowLeft' && hasPrev) navigate(`/session/${session.id}/dive/${idx - 1}`);
+      else if (e.key === 'ArrowRight' && hasNext) navigate(`/session/${session.id}/dive/${idx + 1}`);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [fullscreen, hasPrev, hasNext, idx, session.id, navigate]);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">

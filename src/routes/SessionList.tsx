@@ -20,7 +20,7 @@
  * someone direct-navigates to /sessions without loading a file first, we
  * redirect to the landing page.
  */
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
 import {
@@ -31,6 +31,8 @@ import {
 } from '../lib/format';
 import type { ParsedSession } from '../schema/backup';
 import { useT } from '../i18n';
+
+const PAGE = 60;
 
 type ModeFilter = 'all' | ParsedSession['mode'];
 
@@ -55,14 +57,21 @@ export function SessionList() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<ModeFilter>('all');
   const [onlyWithNotes, setOnlyWithNotes] = useState(false);
+  const [query, setQuery] = useState('');
+  const [limit, setLimit] = useState(PAGE);
   const monthRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  // Reset the render window whenever the filter set changes.
+  useEffect(() => setLimit(PAGE), [filter, onlyWithNotes, query]);
 
   if (!backup) return <Navigate to="/" replace />;
 
   const filtered = useMemo(() => {
     const all = backup.data.sessions;
+    const q = query.trim().toLowerCase();
     let out = filter === 'all' ? all : all.filter((s) => s.mode === filter);
     if (onlyWithNotes) out = out.filter((s) => sessionHasNotes(s));
+    if (q) out = out.filter((s) => sessionMatches(s, q));
     return [...out].sort((a, b) => {
       const ta = new Date(a.date).getTime();
       const tb = new Date(b.date).getTime();
@@ -70,9 +79,12 @@ export function SessionList() {
       const sb = Number.isFinite(tb) ? tb : -Infinity;
       return sb - sa;
     });
-  }, [backup, filter, onlyWithNotes]);
+  }, [backup, filter, onlyWithNotes, query]);
 
-  const grouped = useMemo(() => groupByMonth(filtered), [filtered]);
+  // Render incrementally — a 300+ session logbook shouldn't mount all at once.
+  const visible = filtered.slice(0, limit);
+  const grouped = useMemo(() => groupByMonth(visible), [visible]);
+  const allMonths = useMemo(() => groupByMonth(filtered), [filtered]);
 
   const counts = useMemo(() => {
     const c = { all: 0, dry: 0, depth: 0, pool: 0, withNotes: 0 };
@@ -89,11 +101,23 @@ export function SessionList() {
     navigate('/');
   }
 
+  const [pendingScroll, setPendingScroll] = useState<string | null>(null);
+  // Once a jump-target month is within the render window, scroll to it.
+  useEffect(() => {
+    if (!pendingScroll) return;
+    const el = monthRefs.current[pendingScroll];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setPendingScroll(null);
+    }
+  }, [pendingScroll, limit]);
+
   function scrollToMonth(key: string) {
-    monthRefs.current[key]?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
+    // Expand the render window far enough to include the target month, then
+    // scroll once it has painted (handled by the effect above).
+    const idx = filtered.findIndex((s) => monthKeyOf(s) === key);
+    if (idx >= 0 && idx >= limit) setLimit(idx + PAGE);
+    setPendingScroll(key);
   }
 
   return (
@@ -135,6 +159,35 @@ export function SessionList() {
         </div>
       </header>
 
+      {/* Search */}
+      <div className="mb-4">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t('Search name, location, notes, or month…')}
+          className="w-full rounded-lg border border-border bg-panel px-4 py-2.5 text-sm text-text placeholder:text-textDim focus:border-accent focus:outline-none"
+        />
+      </div>
+
+      {/* Mobile month jump */}
+      {allMonths.length > 1 && (
+        <div className="mb-4 md:hidden">
+          <select
+            value=""
+            onChange={(e) => e.target.value && scrollToMonth(e.target.value)}
+            className="w-full rounded-lg border border-border bg-panel px-3 py-2 text-sm text-textDim focus:border-accent focus:outline-none"
+          >
+            <option value="">{t('Jump to')}…</option>
+            {allMonths.map((g) => (
+              <option key={g.key} value={g.key}>
+                {g.label} ({g.sessions.length})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Filter pills */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
         {FILTERS.map((f) => {
@@ -171,14 +224,14 @@ export function SessionList() {
       </div>
 
       <div className="flex gap-8">
-        {/* Side rail — year-month jump list */}
-        {grouped.length > 1 && (
+        {/* Side rail — year-month jump list (desktop) */}
+        {allMonths.length > 1 && (
           <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] w-32 shrink-0 overflow-y-auto md:block">
             <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-textDim">
               {t('Jump to')}
             </div>
             <ul className="space-y-1">
-              {grouped.map((g) => (
+              {allMonths.map((g) => (
                 <li key={g.key}>
                   <button
                     onClick={() => scrollToMonth(g.key)}
@@ -196,7 +249,7 @@ export function SessionList() {
         {/* Feed */}
         <div className="min-w-0 flex-1">
           {grouped.length === 0 ? (
-            <EmptyState onlyWithNotes={onlyWithNotes} filter={filter} />
+            <EmptyState onlyWithNotes={onlyWithNotes} filter={filter} query={query} />
           ) : (
             grouped.map((g) => (
               <section
@@ -221,8 +274,42 @@ export function SessionList() {
               </section>
             ))
           )}
+
+          {filtered.length > visible.length && (
+            <LoadMore
+              remaining={filtered.length - visible.length}
+              onMore={() => setLimit((l) => l + PAGE)}
+            />
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Auto-loads the next page when scrolled into view; also a manual button. */
+function LoadMore({ remaining, onMore }: { remaining: number; onMore: () => void }) {
+  const t = useT();
+  const ref = useRef<HTMLDivElement>(null);
+  const cb = useRef(onMore);
+  cb.current = onMore;
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) cb.current();
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className="py-6 text-center">
+      <button
+        onClick={onMore}
+        className="rounded-full border border-border px-5 py-2 font-mono text-xs uppercase tracking-widest text-textDim transition-colors hover:border-accent hover:text-accent"
+      >
+        {t('Show more')} <span className="opacity-60">({remaining})</span>
+      </button>
     </div>
   );
 }
@@ -310,27 +397,59 @@ function SessionRow({ session }: { session: ParsedSession }) {
 function EmptyState({
   onlyWithNotes,
   filter,
+  query,
 }: {
   onlyWithNotes: boolean;
   filter: ModeFilter;
+  query: string;
 }) {
   const t = useT();
   return (
     <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-12 text-center">
       <p className="text-textDim">
-        {onlyWithNotes
-          ? t(
-              "No sessions with notes match this filter. Try widening the mode or turning 'Has notes' off.",
-            )
-          : filter === 'all'
-            ? t('No sessions in this backup.')
-            : `${t('No')} ${filter} ${t('sessions in this backup.')}`}
+        {query.trim()
+          ? `${t('No sessions match')} “${query.trim()}”.`
+          : onlyWithNotes
+            ? t(
+                "No sessions with notes match this filter. Try widening the mode or turning 'Has notes' off.",
+              )
+            : filter === 'all'
+              ? t('No sessions in this backup.')
+              : `${t('No')} ${filter} ${t('sessions in this backup.')}`}
       </p>
     </div>
   );
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+
+function monthKeyOf(s: ParsedSession): string {
+  const d = new Date(s.date);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/** Free-text match across name, location, notes (session + dive), and the
+ *  human date label (so "may 2025" or "june" narrows the feed). */
+function sessionMatches(s: ParsedSession, q: string): boolean {
+  const hay: string[] = [s.name ?? '', s.remarks ?? ''];
+  const loc = (s as { location?: string | null }).location;
+  if (loc) hay.push(loc);
+  const d = new Date(s.date);
+  if (!Number.isNaN(d.getTime())) {
+    hay.push(d.toLocaleDateString(undefined, { year: 'numeric', month: 'long' }));
+    hay.push(formatDate(s.date));
+  }
+  if ('dives' in s && Array.isArray(s.dives)) {
+    for (const dv of s.dives) {
+      const r = (dv as { remarks?: string | null }).remarks;
+      if (r) hay.push(r);
+      const disc = (dv as { discipline?: string }).discipline;
+      if (disc) hay.push(disc);
+    }
+  }
+  return hay.join('  ').toLowerCase().includes(q);
+}
 
 function sessionHasNotes(s: ParsedSession): boolean {
   if (s.remarks && s.remarks.trim().length > 0) return true;

@@ -3,7 +3,7 @@
  *
  * URL: /session/:sessionId/pool/:diveIdx
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
 import { extractPoolDiveData } from '../lib/analytics/poolDiveProfile';
@@ -59,6 +59,18 @@ export function PoolDivePlayer() {
   const hasPrev = idx > 0;
   const hasNext = idx < dives.length - 1;
   const isSta = dive.discipline === 'STA';
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (fullscreen) return;
+      const el = document.activeElement;
+      if (el && ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) return;
+      if (e.key === 'ArrowLeft' && hasPrev) navigate(`/session/${session.id}/pool/${idx - 1}`);
+      else if (e.key === 'ArrowRight' && hasNext) navigate(`/session/${session.id}/pool/${idx + 1}`);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [fullscreen, hasPrev, hasNext, idx, session.id, navigate]);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">

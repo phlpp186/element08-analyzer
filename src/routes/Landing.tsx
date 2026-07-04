@@ -23,12 +23,14 @@ export function Landing() {
   const t = useT();
   const navigate = useNavigate();
   const setBackup = useBackupStore((s) => s.setBackup);
+  const clear = useBackupStore((s) => s.clear);
   const currentFilename = useBackupStore((s) => s.filename);
+  const persisted = useBackupStore((s) => s.persisted);
   const [demoBusy, setDemoBusy] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
 
-  function onLoaded(backup: ParsedBackup, filename: string) {
-    setBackup(backup, filename);
+  function onLoaded(backup: ParsedBackup, filename: string, persist = false) {
+    setBackup(backup, filename, persist);
     navigate('/sessions');
   }
 
@@ -108,12 +110,22 @@ export function Landing() {
       </p>
 
       {currentFilename && (
-        <button
-          onClick={() => navigate('/sessions')}
-          className="mt-6 font-mono text-xs uppercase tracking-widest text-accent hover:underline"
-        >
-          ← {t('continue with')} {currentFilename}
-        </button>
+        <div className="mt-6 flex flex-col items-center gap-1">
+          <button
+            onClick={() => navigate('/sessions')}
+            className="font-mono text-xs uppercase tracking-widest text-accent hover:underline"
+          >
+            ← {t('continue with')} {currentFilename}
+          </button>
+          {persisted && (
+            <button
+              onClick={() => clear()}
+              className="font-mono text-[10px] uppercase tracking-widest text-textDim hover:text-red"
+            >
+              {t('forget saved data')}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

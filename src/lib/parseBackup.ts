@@ -38,12 +38,39 @@ export function parseBackupText(text: string): ParsedBackup {
 export function parseBackupObject(json: unknown): ParsedBackup {
   const result = backupFileSchema.safeParse(json);
   if (!result.success) {
-    // Surface the FIRST issue with its path. Most validation failures stem
-    // from a single root cause; a flood of nested errors is more confusing
-    // than helpful for the user.
-    const issue = result.error.issues[0];
-    const where = issue.path.length > 0 ? ` (at ${issue.path.join('.')})` : '';
-    throw new Error(issue.message + where);
+    throw new Error(friendlyError(result.error.issues, json));
   }
   return result.data;
+}
+
+interface ZodIssueLite {
+  message: string;
+}
+
+/** Turn the first Zod issue into plain language a diver can act on, instead
+ *  of a schema path like "at data.sessions.0.dives". Most failures come from
+ *  one root cause (wrong file, unsupported version), so we lead with that. */
+function friendlyError(issues: ZodIssueLite[], json: unknown): string {
+  const obj = json as { appId?: unknown; schemaVersion?: unknown; data?: unknown } | null;
+
+  // Wrong file entirely — no ELEMENT | 08 envelope.
+  if (!obj || typeof obj !== 'object' || obj.appId === undefined) {
+    return "This doesn't look like an ELEMENT | 08 backup. Export one from the app under Settings → Backup → Export a File, then drop that here.";
+  }
+  if (obj.appId !== 'element08') {
+    return 'This file is from a different app, not ELEMENT | 08.';
+  }
+  // Backup from a newer app version than this analyzer understands.
+  if (typeof obj.schemaVersion === 'number' && obj.schemaVersion > 3) {
+    return `This backup is from a newer app version (format ${obj.schemaVersion}) than the analyzer supports yet. Update the analyzer, or export again from a matching app version.`;
+  }
+  if (obj.data === undefined) {
+    return 'This backup is missing its data. It may be truncated — try exporting a fresh copy from the app.';
+  }
+
+  // Fall back to the first issue, but drop the raw schema path.
+  const first = issues[0];
+  return first
+    ? `This backup couldn't be read: ${first.message}. Try exporting a fresh copy from the app.`
+    : "This backup couldn't be read. Try exporting a fresh copy from the app.";
 }

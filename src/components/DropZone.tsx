@@ -14,7 +14,7 @@ import type { ParsedBackup } from '../schema/backup';
 import { useT } from '../i18n';
 
 interface Props {
-  onLoaded: (backup: ParsedBackup, filename: string) => void;
+  onLoaded: (backup: ParsedBackup, filename: string, persist: boolean) => void;
 }
 
 export function DropZone({ onLoaded }: Props) {
@@ -23,6 +23,7 @@ export function DropZone({ onLoaded }: Props) {
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [keep, setKeep] = useState(false);
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -30,14 +31,14 @@ export function DropZone({ onLoaded }: Props) {
       setBusy(true);
       try {
         const backup = await parseBackupFile(file);
-        onLoaded(backup, file.name);
+        onLoaded(backup, file.name, keep);
       } catch (e) {
         setError(e instanceof Error ? e.message : t('Could not read the file.'));
       } finally {
         setBusy(false);
       }
     },
-    [onLoaded, t],
+    [onLoaded, t, keep],
   );
 
   function onClick() {
@@ -99,6 +100,16 @@ export function DropZone({ onLoaded }: Props) {
         onChange={onChange}
         className="hidden"
       />
+
+      <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 text-xs text-textDim">
+        <input
+          type="checkbox"
+          checked={keep}
+          onChange={(e) => setKeep(e.target.checked)}
+          className="accent-accent"
+        />
+        {t('Keep in this browser so a refresh keeps it (stays on your device)')}
+      </label>
 
       {error && (
         <p

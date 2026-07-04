@@ -1,7 +1,8 @@
-import { StrictMode } from 'react';
+import { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import './index.css';
+import { useBackupStore } from './stores/useBackupStore';
 import { Landing } from './routes/Landing';
 import { SessionList } from './routes/SessionList';
 import { SessionDetail } from './routes/SessionDetail';
@@ -17,12 +18,26 @@ import { AppFooter } from './components/AppFooter';
 import { AuthProvider } from './lib/supabase/AuthProvider';
 import { LanguageSwitcher } from './i18n/LanguageSwitcher';
 
+/** Restore an opted-in persisted backup before the first route paints, so a
+ *  refresh mid-analysis lands back where you were instead of on the landing
+ *  page. Renders nothing until the (fast) IndexedDB read resolves. */
+function PersistGate({ children }: { children: React.ReactNode }) {
+  const hydrated = useBackupStore((s) => s.hydrated);
+  const hydrate = useBackupStore((s) => s.hydrate);
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
+  if (!hydrated) return null;
+  return <>{children}</>;
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
     <ThemeToggle />
     <LanguageSwitcher />
     <BrowserRouter>
+      <PersistGate>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/sessions" element={<SessionList />} />
@@ -37,6 +52,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/playground" element={<Playground />} />
       </Routes>
       <AppFooter />
+      </PersistGate>
     </BrowserRouter>
     </AuthProvider>
   </StrictMode>,

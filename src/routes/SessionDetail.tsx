@@ -13,12 +13,23 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { useT } from '../i18n';
 import { useChartTheme, type ChartTheme } from '../lib/chartTheme';
 import { useBackupStore } from '../stores/useBackupStore';
+import { Sparkline } from '../components/Sparkline';
 import {
   formatDate,
   modeColorClass,
   modeLabel,
   summaryLine,
 } from '../lib/format';
+
+/** Downsample a profile series to at most `n` evenly-spaced points for a
+ *  cheap sparkline. */
+function sample(values: number[], n = 60): number[] {
+  if (values.length <= n) return values;
+  const step = values.length / n;
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) out.push(values[Math.floor(i * step)]);
+  return out;
+}
 
 export function SessionDetail() {
   const t = useT();
@@ -89,10 +100,12 @@ interface DepthDiveRow {
   hangTime?: number;
   discipline?: string;
   hr?: number | null;
+  profile?: { t: number; d: number }[];
 }
 
 function DepthDiveList({ session }: { session: any }) {
   const t = useT();
+  const ct = useChartTheme();
   const dives: DepthDiveRow[] = session.dives ?? [];
   if (dives.length === 0) {
     return (
@@ -103,28 +116,38 @@ function DepthDiveList({ session }: { session: any }) {
   }
   return (
     <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border">
-      {dives.map((d, idx) => (
-        <li key={idx}>
-          <Link
-            to={`/session/${session.id}/dive/${idx}`}
-            className="flex items-center gap-4 bg-panel px-4 py-3 transition-colors hover:bg-abyss"
-          >
-            <div className="w-20 shrink-0 font-mono text-xs uppercase tracking-widest text-textDim">
-              {t('Dive')} {idx + 1}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="font-heading text-lg tracking-wide text-accent">
-                {d.depth}m
+      {dives.map((d, idx) => {
+        const depths = Array.isArray(d.profile)
+          ? sample(d.profile.map((p) => p.d).filter((x) => typeof x === 'number'))
+          : [];
+        return (
+          <li key={idx}>
+            <Link
+              to={`/session/${session.id}/dive/${idx}`}
+              className="flex items-center gap-4 bg-panel px-4 py-3 transition-colors hover:bg-abyss"
+            >
+              <div className="w-16 shrink-0 font-mono text-xs uppercase tracking-widest text-textDim">
+                {t('Dive')} {idx + 1}
               </div>
-              <div className="font-mono text-xs text-textDim">
-                {fmtSec(d.diveTime)} · {t('descent')} {fmtSec(d.descentTime ?? 0)} · {t('hang')} {fmtSec(d.hangTime ?? 0)} · {t('ascent')} {fmtSec(d.ascentTime ?? 0)}
-                {d.discipline ? ` · ${d.discipline}` : ''}
+              {depths.length > 1 ? (
+                <Sparkline values={depths} invert color={ct.accent} />
+              ) : (
+                <div className="w-24 shrink-0" aria-hidden />
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="font-heading text-lg tracking-wide text-accent">
+                  {d.depth}m
+                </div>
+                <div className="font-mono text-xs text-textDim">
+                  {fmtSec(d.diveTime)} · {t('descent')} {fmtSec(d.descentTime ?? 0)} · {t('hang')} {fmtSec(d.hangTime ?? 0)} · {t('ascent')} {fmtSec(d.ascentTime ?? 0)}
+                  {d.discipline ? ` · ${d.discipline}` : ''}
+                </div>
               </div>
-            </div>
-            <span className="font-mono text-xs text-textDim">→</span>
-          </Link>
-        </li>
-      ))}
+              <span className="font-mono text-xs text-textDim">→</span>
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -146,6 +169,8 @@ interface PoolDiveRow {
   turns?: number | null;
   hrHighest?: number | null;
   hrLowest?: number | null;
+  profile?: { t: number; hr?: number; depth?: number }[];
+  hrProfile?: { t: number; hr: number }[];
 }
 
 /** Per-discipline colours from the chart theme — matches DisciplineBestsCard. */
@@ -175,15 +200,25 @@ function PoolDiveList({ session }: { session: any }) {
       {dives.map((d, idx) => {
         const isSta = d.discipline === 'STA';
         const primary = isSta ? fmtSec(d.diveTime) : `${d.distance ?? 0}m`;
+        const hrs = sample(
+          (d.profile ?? d.hrProfile ?? [])
+            .map((p) => (p as { hr?: number }).hr)
+            .filter((x): x is number => typeof x === 'number'),
+        );
         return (
           <li key={idx}>
             <Link
               to={`/session/${session.id}/pool/${idx}`}
               className="flex items-center gap-4 bg-panel px-4 py-3 transition-colors hover:bg-abyss"
             >
-              <div className="w-20 shrink-0 font-mono text-xs uppercase tracking-widest text-textDim">
+              <div className="w-16 shrink-0 font-mono text-xs uppercase tracking-widest text-textDim">
                 {t('Dive')} {idx + 1}
               </div>
+              {hrs.length > 1 ? (
+                <Sparkline values={hrs} color={POOL_DISC_COLORS[d.discipline]} />
+              ) : (
+                <div className="w-24 shrink-0" aria-hidden />
+              )}
               <div className="min-w-0 flex-1">
                 <div
                   className="font-heading text-lg tracking-wide"
