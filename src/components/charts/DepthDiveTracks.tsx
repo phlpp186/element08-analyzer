@@ -605,10 +605,11 @@ function buildLineOption(
 
 /** Speed against depth, oriented like a dive profile: depth runs down the
  *  VERTICAL axis (0 m at the top, inverted) and speed (m/s) runs along the
- *  horizontal axis. The dive splits at its deepest point into a descent
- *  branch and an ascent branch; smoothing applies to each independently so
- *  the turn doesn't bleed between them. The crosshair rides the depth axis,
- *  so hovering a depth reads out both branches' speeds at that depth. */
+ *  horizontal axis, MIRRORED about zero — descent flows out to the left,
+ *  ascent to the right (both plotted as magnitude, so the axis labels read
+ *  positive m/s on each side). Smoothing applies to each branch
+ *  independently so the turn doesn't bleed between them. The crosshair rides
+ *  the depth axis, so hovering a depth reads out both branches' speeds. */
 function buildSpeedByDepthOption(
   data: DepthDiveData,
   smoothWindow: number,
@@ -620,17 +621,24 @@ function buildSpeedByDepthOption(
   // moving-average helper can smooth the speed values along depth.
   const desc: [number, number][] = [];
   const asc: [number, number][] = [];
+  let maxSpeed = 0;
   for (const p of data.points) {
     if (p.v == null) continue;
-    if (p.t <= splitT) desc.push([p.d, Math.abs(p.v)]);
-    else asc.push([p.d, Math.abs(p.v)]);
+    const s = Math.abs(p.v);
+    if (s > maxSpeed) maxSpeed = s;
+    if (p.t <= splitT) desc.push([p.d, s]);
+    else asc.push([p.d, s]);
   }
   desc.sort((a, b) => a[0] - b[0]);
   asc.sort((a, b) => a[0] - b[0]);
-  // Plot as [speed, depth]: x = m/s, y = metres.
-  const toPlot = (s: [number, number][]) => s.map(([d, v]) => [v, d] as [number, number]);
+  const bound = Math.max(0.5, maxSpeed * 1.08);
 
-  const branch = (name: string, byDepth: [number, number][], color: string) => {
+  // Plot as [x, depth]: descent mirrored to the left (negative x), ascent to
+  // the right (positive x). The magnitude is unchanged; only the side flips.
+  const toPlot = (s: [number, number][], sign: 1 | -1) =>
+    s.map(([d, v]) => [sign * v, d] as [number, number]);
+
+  const branch = (name: string, byDepth: [number, number][], color: string, sign: 1 | -1) => {
     const out: any[] = [];
     if (byDepth.length < 2) return out;
     if (smoothWindow > 1) {
@@ -638,7 +646,7 @@ function buildSpeedByDepthOption(
         name,
         type: 'line',
         color,
-        data: toPlot(byDepth),
+        data: toPlot(byDepth, sign),
         showSymbol: false,
         smooth: 0.2,
         silent: true,
@@ -650,7 +658,7 @@ function buildSpeedByDepthOption(
       name,
       type: 'line',
       color,
-      data: toPlot(smoothWindow > 1 ? smoothSeries(byDepth, smoothWindow) : byDepth),
+      data: toPlot(smoothWindow > 1 ? smoothSeries(byDepth, smoothWindow) : byDepth, sign),
       showSymbol: false,
       smooth: 0.2,
       lineStyle: { color, width: 2 },
@@ -666,7 +674,7 @@ function buildSpeedByDepthOption(
       right: 16,
       textStyle: { color: ct.textDim, fontSize: 10, fontFamily: 'Nunito, system-ui' },
       itemWidth: 14,
-      data: [t('Descent'), t('Ascent')],
+      data: [`← ${t('Descent')}`, `${t('Ascent')} →`],
     },
     tooltip: {
       ...baseTooltip(ct),
@@ -675,21 +683,32 @@ function buildSpeedByDepthOption(
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];
         // With smoothing on, raw underlays duplicate the names — keep the
-        // last (bold/smoothed) entry per series name.
+        // last (bold/smoothed) entry per series name. Speed shown as
+        // magnitude regardless of which side it's mirrored to.
         const byName = new Map<string, [number, number]>();
-        for (const p of arr) byName.set(p.seriesName, p.value as [number, number]);
+        for (const p of arr) {
+          if (p.seriesName === '__zero__') continue;
+          byName.set(p.seriesName, p.value as [number, number]);
+        }
         const d = arr[0]?.value?.[1];
         const lines = [...byName.entries()].map(
-          ([name, [v]]) => `${name}: ${typeof v === 'number' ? v.toFixed(2) : v} m/s`,
+          ([name, [v]]) => `${name}: ${typeof v === 'number' ? Math.abs(v).toFixed(2) : v} m/s`,
         );
         return `${typeof d === 'number' ? d.toFixed(1) : d} m<br/>${lines.join('<br/>')}`;
       },
     },
     xAxis: {
       type: 'value',
-      min: 0,
-      axisLabel: { formatter: '{value} m/s', color: ct.textDim, fontSize: 10 },
+      min: -bound,
+      max: bound,
+      // Labels read positive on both sides (magnitude).
+      axisLabel: {
+        formatter: (v: number) => `${Math.abs(v).toFixed(1)}`,
+        color: ct.textDim,
+        fontSize: 10,
+      },
       axisLine: { lineStyle: { color: ct.axisLine } },
+      // Emphasise the zero centre-line; keep the rest faint.
       splitLine: { lineStyle: { color: ct.splitLine } },
     },
     yAxis: {
@@ -701,7 +720,20 @@ function buildSpeedByDepthOption(
       axisLine: { show: false },
       splitLine: { show: false },
     },
-    series: [...branch(t('Descent'), desc, ct.amber), ...branch(t('Ascent'), asc, ct.red)],
+    series: [
+      ...branch(`← ${t('Descent')}`, desc, ct.amber, -1),
+      ...branch(`${t('Ascent')} →`, asc, ct.red, 1),
+      // Zero centre-line divider (descent | ascent).
+      {
+        name: '__zero__',
+        type: 'line',
+        silent: true,
+        legendHoverLink: false,
+        data: [[0, 0], [0, Math.ceil(data.maxDepth * 1.02)]],
+        showSymbol: false,
+        lineStyle: { color: ct.axisLine, width: 1, type: 'solid' as const },
+      },
+    ],
   };
 }
 
