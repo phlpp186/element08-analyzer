@@ -249,6 +249,25 @@ function TrackHeader({ label, unit, hint }: { label: string; unit: string; hint?
 
 // ─── Option builders ────────────────────────────────────────────────────────
 
+/** Value of a time-ordered [t, v][] series at (or nearest to) time `tm`.
+ *  Returns null for an empty series. Used to read speed/HR into the depth
+ *  tooltip. */
+function valueAtTime(series: [number, number][], tm: number): number | null {
+  if (series.length === 0) return null;
+  if (tm <= series[0][0]) return series[0][1];
+  const last = series[series.length - 1];
+  if (tm >= last[0]) return last[1];
+  for (let i = 1; i < series.length; i++) {
+    if (series[i][0] >= tm) {
+      const [t0, v0] = series[i - 1];
+      const [t1, v1] = series[i];
+      const span = t1 - t0;
+      return span > 0 ? v0 + ((v1 - v0) * (tm - t0)) / span : v1;
+    }
+  }
+  return last[1];
+}
+
 /** Time of the deepest sample — the descent/ascent split point. */
 function maxDepthTime(series: [number, number][]): number {
   let bestT = series.length > 0 ? series[0][0] : 0;
@@ -441,8 +460,15 @@ function buildDepthOption(
       trigger: 'axis',
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
-        const [t, d] = p.value as [number, number];
-        return `t=${fmtSec(t)}<br/>${d.toFixed(1)} m`;
+        const [tm, d] = p.value as [number, number];
+        // Pull speed + HR at the hovered time from the sibling series, so the
+        // depth curve reads out everything without hunting the other tracks.
+        const lines = [`${d.toFixed(1)} m`];
+        const v = valueAtTime(data.speedSeries, tm);
+        if (v != null) lines.push(`${Math.abs(v).toFixed(1)} m/s`);
+        const hr = valueAtTime(data.hrSeries, tm);
+        if (hr != null) lines.push(`${Math.round(hr)} bpm`);
+        return `t=${fmtSec(tm)}<br/>${lines.join(' · ')}`;
       },
     },
     xAxis: {
