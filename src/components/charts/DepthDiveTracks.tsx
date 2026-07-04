@@ -71,6 +71,9 @@ interface Props {
    *  splits the dive at its deepest point into a descent and an ascent
    *  branch (|v| vs depth), which is how coaches read pacing. */
   speedAxis?: 'time' | 'depth';
+  /** Over-depth layout: mirrored butterfly (default) or both branches
+   *  overlaid on the same positive axis for direct comparison. */
+  speedDepthOverlay?: boolean;
 }
 
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
@@ -88,6 +91,7 @@ export function DepthDiveTracks({
   solo,
   chartHeight,
   speedAxis = 'time',
+  speedDepthOverlay = false,
 }: Props) {
   const ct = useChartTheme();
   const t = useT();
@@ -140,8 +144,8 @@ export function DepthDiveTracks({
     [data, ct],
   );
   const speedByDepthOption = useMemo(
-    () => buildSpeedByDepthOption(data, speedSmooth, ct, t),
-    [data, speedSmooth, ct, lang],
+    () => buildSpeedByDepthOption(data, speedSmooth, ct, t, speedDepthOverlay),
+    [data, speedSmooth, ct, lang, speedDepthOverlay],
   );
 
   const mountedRef = useRef(0);
@@ -615,6 +619,7 @@ function buildSpeedByDepthOption(
   smoothWindow: number,
   ct: ChartTheme,
   t: TFn,
+  overlay = false,
 ) {
   const splitT = maxDepthTime(data.depthSeries);
   // Collected as [depth, |speed|], ordered by depth, so the shared
@@ -666,6 +671,12 @@ function buildSpeedByDepthOption(
     return out;
   };
 
+  // Overlay puts both branches on the same positive axis; mirrored spreads
+  // them left/right of a zero centre-line.
+  const descName = overlay ? t('Descent') : `← ${t('Descent')}`;
+  const ascName = overlay ? t('Ascent') : `${t('Ascent')} →`;
+  const descSign: 1 | -1 = overlay ? 1 : -1;
+
   return {
     grid: { ...GRID, top: 28 },
     animation: false,
@@ -674,7 +685,7 @@ function buildSpeedByDepthOption(
       right: 16,
       textStyle: { color: ct.textDim, fontSize: 10, fontFamily: 'Nunito, system-ui' },
       itemWidth: 14,
-      data: [`← ${t('Descent')}`, `${t('Ascent')} →`],
+      data: [descName, ascName],
     },
     tooltip: {
       ...baseTooltip(ct),
@@ -699,7 +710,7 @@ function buildSpeedByDepthOption(
     },
     xAxis: {
       type: 'value',
-      min: -bound,
+      min: overlay ? 0 : -bound,
       max: bound,
       // Labels read positive on both sides (magnitude).
       axisLabel: {
@@ -721,18 +732,22 @@ function buildSpeedByDepthOption(
       splitLine: { show: false },
     },
     series: [
-      ...branch(`← ${t('Descent')}`, desc, ct.amber, -1),
-      ...branch(`${t('Ascent')} →`, asc, ct.red, 1),
-      // Zero centre-line divider (descent | ascent).
-      {
-        name: '__zero__',
-        type: 'line',
-        silent: true,
-        legendHoverLink: false,
-        data: [[0, 0], [0, Math.ceil(data.maxDepth * 1.02)]],
-        showSymbol: false,
-        lineStyle: { color: ct.axisLine, width: 1, type: 'solid' as const },
-      },
+      ...branch(descName, desc, ct.amber, descSign),
+      ...branch(ascName, asc, ct.red, 1),
+      // Zero centre-line divider (descent | ascent) — mirrored layout only.
+      ...(overlay
+        ? []
+        : [
+            {
+              name: '__zero__',
+              type: 'line',
+              silent: true,
+              legendHoverLink: false,
+              data: [[0, 0], [0, Math.ceil(data.maxDepth * 1.02)]],
+              showSymbol: false,
+              lineStyle: { color: ct.axisLine, width: 1, type: 'solid' as const },
+            },
+          ]),
     ],
   };
 }

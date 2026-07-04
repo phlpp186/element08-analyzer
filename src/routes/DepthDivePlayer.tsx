@@ -16,6 +16,7 @@ import { effectiveHangs, diveTimes } from '../lib/analytics/effectiveHangs';
 import { DepthDiveTracks } from '../components/charts/DepthDiveTracks';
 import { HangEditorPopover } from '../components/HangEditorPopover';
 import { FullscreenDive, type FullscreenTab } from '../components/FullscreenDive';
+import { SpeedBands } from '../components/SpeedBands';
 import { formatDate } from '../lib/format';
 import { useT } from '../i18n';
 
@@ -37,6 +38,8 @@ export function DepthDivePlayer() {
   const [speedSmooth, setSpeedSmooth] = useState(0);
   // Speed track x-axis: over time, or over depth (descent/ascent branches).
   const [speedAxis, setSpeedAxis] = useState<'time' | 'depth'>('time');
+  // Over-depth layout: mirrored butterfly, or both branches overlaid.
+  const [speedDepthOverlay, setSpeedDepthOverlay] = useState(false);
   // Which hang band is currently being edited + the click position to
   // anchor the editor popover. Null = no popover.
   const [selectedHang, setSelectedHang] = useState<{
@@ -253,42 +256,21 @@ export function DepthDivePlayer() {
           {/* Depth-track overlay controls. The alarm toggle only shows
               when the session actually carries depth alarms. */}
           <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2">
-            {hasDepthAlarms && (
-              <label className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-textDim">
-                <input
-                  type="checkbox"
-                  checked={showAlarms}
-                  onChange={(e) => setShowAlarms(e.target.checked)}
-                  className="accent-accent"
-                />
-                {t('Depth alarms')}
-              </label>
-            )}
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
-                {t('Speed markers')}
-              </span>
-              {([0, 5, 10] as const).map((step) => (
-                <button
-                  key={step}
-                  onClick={() => setSpeedStep(step)}
-                  className={[
-                    'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
-                    speedStep === step
-                      ? 'border-accent bg-accent/10 text-accent'
-                      : 'border-border text-textDim hover:border-accent hover:text-accent',
-                  ].join(' ')}
-                >
-                  {step === 0 ? t('Off') : `${step}m`}
-                </button>
-              ))}
-            </div>
+            <MarkerControls
+              hasAlarms={hasDepthAlarms}
+              showAlarms={showAlarms}
+              onAlarms={setShowAlarms}
+              speedStep={speedStep}
+              onStep={setSpeedStep}
+            />
             {data.hasSpeed && (
               <SpeedControls
                 axis={speedAxis}
                 onAxis={setSpeedAxis}
                 smooth={speedSmooth}
                 onSmooth={setSpeedSmooth}
+                overlay={speedDepthOverlay}
+                onOverlay={setSpeedDepthOverlay}
               />
             )}
             {/* Hangs — one chip per detected hang opens its editor, + Add
@@ -351,9 +333,12 @@ export function DepthDivePlayer() {
             speedStep={speedStep}
             speedSmooth={speedSmooth}
             speedAxis={speedAxis}
+            speedDepthOverlay={speedDepthOverlay}
             groupId={`dive-${session.id}-${idx}`}
             onHangClick={handleHangClick}
           />
+
+          <SpeedBands data={dataWithHangs} />
 
           {selectedHang && effective[selectedHang.idx] && (
             <HangEditorPopover
@@ -389,6 +374,16 @@ export function DepthDivePlayer() {
                     onAxis={setSpeedAxis}
                     smooth={speedSmooth}
                     onSmooth={setSpeedSmooth}
+                    overlay={speedDepthOverlay}
+                    onOverlay={setSpeedDepthOverlay}
+                  />
+                ) : fsTab === 'depth' ? (
+                  <MarkerControls
+                    hasAlarms={hasDepthAlarms}
+                    showAlarms={showAlarms}
+                    onAlarms={setShowAlarms}
+                    speedStep={speedStep}
+                    onStep={setSpeedStep}
                   />
                 ) : undefined
               }
@@ -402,6 +397,7 @@ export function DepthDivePlayer() {
                   speedStep={speedStep}
                   speedSmooth={speedSmooth}
                   speedAxis={speedAxis}
+                  speedDepthOverlay={speedDepthOverlay}
                   groupId={`dive-fs-${session.id}-${idx}`}
                   solo={fsTab}
                   chartHeight={Math.max(220, h - 32)}
@@ -426,7 +422,61 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** Speed-track controls: x-axis toggle (over time / over depth) plus the
+/** Shared pill-button styling for the small control rows. */
+function pillCls(active: boolean): string {
+  return [
+    'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
+    active
+      ? 'border-accent bg-accent/10 text-accent'
+      : 'border-border text-textDim hover:border-accent hover:text-accent',
+  ].join(' ');
+}
+
+/** Depth-track marker controls: the alarms toggle + speed-marker interval.
+ *  Shared by the page controls row and the fullscreen Dive profile tab. */
+function MarkerControls({
+  hasAlarms,
+  showAlarms,
+  onAlarms,
+  speedStep,
+  onStep,
+}: {
+  hasAlarms: boolean;
+  showAlarms: boolean;
+  onAlarms: (v: boolean) => void;
+  speedStep: 0 | 5 | 10;
+  onStep: (v: 0 | 5 | 10) => void;
+}) {
+  const t = useT();
+  return (
+    <>
+      {hasAlarms && (
+        <label className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-textDim">
+          <input
+            type="checkbox"
+            checked={showAlarms}
+            onChange={(e) => onAlarms(e.target.checked)}
+            className="accent-accent"
+          />
+          {t('Depth alarms')}
+        </label>
+      )}
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
+          {t('Speed markers')}
+        </span>
+        {([0, 5, 10] as const).map((step) => (
+          <button key={step} onClick={() => onStep(step)} className={pillCls(speedStep === step)}>
+            {step === 0 ? t('Off') : `${step}m`}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/** Speed-track controls: x-axis toggle (over time / over depth), the
+ *  mirrored/overlaid layout toggle for the over-depth view, plus the
  *  continuous smoothing slider (0 = raw, 31 = heavy moving average). Shared
  *  by the page controls row and the fullscreen Speed tab. */
 function SpeedControls({
@@ -434,11 +484,15 @@ function SpeedControls({
   onAxis,
   smooth,
   onSmooth,
+  overlay,
+  onOverlay,
 }: {
   axis: 'time' | 'depth';
   onAxis: (a: 'time' | 'depth') => void;
   smooth: number;
   onSmooth: (n: number) => void;
+  overlay: boolean;
+  onOverlay: (v: boolean) => void;
 }) {
   const t = useT();
   return (
@@ -448,20 +502,21 @@ function SpeedControls({
           {t('Speed')}
         </span>
         {(['time', 'depth'] as const).map((a) => (
-          <button
-            key={a}
-            onClick={() => onAxis(a)}
-            className={[
-              'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
-              axis === a
-                ? 'border-accent bg-accent/10 text-accent'
-                : 'border-border text-textDim hover:border-accent hover:text-accent',
-            ].join(' ')}
-          >
+          <button key={a} onClick={() => onAxis(a)} className={pillCls(axis === a)}>
             {a === 'time' ? t('Over time') : t('Over depth')}
           </button>
         ))}
       </div>
+      {axis === 'depth' && (
+        <div className="flex items-center gap-2">
+          <button onClick={() => onOverlay(false)} className={pillCls(!overlay)}>
+            {t('Mirrored')}
+          </button>
+          <button onClick={() => onOverlay(true)} className={pillCls(overlay)}>
+            {t('Overlaid')}
+          </button>
+        </div>
+      )}
       <div className="flex items-center gap-2">
         <span className="font-mono text-[11px] uppercase tracking-widest text-textDim">
           {t('Smoothing')}
