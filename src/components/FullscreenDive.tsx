@@ -113,8 +113,16 @@ export function FullscreenDive({
           {controls}
         </div>
       )}
-      <div ref={bodyRef} className="min-h-0 flex-1 overflow-auto p-4 sm:px-6">
-        {bodyHeight > 0 && children(chartHeight)}
+      {/* The chart sits in a recessed "well" a touch darker than the page, so
+          the plot area reads as the focus rather than blending into the bg. */}
+      <div className="min-h-0 flex-1 overflow-hidden p-3 sm:p-4">
+        <div
+          ref={bodyRef}
+          className="h-full overflow-auto rounded-2xl border border-border p-4 sm:px-6"
+          style={{ backgroundColor: 'rgb(var(--c-sunken))' }}
+        >
+          {bodyHeight > 0 && children(chartHeight)}
+        </div>
       </div>
     </div>
   );

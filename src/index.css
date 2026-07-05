@@ -15,6 +15,7 @@
   /* Chalk Dark — warm charcoal surfaces, sky-cyan accent, pink highlight. */
   --c-deep:      31 29 26;   /* page background */
   --c-abyss:     22 20 18;   /* input fields / recessed insets */
+  --c-sunken:    18 16 14;   /* fullscreen chart well — recessed below the page */
   --c-panel:     42 39 36;   /* cards / panels */
   --c-border:    74 70 63;
   --c-text:      237 233 226;
@@ -33,6 +34,7 @@
   /* Caribbean — pale aqua page, white cards, coral accent, golden sand. */
   --c-deep:      217 241 246;
   --c-abyss:     240 250 252;
+  --c-sunken:    199 228 235;  /* fullscreen chart well — a touch deeper than the page */
   --c-panel:     255 255 255;
   --c-border:    185 220 227;
   --c-text:      12 59 69;
@@ -53,6 +55,7 @@
    * between Caribbean (.light) and Chalk Dark. */
   --c-deep:      194 203 209;
   --c-abyss:     238 242 244;
+  --c-sunken:    176 186 193;  /* fullscreen chart well — a touch deeper than the page */
   --c-panel:     248 250 251;
   --c-border:    157 168 175;
   --c-text:      20 24 27;

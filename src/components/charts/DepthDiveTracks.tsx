@@ -136,6 +136,8 @@ export function DepthDiveTracks({
       buildLineOption(data.speedSeries, ct.amber, 'm/s', data.startT, data.endT, ct, {
         allowNegative: true,
         smoothWindow: speedSmooth,
+        // ±1 m/s: the reference descent/ascent speeds freedivers train around.
+        refLines: [1, -1],
       }),
     [data, speedSmooth, ct],
   );
@@ -560,7 +562,7 @@ function buildLineOption(
   startT: number,
   endT: number,
   ct: ChartTheme,
-  opts: { allowNegative?: boolean; smoothWindow?: number } = {},
+  opts: { allowNegative?: boolean; smoothWindow?: number; refLines?: number[] } = {},
 ) {
   const empty = series.length < 2;
   const smoothed =
@@ -568,9 +570,38 @@ function buildLineOption(
       ? smoothSeries(series, opts.smoothWindow)
       : null;
 
+  // Emphasised horizontal reference lines (e.g. ±1 m/s for freedivers): dashed
+  // and labelled, more prominent than the faint 0.5-interval gridlines.
+  // Attached to the bold data series so ECharts keeps them in the y-axis range.
+  const markLine =
+    opts.refLines && opts.refLines.length
+      ? {
+          silent: true,
+          symbol: 'none' as const,
+          lineStyle: { color: ct.textDim, type: 'dashed' as const, width: 1, opacity: 0.7 },
+          label: {
+            show: true,
+            position: 'insideEndTop' as const,
+            formatter: (p: { value: number }) => `${p.value > 0 ? '+' : ''}${p.value} ${unit}`,
+            color: ct.textDim,
+            fontSize: 10,
+          },
+          data: opts.refLines.map((y) => ({ yAxis: y })),
+        }
+      : undefined;
+
   // When smoothing is on, the raw curve drops to a faint underlay and the
   // bold line is the moving average. The tooltip then reports the smoothed
   // value (last series) rather than the noisy raw one.
+  const boldSeries: Record<string, unknown> = {
+    type: 'line',
+    data: smoothed ?? series,
+    showSymbol: false,
+    smooth: 0.2,
+    lineStyle: { color, width: smoothed ? 2 : 1.5 },
+  };
+  if (markLine) boldSeries.markLine = markLine;
+
   const lineSeries = smoothed
     ? [
         {
@@ -581,23 +612,9 @@ function buildLineOption(
           silent: true,
           lineStyle: { color, width: 1, opacity: 0.25 },
         },
-        {
-          type: 'line',
-          data: smoothed,
-          showSymbol: false,
-          smooth: 0.2,
-          lineStyle: { color, width: 2 },
-        },
+        boldSeries,
       ]
-    : [
-        {
-          type: 'line',
-          data: series,
-          showSymbol: false,
-          smooth: 0.2,
-          lineStyle: { color, width: 1.5 },
-        },
-      ];
+    : [boldSeries];
 
   return {
     grid: GRID,
