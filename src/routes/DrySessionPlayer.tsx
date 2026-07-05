@@ -67,18 +67,6 @@ export function DrySessionPlayer() {
         >
           ← {t('back to sessions')}
         </Link>
-        {(data.spo2Series.length >= 2 || data.hrSeries.length >= 2) && (
-          <button
-            onClick={() => {
-              setFsTab(data.spo2Series.length >= 2 ? 'spo2' : 'hr');
-              setFullscreen(true);
-            }}
-            title={t('Fullscreen analysis')}
-            className="rounded-full border border-border px-3 py-1 font-mono text-xs uppercase tracking-widest text-textDim transition-colors hover:border-accent hover:text-accent"
-          >
-            ⛶ {t('Fullscreen')}
-          </button>
-        )}
       </div>
 
       <header className="mt-6 mb-8">
@@ -100,6 +88,21 @@ export function DrySessionPlayer() {
           )}
         </div>
       </header>
+
+      {(data.spo2Series.length >= 2 || data.hrSeries.length >= 2) && (
+        <div className="mb-3 flex justify-end">
+          <button
+            onClick={() => {
+              setFsTab(data.spo2Series.length >= 2 ? 'spo2' : 'hr');
+              setFullscreen(true);
+            }}
+            title={t('Fullscreen analysis')}
+            className="rounded-full border border-border px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-textDim transition-colors hover:border-accent hover:text-accent"
+          >
+            ⛶ {t('Fullscreen')}
+          </button>
+        </div>
+      )}
 
       <DrySessionTracks data={data} groupId={`dry-${session.id}`} />
 

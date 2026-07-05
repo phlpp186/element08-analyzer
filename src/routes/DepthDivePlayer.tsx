@@ -209,15 +209,6 @@ export function DepthDivePlayer() {
           >
             {t('next')} →
           </button>
-          {data.points.length >= 2 && (
-            <button
-              onClick={() => setFullscreen(true)}
-              title={t('Fullscreen analysis')}
-              className="rounded-full border border-border px-3 py-1 text-textDim transition-colors hover:border-accent hover:text-accent"
-            >
-              ⛶ {t('Fullscreen')}
-            </button>
-          )}
         </nav>
       </div>
 
@@ -323,6 +314,14 @@ export function DepthDivePlayer() {
                 </>
               )}
             </div>
+            {/* Sits with the chart controls, right above the graphs. */}
+            <button
+              onClick={() => setFullscreen(true)}
+              title={t('Fullscreen analysis')}
+              className="ml-auto rounded-full border border-border px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-textDim transition-colors hover:border-accent hover:text-accent"
+            >
+              ⛶ {t('Fullscreen')}
+            </button>
           </div>
 
           <DepthDiveTracks

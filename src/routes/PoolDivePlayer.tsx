@@ -99,18 +99,6 @@ export function PoolDivePlayer() {
           >
             {t('next')} →
           </button>
-          {(data.hasHR || data.hasDepth || data.hasSpeed) && (
-            <button
-              onClick={() => {
-                setFsTab(data.hasHR ? 'hr' : data.hasDepth ? 'depth' : 'speed');
-                setFullscreen(true);
-              }}
-              title={t('Fullscreen analysis')}
-              className="rounded-full border border-border px-3 py-1 text-textDim transition-colors hover:border-accent hover:text-accent"
-            >
-              ⛶ {t('Fullscreen')}
-            </button>
-          )}
         </nav>
       </div>
 
@@ -131,6 +119,21 @@ export function PoolDivePlayer() {
           {dive.hrLowest != null && <Stat label={t('HR low')} value={`${dive.hrLowest}`} />}
         </div>
       </header>
+
+      {(data.hasHR || data.hasDepth || data.hasSpeed) && (
+        <div className="mb-3 flex justify-end">
+          <button
+            onClick={() => {
+              setFsTab(data.hasHR ? 'hr' : data.hasDepth ? 'depth' : 'speed');
+              setFullscreen(true);
+            }}
+            title={t('Fullscreen analysis')}
+            className="rounded-full border border-border px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-textDim transition-colors hover:border-accent hover:text-accent"
+          >
+            ⛶ {t('Fullscreen')}
+          </button>
+        </div>
+      )}
 
       <PoolDiveTracks data={data} groupId={`pool-${session.id}-${idx}`} />
 
