@@ -114,11 +114,13 @@ export function FullscreenDive({
         </div>
       )}
       {/* The chart sits in a recessed "well" a touch darker than the page, so
-          the plot area reads as the focus rather than blending into the bg. */}
+          the plot area reads as the focus rather than blending into the bg.
+          Capped + centred so the graphs don't stretch across a wide monitor
+          (dive profiles, and especially speed-by-depth, read better narrow). */}
       <div className="min-h-0 flex-1 overflow-hidden p-3 sm:p-4">
         <div
           ref={bodyRef}
-          className="h-full overflow-auto rounded-2xl border border-border p-4 sm:px-6"
+          className="mx-auto h-full w-full max-w-[840px] overflow-auto rounded-2xl border border-border p-4 sm:px-6"
           style={{ backgroundColor: 'rgb(var(--c-sunken))' }}
         >
           {bodyHeight > 0 && children(chartHeight)}

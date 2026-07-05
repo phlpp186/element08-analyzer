@@ -163,7 +163,9 @@ export function DepthDiveTracks({
   const show = (track: 'depth' | 'hr' | 'speed' | 'temp') => !solo || solo === track;
 
   return (
-    <div className="space-y-4">
+    // Capped + centred so the graphs read at a comfortable width instead of
+    // stretching across the page (speed-by-depth especially).
+    <div className="mx-auto max-w-[840px] space-y-4">
       {show('depth') && (
         <>
           <TrackHeader label={t('Depth')} unit="m" />
@@ -665,8 +667,13 @@ function buildSpeedByDepthOption(
   overlay = false,
 ) {
   const splitT = maxDepthTime(data.depthSeries);
-  // Collected as [depth, |speed|], ordered by depth, so the shared
-  // moving-average helper can smooth the speed values along depth.
+  // Collected as [depth, |speed|] in TIME order (the natural dive path), NOT
+  // sorted by depth: real dives aren't monotonic in depth (bottom hangs, small
+  // reversals), so sorting by depth puts the fast "arriving" speed and the
+  // near-zero "hanging" speed at the same depth next to each other and the line
+  // zig-zags / looks broken at the turn. Time order keeps each branch a single
+  // connected curve, exactly like the speed-over-time chart. data.points is
+  // already time-sorted; smoothing then runs along time.
   const desc: [number, number][] = [];
   const asc: [number, number][] = [];
   let maxSpeed = 0;
@@ -677,8 +684,6 @@ function buildSpeedByDepthOption(
     if (p.t <= splitT) desc.push([p.d, s]);
     else asc.push([p.d, s]);
   }
-  desc.sort((a, b) => a[0] - b[0]);
-  asc.sort((a, b) => a[0] - b[0]);
   const bound = Math.max(0.5, maxSpeed * 1.08);
 
   // Plot as [x, depth]: descent mirrored to the left (negative x), ascent to
