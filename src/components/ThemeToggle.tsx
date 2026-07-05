@@ -1,11 +1,11 @@
 /**
- * ThemeToggle — fixed-position theme cycle: Caribbean (light) → Misty (mid)
+ * ThemeToggle — fixed-position theme cycle: Caribbean (light) → Titanium (mid)
  * → Chalk Dark. Mounted once at the app root (see main.tsx). Floats at the
  * top-right across every route so the user can flip without leaving the page.
  */
 import { useThemeStore, type ThemeMode } from '../stores/useThemeStore';
 
-const LABEL: Record<ThemeMode, string> = { light: 'Caribbean', mid: 'Misty', dark: 'Chalk Dark' };
+const LABEL: Record<ThemeMode, string> = { light: 'Caribbean', mid: 'Titanium', dark: 'Chalk Dark' };
 const NEXT: Record<ThemeMode, ThemeMode> = { light: 'mid', mid: 'dark', dark: 'light' };
 
 export function ThemeToggle() {

@@ -78,23 +78,24 @@ const light: ChartTheme = {
   heatRamp: ['#e3f0f4', '#f8cdbc', '#f7ab8d', '#f58f66', '#f2764f'],
 };
 
-// Misty — a light theme (dark ink text, light cards), so it mirrors the
-// `light` chart chrome but with ELEMENT 08's coral-orange accent + rose.
+// Titanium — a light theme (carbon-ink text, near-white cards), so it mirrors
+// the `light` chart chrome but with ELEMENT 08's Audi Progressive Red accent
+// + steel blue (the app's "Carbon" light twin, Audi Revolut direction).
 const mid: ChartTheme = {
-  surface: '#eaf2f3', // panel
-  page: '#7fa0aa', // deep
-  tooltipBg: '#eaf2f3',
-  tooltipBorder: '#a6c0c6', // border
-  axisLine: '#a6c0c6',
-  splitLine: '#c5d9dd',
-  text: '#123b44',
-  textDim: '#4e6e76',
-  accent: '#e8623a', // coral-orange
-  highlight: '#e06699', // dusk rose
-  green: '#128c6a',
-  amber: '#e39a2a',
-  red: '#e24b3c',
-  heatRamp: ['#c5d9dd', '#f6c3ac', '#f19f7e', '#ee8158', '#e8623a'],
+  surface: '#f8fafb', // panel
+  page: '#c2cbd1', // deep
+  tooltipBg: '#f8fafb',
+  tooltipBorder: '#9da8af', // border
+  axisLine: '#9da8af',
+  splitLine: '#d9dee1',
+  text: '#14181b',
+  textDim: '#5c666d',
+  accent: '#e0002a', // Audi red
+  highlight: '#2e6e8f', // steel blue
+  green: '#0e7a54',
+  amber: '#b5730a',
+  red: '#d3002a',
+  heatRamp: ['#dbe0e3', '#f2c2c8', '#e88a95', '#e24a60', '#e0002a'],
 };
 
 export function useChartTheme(): ChartTheme {

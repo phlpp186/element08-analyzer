@@ -48,19 +48,20 @@
 }
 
 :root.mid {
-  /* Misty — the ELEMENT 08 theme: light-mid muted teal, coral accent, sea
-   * ink text. The middle stop between Caribbean (.light) and Chalk Dark. */
-  --c-deep:      127 160 170;
-  --c-abyss:     220 234 237;
-  --c-panel:     234 242 243;
-  --c-border:    166 192 198;
-  --c-text:      18 59 68;
-  --c-textDim:   78 110 118;
-  --c-accent:    232 98 58;   /* coral-orange */
-  --c-highlight: 224 102 153; /* dusk rose */
-  --c-recover:   18 140 106;
-  --c-amber:     227 154 42;
-  --c-red:       226 75 60;
+  /* Titanium — the ELEMENT 08 light twin (Audi Revolut direction): brushed
+   * silver, Audi Progressive Red accent, carbon-ink text. The middle stop
+   * between Caribbean (.light) and Chalk Dark. */
+  --c-deep:      194 203 209;
+  --c-abyss:     238 242 244;
+  --c-panel:     248 250 251;
+  --c-border:    157 168 175;
+  --c-text:      20 24 27;
+  --c-textDim:   92 102 109;
+  --c-accent:    224 0 42;     /* Audi red */
+  --c-highlight: 46 110 143;   /* steel blue */
+  --c-recover:   14 122 84;
+  --c-amber:     181 115 10;
+  --c-red:       211 0 42;
   --c-ink:       255 255 255;
   color-scheme: light;
 }
@@ -129,7 +130,7 @@ body::before {
 }
 :root.light .glass-card,
 :root.mid .glass-card {
-  box-shadow: 0 6px 22px rgba(15, 48, 56, 0.10);
+  box-shadow: 0 6px 22px rgba(18, 26, 31, 0.10);
 }
 
 /* Headings — Nunito 800 replaces the old condensed display face, so the
