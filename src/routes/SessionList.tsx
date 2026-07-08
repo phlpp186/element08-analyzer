@@ -350,7 +350,7 @@ function SessionRow({ session }: { session: ParsedSession }) {
           )}
           {session.rating != null && (
             <span className="ml-auto font-mono text-xs text-textDim">
-              ★ {session.rating}/5
+              ★ {session.rating}/10
             </span>
           )}
         </div>

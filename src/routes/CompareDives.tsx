@@ -667,7 +667,7 @@ function fmtSpeed(v: unknown): string {
 }
 
 function fmtRating(r: unknown): string {
-  return typeof r === 'number' && r > 0 ? `${r}/5` : '-';
+  return typeof r === 'number' && r > 0 ? `${r}/10` : '-';
 }
 
 function fmtPct(v: number | null): string {

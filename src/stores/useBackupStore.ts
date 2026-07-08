@@ -20,6 +20,7 @@ import {
   loadPersistedBackup,
   savePersistedBackup,
 } from '../lib/persistBackup';
+import { migrateRatingScale } from '../lib/parseBackup';
 
 interface BackupState {
   backup: ParsedBackup | null;
@@ -52,7 +53,10 @@ export const useBackupStore = create<BackupState>((set, get) => ({
   hydrate: async () => {
     const saved = await loadPersistedBackup();
     if (saved && !get().backup) {
-      set({ backup: saved.backup, filename: saved.filename, persisted: true });
+      // A copy persisted before the 1-10 rating scale still carries 1-5
+      // values (schemaVersion ≤ 3) — remap them the same way a fresh parse
+      // would. Gated on schemaVersion, so it can never double-apply.
+      set({ backup: migrateRatingScale(saved.backup), filename: saved.filename, persisted: true });
     }
     set({ hydrated: true });
   },

@@ -40,7 +40,33 @@ export function parseBackupObject(json: unknown): ParsedBackup {
   if (!result.success) {
     throw new Error(friendlyError(result.error.issues, json));
   }
-  return result.data;
+  return migrateRatingScale(result.data);
+}
+
+/**
+ * Backup schema v4 (app build 1.1.3) widened effort ratings from 1-5 to
+ * 1-10; older files carry 1-5 values which are remapped ×2 (1→2 … 5→10) so
+ * every chart downstream reads one scale. The envelope's schemaVersion is
+ * bumped to 4 afterwards, so an already-migrated object (e.g. restored from
+ * the persisted IndexedDB copy) is never doubled. Exported for the store's
+ * hydrate path, which restores persisted backups without re-parsing.
+ */
+export function migrateRatingScale(b: ParsedBackup): ParsedBackup {
+  if (b.schemaVersion >= 4) return b;
+  const x2 = (r: number) => Math.max(1, Math.min(10, Math.round(r) * 2));
+  for (const s of b.data.sessions) {
+    if (s.rating != null) s.rating = x2(s.rating);
+    const dives = (s as { dives?: { rating?: number | null }[] }).dives;
+    if (Array.isArray(dives)) {
+      for (const d of dives) if (d.rating != null) d.rating = x2(d.rating);
+    }
+    const blocks = (s as { blockTimeline?: { rating?: number | null }[] }).blockTimeline;
+    if (Array.isArray(blocks)) {
+      for (const blk of blocks) if (blk.rating != null) blk.rating = x2(blk.rating);
+    }
+  }
+  b.schemaVersion = 4;
+  return b;
 }
 
 interface ZodIssueLite {
@@ -61,7 +87,7 @@ function friendlyError(issues: ZodIssueLite[], json: unknown): string {
     return 'This file is from a different app, not ELEMENT | 08.';
   }
   // Backup from a newer app version than this analyzer understands.
-  if (typeof obj.schemaVersion === 'number' && obj.schemaVersion > 3) {
+  if (typeof obj.schemaVersion === 'number' && obj.schemaVersion > 4) {
     return `This backup is from a newer app version (format ${obj.schemaVersion}) than the analyzer supports yet. Update the analyzer, or export again from a matching app version.`;
   }
   if (obj.data === undefined) {

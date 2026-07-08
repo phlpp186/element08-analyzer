@@ -22,7 +22,7 @@ import { cleanOxyReadings, type OxyReading } from './cleanOxyReadings';
 interface BlockEntry {
   type: 'Rest' | 'Hold' | 'Recover';
   seconds: number;
-  rating?: 1 | 2 | 3 | 4 | 5 | null;
+  rating?: number | null;
   pausedMs?: number;
 }
 

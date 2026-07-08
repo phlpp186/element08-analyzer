@@ -4,7 +4,7 @@
  *   - sessionTagDistribution: how the user's tagged sessions split across
  *     the five session tags. Untagged sessions are excluded so the chart
  *     reflects deliberate planning, not raw volume (matches the app).
- *   - effortDistribution: count of sessions per 1-5 self-rated effort.
+ *   - effortDistribution: count of sessions per 1-10 self-rated effort.
  *   - weeklyVolume: total session minutes per week over a recent window.
  */
 import type { ParsedSession } from '../../schema/backup';
@@ -39,24 +39,25 @@ export function sessionTagDistribution(sessions: ParsedSession[]): TagCount[] {
 }
 
 export interface EffortCount {
-  rating: 1 | 2 | 3 | 4 | 5;
+  rating: number;
   count: number;
 }
 
-/** Count of sessions per 1-5 effort rating. Unrated sessions are skipped.
+/** Count of sessions per 1-10 effort rating. Unrated sessions are skipped.
  *  Empty array when nothing is rated. */
 export function effortDistribution(sessions: ParsedSession[]): EffortCount[] {
-  const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  const ratings = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const counts: Record<number, number> = Object.fromEntries(ratings.map((r) => [r, 0]));
   let any = false;
   for (const s of sessions) {
     const r = s.rating;
-    if (r != null && r >= 1 && r <= 5) {
+    if (r != null && r >= 1 && r <= 10) {
       counts[r]++;
       any = true;
     }
   }
   if (!any) return [];
-  return ([1, 2, 3, 4, 5] as const).map((rating) => ({ rating, count: counts[rating] }));
+  return ratings.map((rating) => ({ rating, count: counts[rating] }));
 }
 
 export interface WeekVolume {

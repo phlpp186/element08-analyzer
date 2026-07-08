@@ -18,7 +18,7 @@
  */
 import { z } from 'zod';
 
-export const MAX_SUPPORTED_SCHEMA = 3;
+export const MAX_SUPPORTED_SCHEMA = 4;
 
 // ─── Primitives ─────────────────────────────────────────────────────────────
 
@@ -30,13 +30,9 @@ const sessionTagSchema = z.enum([
   'recovery',
 ]);
 
-const effortRatingSchema = z.union([
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-  z.literal(5),
-]);
+// 1-10 since backup schema v4; v3-and-older files carry 1-5 and are remapped
+// ×2 by parseBackup right after validation.
+const effortRatingSchema = z.number().int().min(1).max(10);
 
 // ─── Session base ───────────────────────────────────────────────────────────
 
