@@ -133,6 +133,12 @@ export function SessionList() {
         </div>
         <div className="flex items-center gap-5">
           <Link
+            to="/progress"
+            className="font-mono text-xs uppercase tracking-widest text-accent hover:underline"
+          >
+            {t('progress')} →
+          </Link>
+          <Link
             to="/insights"
             className="font-mono text-xs uppercase tracking-widest text-accent hover:underline"
           >

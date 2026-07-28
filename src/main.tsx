@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import './index.css';
 import { useBackupStore } from './stores/useBackupStore';
 import { Landing } from './routes/Landing';
+import { Progress } from './routes/Progress';
 import { SessionList } from './routes/SessionList';
 import { SessionDetail } from './routes/SessionDetail';
 import { Insights } from './routes/Insights';
@@ -14,6 +15,7 @@ import { CompareSeasons } from './routes/CompareSeasons';
 import { CompareDives } from './routes/CompareDives';
 import { Playground } from './routes/Playground';
 import { ThemeToggle } from './components/ThemeToggle';
+import { AskPanel } from './components/AskPanel';
 import { AppFooter } from './components/AppFooter';
 import { AuthProvider } from './lib/supabase/AuthProvider';
 import { LanguageSwitcher } from './i18n/LanguageSwitcher';
@@ -40,6 +42,7 @@ createRoot(document.getElementById('root')!).render(
       <PersistGate>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/progress" element={<Progress />} />
         <Route path="/sessions" element={<SessionList />} />
         <Route path="/session/:id" element={<SessionDetail />} />
         <Route path="/session/:sessionId/dive/:diveIdx" element={<DepthDivePlayer />} />
@@ -51,6 +54,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/compare/dives" element={<CompareDives />} />
         <Route path="/playground" element={<Playground />} />
       </Routes>
+      <AskPanel />
       <AppFooter />
       </PersistGate>
     </BrowserRouter>

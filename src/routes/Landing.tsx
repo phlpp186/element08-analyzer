@@ -31,7 +31,7 @@ export function Landing() {
 
   function onLoaded(backup: ParsedBackup, filename: string, persist = false) {
     setBackup(backup, filename, persist);
-    navigate('/sessions');
+    navigate('/progress');
   }
 
   async function loadDemo() {
@@ -112,7 +112,7 @@ export function Landing() {
       {currentFilename && (
         <div className="mt-6 flex flex-col items-center gap-1">
           <button
-            onClick={() => navigate('/sessions')}
+            onClick={() => navigate('/progress')}
             className="font-mono text-xs uppercase tracking-widest text-accent hover:underline"
           >
             ← {t('continue with')} {currentFilename}
