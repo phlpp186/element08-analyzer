@@ -28,6 +28,7 @@ import {
 import { supabase } from '../lib/supabase/client';
 import { useChartTheme } from '../lib/chartTheme';
 import { useT } from '../i18n';
+import { todayLocalIso } from '../lib/localDate';
 
 interface Turn {
   role: 'user' | 'assistant';
@@ -170,7 +171,11 @@ export function AskPanel() {
         callModel,
         history,
         toolContext: {
-          todayIso: new Date().toISOString().slice(0, 10),
+          // The user's own calendar day, not the UTC one — the tz on the next
+          // line was already local, so a question asked before 08:00 in Asia
+          // (or after 16:00 in California) reached the model with the two
+          // disagreeing, and "how did I dive today" answered for the wrong day.
+          todayIso: todayLocalIso(),
           tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
       });
