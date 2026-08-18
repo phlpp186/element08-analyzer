@@ -28,6 +28,8 @@ import type {
 import { peakSpeedsFromProfile } from './support/queryDives';
 import { extractHoldStats } from './support/extractHoldStats';
 import { resolveContractionMs } from './support/resolveContractionMs';
+import { sessionDay } from '../sessionDay';
+import type { ToolContext } from './trainingSummary';
 
 export type Dataset = 'depth' | 'pool' | 'dry';
 
@@ -102,7 +104,13 @@ interface DryRow {
   hold: BlockEntry;
   holdIdx: number;
 }
-export type Row = DepthRow | PoolRow | DryRow;
+export type Row = (DepthRow | PoolRow | DryRow) & {
+  /** The USER's calendar day for this row's session (see sessionDay). Stamped
+   *  once here rather than derived at every comparison: filtering, grouping and
+   *  sorting all want the same answer, and formatting a zone-aware date per row
+   *  per filter over a few thousand dives is not free. */
+  day?: string;
+};
 
 function suitMm(s?: SuitThickness | null): number | null {
   if (!s) return null;
@@ -116,22 +124,23 @@ function normDiscipline(d: unknown): string | null {
   return t.length ? t : null;
 }
 
-export function buildRows(sessions: Session[], dataset: Dataset): Row[] {
+export function buildRows(sessions: Session[], dataset: Dataset, tz?: string): Row[] {
   const rows: Row[] = [];
   for (const s of sessions) {
+    const day = s.date ? sessionDay(s.date, tz) : undefined;
     if (dataset === 'depth' && s.mode === 'depth') {
       s.dives.forEach((dive, diveIdx) =>
-        rows.push({ dataset: 'depth', session: s, dive, diveIdx }),
+        rows.push({ dataset: 'depth', session: s, dive, diveIdx, day }),
       );
     } else if (dataset === 'pool' && s.mode === 'pool') {
-      s.dives.forEach((dive, diveIdx) => rows.push({ dataset: 'pool', session: s, dive, diveIdx }));
+      s.dives.forEach((dive, diveIdx) => rows.push({ dataset: 'pool', session: s, dive, diveIdx, day }));
     } else if (dataset === 'dry' && s.mode === 'dry') {
       // holdIdx is the Hold ORDINAL (0-based among Hold blocks), not the
       // blockTimeline position — that's what Contraction.holdIdx and
       // extractHoldStats key on, so per-hold joins line up.
       let hi = 0;
       for (const hold of s.blockTimeline) {
-        if (hold.type === 'Hold') rows.push({ dataset: 'dry', session: s, hold, holdIdx: hi++ });
+        if (hold.type === 'Hold') rows.push({ dataset: 'dry', session: s, hold, holdIdx: hi++, day });
       }
     }
   }
@@ -184,10 +193,18 @@ function advancedField(adv: unknown, path: string): unknown {
   return (adv as Record<string, unknown> | undefined)?.[key] ?? null;
 }
 
+/** The user's day for a row — the stamp from buildRows, or the raw date part
+ *  for a row built before the zone was known. */
+export function dayOfRow(r: Row): string {
+  return r.day ?? r.session.date.slice(0, 10);
+}
+
 export function getField(r: Row, path: string): unknown {
-  // Date-only (drop the UTC time) so grouping/selecting by date buckets by day
-  // rather than treating every timestamp as its own distinct value.
-  if (path === 'date') return r.session.date.slice(0, 10);
+  // The USER's day (stamped in buildRows), not the timestamp: grouping and
+  // selecting by date bucket by day, and that day has to be the one they see
+  // in the session list. The UTC slice filed an early-morning session under
+  // the day before.
+  if (path === 'date') return dayOfRow(r);
   // Within-session position — shared by depth & pool (both carry diveIdx and a
   // `session.dives` array in chronological order). Lets the model answer
   // fatigue questions ("do my later dives get slower?") without eyeballing
@@ -566,16 +583,17 @@ function computeMetrics(rows: Row[], metrics: QueryMetric[]): Record<string, num
 
 // ─── Public entry point ──────────────────────────────────────────────────────
 
-export function runQuery(sessions: Session[], spec: QuerySpec): QueryResult {
+export function runQuery(sessions: Session[], spec: QuerySpec, ctx: ToolContext = {}): QueryResult {
   const notes: string[] = [];
   const noun = spec.dataset === 'dry' ? 'holds' : 'dives';
 
-  let rows = buildRows(sessions, spec.dataset);
+  let rows = buildRows(sessions, spec.dataset, ctx.tz);
 
-  // session.date is a full UTC timestamp; compare on YYYY-MM-DD only (a date_to
-  // of "2026-07-09" must still include a dive stamped 2026-07-09T00:54Z).
-  if (spec.date_from) rows = rows.filter((r) => r.session.date.slice(0, 10) >= spec.date_from!);
-  if (spec.date_to) rows = rows.filter((r) => r.session.date.slice(0, 10) <= spec.date_to!);
+  // Compare on the user's DAY, not the stored timestamp: a date_to of
+  // "2026-07-09" must include a dive stamped 2026-07-09T00:54Z, and a dive
+  // stamped 2026-07-10T00:54Z that they did on the evening of the 9th.
+  if (spec.date_from) rows = rows.filter((r) => dayOfRow(r) >= spec.date_from!);
+  if (spec.date_to) rows = rows.filter((r) => dayOfRow(r) <= spec.date_to!);
 
   for (const f of spec.filters ?? []) {
     rows = rows.filter((r) => applyFilter(getField(r, f.field), f.op, f.value));

@@ -366,8 +366,8 @@ export function runTool(
   input: unknown,
   ctx?: ToolContext,
 ): unknown {
-  if (name === 'query_dives') return runQuery(sessions, input as QuerySpec);
-  if (name === 'list_dives') return listDives(sessions, input as ListDivesSpec);
+  if (name === 'query_dives') return runQuery(sessions, input as QuerySpec, ctx);
+  if (name === 'list_dives') return listDives(sessions, input as ListDivesSpec, ctx);
   if (name === 'get_dive_detail') return getDiveDetail(sessions, input as DiveDetailSpec, ctx);
   if (name === 'get_training_summary')
     return trainingSummary(sessions, input as TrainingSummarySpec, ctx);

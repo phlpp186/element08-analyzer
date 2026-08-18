@@ -28,7 +28,7 @@ import {
 import { supabase } from '../lib/supabase/client';
 import { useChartTheme } from '../lib/chartTheme';
 import { useT } from '../i18n';
-import { todayLocalIso } from '../lib/localDate';
+import { todayLocalIso } from '../lib/sessionDay';
 
 interface Turn {
   role: 'user' | 'assistant';

@@ -14,6 +14,7 @@
  * Pure, no RN imports (runs in app / Deno / browser).
  */
 import type { Session } from './appTypes';
+import { sessionDay } from '../sessionDay';
 
 // Structural plan shape (matches Plan/SeasonPlan from the plan store without
 // importing it — the tool only reads these fields).
@@ -111,9 +112,14 @@ export function trainingSummary(
   const notes: string[] = [];
   const ws: 0 | 1 = ctx.weekStartsOn ?? 1;
 
+  // Days are the USER's, in the same zone the model was told "today" in — see
+  // sessionDay. The UTC slice put an early-morning session on the day before
+  // the one it is filed under everywhere they can see it.
+  const dayOf = (s: { date: string }) => sessionDay(s.date, ctx.tz);
+
   let rows = sessions.filter((s) => !!s.date);
-  if (spec.date_from) rows = rows.filter((s) => s.date.slice(0, 10) >= spec.date_from!);
-  if (spec.date_to) rows = rows.filter((s) => s.date.slice(0, 10) <= spec.date_to!);
+  if (spec.date_from) rows = rows.filter((s) => dayOf(s) >= spec.date_from!);
+  if (spec.date_to) rows = rows.filter((s) => dayOf(s) <= spec.date_to!);
   rows = [...rows].sort((a, b) => (a.date < b.date ? -1 : 1));
 
   // ── Totals + weekly buckets ────────────────────────────────────────────────
@@ -126,7 +132,7 @@ export function trainingSummary(
   >();
 
   for (const s of rows) {
-    const day = s.date.slice(0, 10);
+    const day = dayOf(s);
     allDays.add(day);
     bump(by_mode, s.mode);
     if (s.mode === 'depth' || s.mode === 'pool') {
@@ -185,7 +191,7 @@ export function trainingSummary(
           completedWeeks++;
           targetTotal += week.targetSessions;
           actualTotal += sessions.filter((s) => {
-            const d = s.date?.slice(0, 10);
+            const d = s.date ? sessionDay(s.date, ctx.tz) : null;
             return !!d && d >= week.weekStart && d < weekEnd;
           }).length;
         }
@@ -210,8 +216,8 @@ export function trainingSummary(
   }
 
   return {
-    from: rows.length ? rows[0].date.slice(0, 10) : null,
-    to: rows.length ? rows[rows.length - 1].date.slice(0, 10) : null,
+    from: rows.length ? dayOf(rows[0]) : null,
+    to: rows.length ? dayOf(rows[rows.length - 1]) : null,
     totals: {
       sessions: rows.length,
       days_trained: allDays.size,

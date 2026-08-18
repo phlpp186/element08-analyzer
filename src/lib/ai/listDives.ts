@@ -19,11 +19,13 @@ import type { Session } from './appTypes';
 import {
   applyFilter,
   buildRows,
+  dayOfRow,
   getField,
   type Dataset,
   type QueryFilter,
   type Row,
 } from './queryTools';
+import type { ToolContext } from './trainingSummary';
 
 export const MAX_ROWS = 25;
 
@@ -153,15 +155,20 @@ function compareBy(field: string, dir: 'asc' | 'desc') {
   };
 }
 
-export function listDives(sessions: Session[], spec: ListDivesSpec): ListDivesResult {
+export function listDives(
+  sessions: Session[],
+  spec: ListDivesSpec,
+  ctx: ToolContext = {},
+): ListDivesResult {
   const notes: string[] = [];
   const noun = spec.dataset === 'dry' ? 'holds' : 'dives';
 
-  let rows = buildRows(sessions, spec.dataset);
-  // session.date is a full UTC timestamp; compare on its YYYY-MM-DD only, or a
-  // date_to like "2026-07-09" would exclude a dive stamped 2026-07-09T00:54Z.
-  if (spec.date_from) rows = rows.filter((r) => r.session.date.slice(0, 10) >= spec.date_from!);
-  if (spec.date_to) rows = rows.filter((r) => r.session.date.slice(0, 10) <= spec.date_to!);
+  let rows = buildRows(sessions, spec.dataset, ctx.tz);
+  // Compare on the user's DAY (see sessionDay), not the stored UTC timestamp:
+  // a date_to of "2026-07-09" must include a dive stamped 2026-07-09T00:54Z,
+  // and one stamped 2026-07-10T00:54Z that they did on the 9th.
+  if (spec.date_from) rows = rows.filter((r) => dayOfRow(r) >= spec.date_from!);
+  if (spec.date_to) rows = rows.filter((r) => dayOfRow(r) <= spec.date_to!);
   for (const f of spec.filters ?? []) {
     rows = rows.filter((r) => applyFilter(getField(r, f.field), f.op, f.value));
   }
@@ -187,9 +194,9 @@ export function listDives(sessions: Session[], spec: ListDivesSpec): ListDivesRe
     const row: Record<string, unknown> = {
       session_id: r.session.id,
       dive_index: rowIndex(r),
-      // Date-only (drop the UTC time) — the exact local time comes from
-      // get_dive_detail; a raw UTC time here just invites mis-conversion.
-      date: r.session.date.slice(0, 10),
+      // The user's day — the exact local time comes from get_dive_detail;
+      // a raw UTC timestamp here just invites mis-conversion.
+      date: dayOfRow(r),
     };
     for (const f of fields) {
       const v = getField(r, f);

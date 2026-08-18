@@ -12,6 +12,7 @@
 import type { DrySession, Session } from './appTypes';
 import type { ToolContext } from './trainingSummary';
 import { extractHoldStats } from './support/extractHoldStats';
+import { sessionDay } from '../sessionDay';
 
 /** Format a UTC ISO timestamp as "YYYY-MM-DD HH:MM" in the user's timezone, so
  *  the model reports LOCAL time instead of doing (error-prone) UTC math itself.
@@ -71,7 +72,9 @@ export function getDiveDetail(
   const local = localDateTime(s.date, ctx?.tz);
   const base = compact({
     session_id: s.id,
-    date: local ? local.slice(0, 10) : s.date.slice(0, 10),
+    // Without a tz from the caller, the device's own zone — still the user's
+    // day, never UTC's (which is what the raw slice gave).
+    date: local ? local.slice(0, 10) : sessionDay(s.date),
     logged_at_local: local, // "YYYY-MM-DD HH:MM" local — report this time verbatim
     mode: s.mode,
     location: (s as { location?: string }).location,
