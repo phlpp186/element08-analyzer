@@ -4,7 +4,10 @@
  * Three modes, switched by the pill row under the header:
  *   - Depth — up to 3 depth profiles on one inverted-depth chart.
  *   - Holds — up to 8 breath holds on stacked HR + SpO2 panels.
- *   - Pool  — pool dives: HR-vs-time overlay + avg-speed bars.
+ *   - Pool  — pool dives: HR-vs-time overlay + avg-speed bars, then the
+ *              lap splits side by side (and strokes per lap where the diver
+ *              confirmed a motion trace), which is where a dynamic is won or
+ *              lost and where no total can show it.
  *
  * Each mode keeps its own selection (useDiveCompareStore) and shares one
  * generic cross-session picker. Layout mirrors CompareSeasons: wide left
@@ -34,6 +37,8 @@ import { PoolOverlayChart } from '../components/charts/PoolOverlayChart';
 import { buildCatalog, type CatalogEntry } from '../lib/analytics/diveCatalog';
 import { extractDiveData, type DepthDiveData } from '../lib/analytics/diveProfile';
 import { extractPoolDiveData } from '../lib/analytics/poolDiveProfile';
+import { lapSplits } from '../lib/analytics/lapSplits';
+import { PoolLapCompareChart } from '../components/charts/PoolLapCompareChart';
 import {
   extractHoldSlice,
   holdStats,
@@ -293,6 +298,13 @@ export function CompareDives() {
                   label: e.label,
                   hrSeries: e.hrSeries,
                   avgSpeed: e.avgSpeed,
+                }))}
+              />
+              <PoolLapCompareChart
+                dives={poolEntries.map((e) => ({
+                  color: e.color,
+                  label: e.label,
+                  laps: lapSplits(e.dive),
                 }))}
               />
               <StatTable columns={poolEntries} rows={poolRows(poolEntries, t)} />
