@@ -8,6 +8,8 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
 import { extractPoolDiveData } from '../lib/analytics/poolDiveProfile';
 import { PoolDiveTracks } from '../components/charts/PoolDiveTracks';
+import { PoolSignalTracks } from '../components/charts/PoolSignalTracks';
+import { extractPoolTraceData } from '../lib/analytics/poolTrace';
 import { FullscreenDive, type FullscreenTab } from '../components/FullscreenDive';
 import { formatDate } from '../lib/format';
 import { useT } from '../i18n';
@@ -56,6 +58,8 @@ export function PoolDivePlayer() {
   }
 
   const data = useMemo(() => extractPoolDiveData(dive), [dive]);
+  const traceData = useMemo(() => extractPoolTraceData(dive), [dive]);
+  const hasTracks = data.hasHR || data.hasDepth || data.hasSpeed;
   const hasPrev = idx > 0;
   const hasNext = idx < dives.length - 1;
   const isSta = dive.discipline === 'STA';
@@ -120,7 +124,7 @@ export function PoolDivePlayer() {
         </div>
       </header>
 
-      {(data.hasHR || data.hasDepth || data.hasSpeed) && (
+      {hasTracks && (
         <div className="mb-3 flex justify-end">
           <button
             onClick={() => {
@@ -135,7 +139,23 @@ export function PoolDivePlayer() {
         </div>
       )}
 
-      <PoolDiveTracks data={data} groupId={`pool-${session.id}-${idx}`} />
+      {/* PoolDiveTracks carries an empty state of its own, so rendering it
+          unconditionally puts "No profile data recorded" directly above a full
+          motion trace — which is the common case for a watch-synced DNF: no
+          `profile`, no depth in a pool, and HR only if a strap was worn. */}
+      {hasTracks && <PoolDiveTracks data={data} groupId={`pool-${session.id}-${idx}`} />}
+
+      {traceData && (
+        <div className={hasTracks ? 'mt-8' : ''}>
+          <PoolSignalTracks data={traceData} groupId={`pool-sig-${session.id}-${idx}`} />
+        </div>
+      )}
+
+      {!hasTracks && !traceData && (
+        <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-12 text-center text-textDim">
+          {t('No profile data recorded for this dive.')}
+        </div>
+      )}
 
       {fullscreen && (
         <FullscreenDive

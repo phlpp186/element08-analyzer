@@ -375,6 +375,9 @@ export interface PoolDive {
    *  the app types it with the Garmin protocol's DiveSignalTrace, which the AI
    *  tools never read. */
   trace?: unknown;
+  /** The diver's own marks over that trace (TraceEdits in the app). Same
+   *  reason as `trace` for staying `unknown` here. */
+  traceEdits?: unknown;
   /** Detailed-logging fields. */
   advanced?: PoolAdvanced;
   /** Per-dive suit override. Falls back to PoolSession.suit when unset. */
