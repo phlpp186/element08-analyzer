@@ -22,8 +22,18 @@
  *     crossing on both descent and ascent, labelled on the depth curve.
  *
  * Cross-chart crosshair sync uses ECharts' `echarts.connect(groupId)`.
+ *
+ * MEASURE A→B. Turn it on and drag across the depth track to select a stretch
+ * of the dive; the panel underneath reports how deep, how long and how fast.
+ * The selection is an ECharts `lineX` brush, so the drag, the shaded band and
+ * the resize handles come from the chart rather than from hand-rolled pointer
+ * maths — which matters because a PanResponder-style drag on top of a chart is
+ * exactly the kind of thing that starts eating the clicks underneath it. Hang
+ * bands stay clickable while measuring is OFF; the brush owns the drag while
+ * it is on. The numbers all come from lib/analytics/rangeStats, shared with
+ * the coach portal.
  */
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as echarts from 'echarts/core';
 import ReactECharts from 'echarts-for-react';
 import type {
@@ -34,6 +44,8 @@ import type {
 } from '../../lib/analytics/diveProfile';
 import { useChartTheme, withAlpha, type ChartTheme } from '../../lib/chartTheme';
 import { useT, useLangValue } from '../../i18n';
+import { rangeStats } from '../../lib/analytics/rangeStats';
+import { RangeReadout } from '../RangeReadout';
 
 type TFn = (s: string) => string;
 
@@ -112,8 +124,8 @@ export function DepthDiveTracks({
     [data, contractionOnset, alarms, showAlarms, speedStep, ct, hangsClickable, lang],
   );
   const depthEvents = useMemo(
-    () =>
-      onHangClick
+    () => ({
+      ...(onHangClick
         ? {
             click: (params: any) => {
               if (params?.componentType !== 'markArea') return;
@@ -124,7 +136,19 @@ export function DepthDiveTracks({
               onHangClick(idx, x, y);
             },
           }
-        : undefined,
+        : {}),
+      // brushEnd, not brushSelected: the latter fires continuously through the
+      // drag and would recompute the panel on every pixel.
+      brushEnd: (params: any) => {
+        const area = params?.areas?.[0];
+        const cr = area?.coordRange;
+        if (!Array.isArray(cr) || cr.length !== 2) {
+          setRange(null);
+          return;
+        }
+        setRange([cr[0], cr[1]]);
+      },
+    }),
     [onHangClick],
   );
   const hrOption = useMemo(
@@ -160,6 +184,62 @@ export function DepthDiveTracks({
     [groupId],
   );
 
+  // ── Measure A→B ──────────────────────────────────────────────────────────
+  const [measuring, setMeasuring] = useState(false);
+  const [range, setRange] = useState<[number, number] | null>(null);
+  const depthChartRef = useRef<any>(null);
+
+  const handleDepthReady = useCallback(
+    (chart: any) => {
+      depthChartRef.current = chart;
+      handleReady(chart);
+    },
+    [handleReady],
+  );
+
+  // takeGlobalCursor is what actually arms the brush; the `brush` block in the
+  // option only describes what a brush WOULD look like. Disarming also clears
+  // any band already drawn, so the chart never keeps a selection the panel is
+  // no longer showing.
+  useEffect(() => {
+    const chart = depthChartRef.current;
+    if (!chart?.dispatchAction) return;
+    if (measuring) {
+      chart.dispatchAction({
+        type: 'takeGlobalCursor',
+        key: 'brush',
+        brushOption: { brushType: 'lineX', brushMode: 'single' },
+      });
+    } else {
+      // `brushType: false` is how the cursor is released. Passing null here
+      // throws inside ECharts ("Cannot read properties of null (reading
+      // 'brushType')") and takes the whole page down on mount, because this
+      // effect runs once with measuring already false.
+      chart.dispatchAction({
+        type: 'takeGlobalCursor',
+        key: 'brush',
+        brushOption: { brushType: false },
+      });
+      chart.dispatchAction({ type: 'brush', areas: [] });
+    }
+  }, [measuring]);
+
+  // A new dive in the same mounted component must not keep the old dive's
+  // selection: the seconds would still be valid and the numbers nonsense.
+  useEffect(() => {
+    setRange(null);
+  }, [data]);
+
+  const clearRange = useCallback(() => {
+    setRange(null);
+    depthChartRef.current?.dispatchAction?.({ type: 'brush', areas: [] });
+  }, []);
+
+  const rangeResult = useMemo(
+    () => (range ? rangeStats(data.points, range[0], range[1]) : null),
+    [range, data.points],
+  );
+
   const show = (track: 'depth' | 'hr' | 'speed' | 'temp') => !solo || solo === track;
 
   return (
@@ -168,15 +248,46 @@ export function DepthDiveTracks({
     <div className="mx-auto max-w-[840px] space-y-4">
       {show('depth') && (
         <>
-          <TrackHeader label={t('Depth')} unit="m" />
+          <div className="flex items-baseline gap-3">
+            <TrackHeader label={t('Depth')} unit="m" />
+            <button
+              onClick={() => {
+                if (measuring) clearRange();
+                setMeasuring((m) => !m);
+              }}
+              title={t('Drag across the profile to measure a stretch of the dive')}
+              className={`ml-auto rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                measuring
+                  ? 'border-accent text-accent'
+                  : 'border-border text-textDim hover:border-accent hover:text-accent'
+              }`}
+            >
+              ⇤⇥ {t('Measure A→B')}
+            </button>
+          </div>
           <ReactECharts
             option={depthOption}
             style={{ height: chartHeight ?? 260 }}
             opts={{ renderer: 'canvas' }}
-            onChartReady={handleReady}
+            onChartReady={handleDepthReady}
             onEvents={depthEvents}
             notMerge
           />
+          {measuring && !rangeResult && (
+            <p className="px-1 font-mono text-[10px] uppercase tracking-widest text-textDim opacity-70">
+              {t('Drag across the profile')}
+            </p>
+          )}
+          {rangeResult && (
+            <RangeReadout
+              stats={rangeResult}
+              t={t}
+              onClear={() => {
+                clearRange();
+                setMeasuring(false);
+              }}
+            />
+          )}
         </>
       )}
 
@@ -458,6 +569,28 @@ function buildDepthOption(
   return {
     grid: GRID,
     animation: false,
+    // Describes what an A->B selection LOOKS like. It does nothing until
+    // takeGlobalCursor arms it (see the measure effect), so it is safe to ship
+    // in the option unconditionally and costs nothing while measuring is off.
+    // Declaring `brush` makes ECharts paint its own button strip inside the
+    // plot; an explicitly hidden toolbox is what stops it. The button above the
+    // chart is the only way into measure mode.
+    toolbox: { show: false },
+    brush: {
+      xAxisIndex: 0,
+      brushType: 'lineX' as const,
+      brushMode: 'single' as const,
+      transformable: true,
+      removeOnClick: false,
+      // No toolbox: the button above the chart is the only way in, so ECharts
+      // must not paint its own control strip over the plot.
+      toolbox: [] as string[],
+      brushStyle: {
+        borderWidth: 1,
+        color: withAlpha(ct.accent, 0.12),
+        borderColor: withAlpha(ct.accent, 0.7),
+      },
+    },
     axisPointer: { link: AXIS_POINTER_LINK, lineStyle: { color: ct.accent, opacity: 0.4 } },
     tooltip: {
       ...baseTooltip(ct),
