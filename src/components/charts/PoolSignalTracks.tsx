@@ -27,12 +27,16 @@
  * Own chart group, never the HR one: these seconds are window-relative and the
  * HR track's are dive-relative (see poolTrace).
  */
-import { useCallback, useMemo } from 'react';
-import * as echarts from 'echarts/core';
-import ReactECharts from 'echarts-for-react';
-import type { PoolTraceData } from '../../lib/analytics/poolTrace';
-import { useChartTheme, withAlpha, type ChartTheme } from '../../lib/chartTheme';
-import { useT } from '../../i18n';
+import { useCallback, useMemo } from "react";
+import * as echarts from "echarts/core";
+import ReactECharts from "echarts-for-react";
+import type { PoolTraceData } from "../../lib/analytics/poolTrace";
+import {
+  useChartTheme,
+  withAlpha,
+  type ChartTheme,
+} from "../../lib/chartTheme";
+import { useT } from "../../i18n";
 
 interface Props {
   data: PoolTraceData;
@@ -47,13 +51,19 @@ export function PoolSignalTracks({ data, groupId }: Props) {
   const t = useT();
 
   const line = useCallback(
-    (x: number, color: string, dashed: boolean, opacity: number, width = 1.5) => ({
+    (
+      x: number,
+      color: string,
+      dashed: boolean,
+      opacity: number,
+      width = 1.5,
+    ) => ({
       xAxis: x,
       lineStyle: {
         color,
         width,
         opacity,
-        type: dashed ? ('dashed' as const) : ('solid' as const),
+        type: dashed ? ("dashed" as const) : ("solid" as const),
       },
       label: { show: false },
     }),
@@ -64,7 +74,9 @@ export function PoolSignalTracks({ data, groupId }: Props) {
   // line down the stack.
   const turnLines = useMemo(
     () =>
-      data.turns.map((x) => line(x, ct.green, !data.confirmed, data.confirmed ? 0.95 : 0.7)),
+      data.turns.map((x) =>
+        line(x, ct.green, !data.confirmed, data.confirmed ? 0.95 : 0.7),
+      ),
     [data.turns, data.confirmed, ct, line],
   );
 
@@ -92,10 +104,38 @@ export function PoolSignalTracks({ data, groupId }: Props) {
   const tracks = useMemo(
     () =>
       [
-        { key: 'accel', label: t('Acceleration'), unit: 'g', series: data.accel, color: ct.accent, marks: turnLines },
-        { key: 'gyro', label: t('Rotation'), unit: '°/s', series: data.gyro, color: ct.amber, marks: [...turnLines, ...rhythmLines] },
-        { key: 'heading', label: t('Heading'), unit: '°', series: data.heading, color: ct.highlight, marks: turnLines },
-        { key: 'mag', label: t('Compass heading'), unit: '°', series: data.magHeading, color: ct.highlight, marks: turnLines },
+        {
+          key: "accel",
+          label: t("Acceleration"),
+          unit: "g",
+          series: data.accel,
+          color: ct.accent,
+          marks: turnLines,
+        },
+        {
+          key: "gyro",
+          label: t("Rotation"),
+          unit: "°/s",
+          series: data.gyro,
+          color: ct.amber,
+          marks: [...turnLines, ...rhythmLines],
+        },
+        {
+          key: "heading",
+          label: t("Heading"),
+          unit: "°",
+          series: data.heading,
+          color: ct.highlight,
+          marks: turnLines,
+        },
+        {
+          key: "mag",
+          label: t("Compass heading"),
+          unit: "°",
+          series: data.magHeading,
+          color: ct.highlight,
+          marks: turnLines,
+        },
       ].filter((tr) => tr.series.length >= 2),
     [data, ct, t, turnLines, rhythmLines],
   );
@@ -111,17 +151,19 @@ export function PoolSignalTracks({ data, groupId }: Props) {
   if (tracks.length === 0) return null;
 
   return (
-    <div className="space-y-3">
+    <div className="chart-well space-y-3 rounded-2xl p-4 sm:p-5">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-1">
         <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-textDim">
-          {t('Motion trace')}
+          {t("Motion trace")}
         </h3>
         <span className="font-mono text-[10px] text-textDim opacity-60">
-          {data.confirmed ? t('diver-confirmed marks') : t("detector's marks, uncorrected")}
+          {data.confirmed
+            ? t("diver-confirmed marks")
+            : t("detector's marks, uncorrected")}
         </span>
-        {data.headingSource === 'gyro' && data.magHeading.length === 0 && (
+        {data.headingSource === "gyro" && data.magHeading.length === 0 && (
           <span className="font-mono text-[10px] text-textDim opacity-50">
-            · {t('heading is integrated gyro, so it drifts')}
+            · {t("heading is integrated gyro, so it drifts")}
           </span>
         )}
       </div>
@@ -134,7 +176,9 @@ export function PoolSignalTracks({ data, groupId }: Props) {
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-textDim">
               {tr.label}
             </span>
-            <span className="font-mono text-[10px] text-textDim opacity-60">{tr.unit}</span>
+            <span className="font-mono text-[10px] text-textDim opacity-60">
+              {tr.unit}
+            </span>
           </div>
           <ReactECharts
             option={buildSignalOption(
@@ -150,7 +194,7 @@ export function PoolSignalTracks({ data, groupId }: Props) {
               ct,
             )}
             style={{ height: 110 }}
-            opts={{ renderer: 'canvas' }}
+            opts={{ renderer: "canvas" }}
             onChartReady={handleReady}
             notMerge
           />
@@ -174,27 +218,38 @@ function Legend({
     items.push({
       color: ct.green,
       dashed: !data.confirmed,
-      label: `${data.turns.length} ${data.turns.length === 1 ? t('turn') : t('turns')}`,
+      label: `${data.turns.length} ${data.turns.length === 1 ? t("turn") : t("turns")}`,
     });
   }
   if (data.strokes.length > 0) {
-    items.push({ color: ct.text, dashed: false, label: `${data.strokes.length} ${t('strokes')}` });
+    items.push({
+      color: ct.text,
+      dashed: false,
+      label: `${data.strokes.length} ${t("strokes")}`,
+    });
   }
   if (data.kicks.length > 0) {
-    items.push({ color: ct.text, dashed: true, label: `${data.kicks.length} ${t('kicks')}` });
+    items.push({
+      color: ct.text,
+      dashed: true,
+      label: `${data.kicks.length} ${t("kicks")}`,
+    });
   }
   if (items.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-1 px-1">
       {items.map((it) => (
-        <span key={it.label} className="flex items-center gap-1.5 font-mono text-[10px] text-textDim">
+        <span
+          key={it.label}
+          className="flex items-center gap-1.5 font-mono text-[10px] text-textDim"
+        >
           <span
             aria-hidden
             style={{
               width: 14,
               height: 0,
               borderTopWidth: 2,
-              borderTopStyle: it.dashed ? 'dashed' : 'solid',
+              borderTopStyle: it.dashed ? "dashed" : "solid",
               borderTopColor: it.color,
             }}
           />
@@ -221,31 +276,42 @@ function buildSignalOption(p: SignalOptionParams, ct: ChartTheme) {
     animation: false,
     // Linked to the OTHER SIGNAL TRACKS only (see the group id above): one
     // crosshair down the stack is how a turn is read across three channels.
-    axisPointer: { link: [{ xAxisIndex: 'all' as const }], lineStyle: { color: p.color, opacity: 0.4 } },
+    axisPointer: {
+      link: [{ xAxisIndex: "all" as const }],
+      lineStyle: { color: p.color, opacity: 0.4 },
+    },
     tooltip: {
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
-      trigger: 'axis' as const,
-      axisPointer: { type: 'line' as const },
+      textStyle: {
+        color: ct.text,
+        fontFamily: "Nunito, system-ui",
+        fontSize: 12,
+      },
+      trigger: "axis" as const,
+      axisPointer: { type: "line" as const },
       formatter: (params: unknown) => {
         const point = Array.isArray(params) ? params[0] : params;
         const value = (point as { value?: [number, number] })?.value;
-        if (!value) return '';
+        if (!value) return "";
         const [x, v] = value;
         return `t=${fmtSec(x)}<br/>${v.toFixed(2)} ${p.unit}`;
       },
     },
     xAxis: {
-      type: 'value' as const,
+      type: "value" as const,
       min: p.startT,
       max: p.endT,
-      axisLabel: { formatter: (v: number) => fmtSec(v), color: ct.textDim, fontSize: 10 },
+      axisLabel: {
+        formatter: (v: number) => fmtSec(v),
+        color: ct.textDim,
+        fontSize: 10,
+      },
       axisLine: { lineStyle: { color: ct.axisLine } },
       splitLine: { show: false },
     },
     yAxis: {
-      type: 'value' as const,
+      type: "value" as const,
       scale: true,
       axisLabel: { color: ct.textDim, fontSize: 10 },
       axisLine: { show: false },
@@ -253,18 +319,21 @@ function buildSignalOption(p: SignalOptionParams, ct: ChartTheme) {
     },
     series: [
       {
-        type: 'line' as const,
+        type: "line" as const,
         data: p.series,
         showSymbol: false,
         // A 5 Hz channel over a long dive is thousands of points; lttb keeps
         // the spikes (which ARE the signal) while drawing a fraction of them.
-        sampling: 'lttb' as const,
+        sampling: "lttb" as const,
         lineStyle: { color: p.color, width: 1.2 },
         markLine:
           p.markLines.length > 0
-            ? { silent: true, symbol: 'none' as const, data: p.markLines }
+            ? { silent: true, symbol: "none" as const, data: p.markLines }
             : undefined,
-        markArea: p.markAreas.length > 0 ? { silent: true, data: p.markAreas } : undefined,
+        markArea:
+          p.markAreas.length > 0
+            ? { silent: true, data: p.markAreas }
+            : undefined,
       },
     ],
   };
@@ -274,5 +343,5 @@ function fmtSec(s: number): string {
   if (s < 60) return `${Math.round(s)}s`;
   const m = Math.floor(s / 60);
   const sec = Math.round(s % 60);
-  return `${m}:${String(sec).padStart(2, '0')}`;
+  return `${m}:${String(sec).padStart(2, "0")}`;
 }

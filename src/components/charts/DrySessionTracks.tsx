@@ -9,12 +9,19 @@
  * hold-onset and saturation drop visible at a glance. Contraction taps
  * appear as red diamonds on the HR line at their logged time.
  */
-import { useCallback, useMemo } from 'react';
-import * as echarts from 'echarts/core';
-import ReactECharts from 'echarts-for-react';
-import type { DryBlock, DrySessionData } from '../../lib/analytics/drySessionProfile';
-import { useChartTheme, withAlpha, type ChartTheme } from '../../lib/chartTheme';
-import { useT } from '../../i18n';
+import { useCallback, useMemo } from "react";
+import * as echarts from "echarts/core";
+import ReactECharts from "echarts-for-react";
+import type {
+  DryBlock,
+  DrySessionData,
+} from "../../lib/analytics/drySessionProfile";
+import {
+  useChartTheme,
+  withAlpha,
+  type ChartTheme,
+} from "../../lib/chartTheme";
+import { useT } from "../../i18n";
 
 type TFn = (s: string) => string;
 
@@ -23,21 +30,21 @@ interface Props {
   groupId: string;
   /** Render just ONE chart (fullscreen single-metric view). The block strip
    *  stays visible below the solo chart for timeline context. */
-  solo?: 'spo2' | 'hr';
+  solo?: "spo2" | "hr";
   /** Chart height override in px (used by the fullscreen view). */
   chartHeight?: number;
 }
 
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
-const AXIS_POINTER_LINK = [{ xAxisIndex: 'all' as const }];
+const AXIS_POINTER_LINK = [{ xAxisIndex: "all" as const }];
 
 /** Block colours derived from the chart theme: Rest = accent, Hold = red,
  *  Recover = green. Fills stay translucent so the bands read as background. */
 function blockColors(ct: ChartTheme) {
   return {
-    Rest:    { fill: withAlpha(ct.accent, 0.10), label: ct.accent },
-    Hold:    { fill: withAlpha(ct.red, 0.14),    label: ct.red },
-    Recover: { fill: withAlpha(ct.green, 0.10),  label: ct.green },
+    Rest: { fill: withAlpha(ct.accent, 0.1), label: ct.accent },
+    Hold: { fill: withAlpha(ct.red, 0.14), label: ct.red },
+    Recover: { fill: withAlpha(ct.green, 0.1), label: ct.green },
   } as const;
 }
 
@@ -47,7 +54,7 @@ export function DrySessionTracks({ data, groupId, solo, chartHeight }: Props) {
   const holdBands = useMemo(
     () =>
       data.blocks
-        .filter((b) => b.type === 'Hold')
+        .filter((b) => b.type === "Hold")
         .map((b) => ({
           startT: b.startT,
           endT: b.endT,
@@ -62,7 +69,7 @@ export function DrySessionTracks({ data, groupId, solo, chartHeight }: Props) {
     () =>
       data.contractions.map((c) => ({
         coord: pickValueAt(data.hrSeries, c.t) ?? [c.t, 0],
-        symbol: 'diamond',
+        symbol: "diamond",
         symbolSize: 10,
         itemStyle: { color: ct.red },
       })),
@@ -70,27 +77,35 @@ export function DrySessionTracks({ data, groupId, solo, chartHeight }: Props) {
   );
 
   const spo2Option = useMemo(
-    () => buildLineOption({
-      series: data.spo2Series,
-      color: ct.accent,
-      unit: '%',
-      startT: data.startT,
-      endT: data.endT,
-      bands: holdBands,
-    }, ct),
+    () =>
+      buildLineOption(
+        {
+          series: data.spo2Series,
+          color: ct.accent,
+          unit: "%",
+          startT: data.startT,
+          endT: data.endT,
+          bands: holdBands,
+        },
+        ct,
+      ),
     [data, holdBands, ct],
   );
 
   const hrOption = useMemo(
-    () => buildLineOption({
-      series: data.hrSeries,
-      color: ct.highlight,
-      unit: 'bpm',
-      startT: data.startT,
-      endT: data.endT,
-      bands: holdBands,
-      markPoints: contractionMarks,
-    }, ct),
+    () =>
+      buildLineOption(
+        {
+          series: data.hrSeries,
+          color: ct.highlight,
+          unit: "bpm",
+          startT: data.startT,
+          endT: data.endT,
+          bands: holdBands,
+          markPoints: contractionMarks,
+        },
+        ct,
+      ),
     [data, holdBands, contractionMarks, ct],
   );
 
@@ -102,34 +117,40 @@ export function DrySessionTracks({ data, groupId, solo, chartHeight }: Props) {
     [groupId],
   );
 
-  const show = (track: 'spo2' | 'hr') => !solo || solo === track;
+  const show = (track: "spo2" | "hr") => !solo || solo === track;
 
   return (
-    <div className="space-y-4">
-      {show('spo2') && data.spo2Series.length >= 2 && (
+    <div
+      className={`space-y-4 ${solo ? "" : "chart-well rounded-2xl p-4 sm:p-5"}`}
+    >
+      {show("spo2") && data.spo2Series.length >= 2 && (
         <>
           <TrackHeader label="SpO₂" unit="%" />
           <ReactECharts
             option={spo2Option}
             style={{ height: chartHeight ?? 220 }}
-            opts={{ renderer: 'canvas' }}
+            opts={{ renderer: "canvas" }}
             onChartReady={handleReady}
             notMerge
           />
         </>
       )}
 
-      {show('hr') && data.hrSeries.length >= 2 && (
+      {show("hr") && data.hrSeries.length >= 2 && (
         <>
           <TrackHeader
-            label={t('Heart Rate')}
+            label={t("Heart Rate")}
             unit="bpm"
-            hint={data.contractions.length > 0 ? `${data.contractions.length} ${data.contractions.length === 1 ? t('contraction') : t('contractions')}` : undefined}
+            hint={
+              data.contractions.length > 0
+                ? `${data.contractions.length} ${data.contractions.length === 1 ? t("contraction") : t("contractions")}`
+                : undefined
+            }
           />
           <ReactECharts
             option={hrOption}
             style={{ height: chartHeight ?? 180 }}
-            opts={{ renderer: 'canvas' }}
+            opts={{ renderer: "canvas" }}
             onChartReady={handleReady}
             notMerge
           />
@@ -138,29 +159,51 @@ export function DrySessionTracks({ data, groupId, solo, chartHeight }: Props) {
 
       {data.blocks.length > 0 && (
         <>
-          <TrackHeader label={t('Block Timeline')} unit={`${t('Rest')} / ${t('Hold')} / ${t('Recover')}`} />
-          <BlockStrip blocks={data.blocks} startT={data.startT} endT={data.endT} t={t} />
+          <TrackHeader
+            label={t("Block Timeline")}
+            unit={`${t("Rest")} / ${t("Hold")} / ${t("Recover")}`}
+          />
+          <BlockStrip
+            blocks={data.blocks}
+            startT={data.startT}
+            endT={data.endT}
+            t={t}
+          />
         </>
       )}
 
       {!data.hasOxy && data.blocks.length === 0 && (
         <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-12 text-center text-textDim">
-          {t('No oximeter readings or block timeline recorded for this session.')}
+          {t(
+            "No oximeter readings or block timeline recorded for this session.",
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function TrackHeader({ label, unit, hint }: { label: string; unit: string; hint?: string }) {
+function TrackHeader({
+  label,
+  unit,
+  hint,
+}: {
+  label: string;
+  unit: string;
+  hint?: string;
+}) {
   return (
     <div className="flex items-baseline gap-3 px-1">
       <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-textDim">
         {label}
       </h3>
-      <span className="font-mono text-[10px] text-textDim opacity-60">{unit}</span>
+      <span className="font-mono text-[10px] text-textDim opacity-60">
+        {unit}
+      </span>
       {hint && (
-        <span className="font-mono text-[10px] text-textDim opacity-50">· {hint}</span>
+        <span className="font-mono text-[10px] text-textDim opacity-50">
+          · {hint}
+        </span>
       )}
     </div>
   );
@@ -187,7 +230,10 @@ function BlockStrip({
   // shaded markAreas in the SpO2 and HR charts above. The values mirror
   // `GRID` at the top of this file — keep them in sync.
   return (
-    <div className="rounded-md border border-border bg-panel py-3" style={{ paddingLeft: 56, paddingRight: 16 }}>
+    <div
+      className="rounded-md border border-border bg-panel py-3"
+      style={{ paddingLeft: 56, paddingRight: 16 }}
+    >
       <div className="flex h-8 overflow-hidden rounded">
         {blocks.map((b, i) => {
           const pct = ((b.endT - b.startT) / total) * 100;
@@ -234,63 +280,79 @@ function buildLineOption(p: LineOptionParams, ct: ChartTheme) {
   return {
     grid: GRID,
     animation: false,
-    axisPointer: { link: AXIS_POINTER_LINK, lineStyle: { color: p.color, opacity: 0.4 } },
+    axisPointer: {
+      link: AXIS_POINTER_LINK,
+      lineStyle: { color: p.color, opacity: 0.4 },
+    },
     tooltip: {
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
-      trigger: 'axis',
-      axisPointer: { type: 'line' as const },
+      textStyle: {
+        color: ct.text,
+        fontFamily: "Nunito, system-ui",
+        fontSize: 12,
+      },
+      trigger: "axis",
+      axisPointer: { type: "line" as const },
       formatter: (params: any) => {
-        if (empty) return '';
+        if (empty) return "";
         const point = Array.isArray(params) ? params[0] : params;
         const [t, v] = point.value as [number, number];
-        return `t=${fmtSec(t)}<br/>${typeof v === 'number' ? v.toFixed(1) : v} ${p.unit}`;
+        return `t=${fmtSec(t)}<br/>${typeof v === "number" ? v.toFixed(1) : v} ${p.unit}`;
       },
     },
     xAxis: {
-      type: 'value',
+      type: "value",
       min: p.startT,
       max: p.endT,
-      axisLabel: { formatter: (v: number) => fmtSec(v), color: ct.textDim, fontSize: 10 },
+      axisLabel: {
+        formatter: (v: number) => fmtSec(v),
+        color: ct.textDim,
+        fontSize: 10,
+      },
       axisLine: { lineStyle: { color: ct.axisLine } },
       splitLine: { show: false },
     },
     yAxis: {
-      type: 'value',
+      type: "value",
       axisLabel: { color: ct.textDim, fontSize: 10 },
       axisLine: { show: false },
       splitLine: { lineStyle: { color: ct.splitLine } },
     },
     series: [
       {
-        type: 'line',
+        type: "line",
         data: p.series,
         showSymbol: false,
         smooth: 0.2,
         lineStyle: { color: p.color, width: 1.8 },
-        markArea: p.bands && p.bands.length > 0
-          ? {
-              silent: true,
-              itemStyle: { opacity: 1 },
-              // No name — the dedicated block strip below the charts is the
-              // source of truth for block labels. Letting ECharts render a
-              // name here clips against the chart's tight top padding.
-              data: p.bands.map((b) => [
-                { xAxis: b.startT, itemStyle: { color: b.color } },
-                { xAxis: b.endT },
-              ]),
-            }
-          : undefined,
-        markPoint: p.markPoints && p.markPoints.length > 0
-          ? { data: p.markPoints, label: { show: false } }
-          : undefined,
+        markArea:
+          p.bands && p.bands.length > 0
+            ? {
+                silent: true,
+                itemStyle: { opacity: 1 },
+                // No name — the dedicated block strip below the charts is the
+                // source of truth for block labels. Letting ECharts render a
+                // name here clips against the chart's tight top padding.
+                data: p.bands.map((b) => [
+                  { xAxis: b.startT, itemStyle: { color: b.color } },
+                  { xAxis: b.endT },
+                ]),
+              }
+            : undefined,
+        markPoint:
+          p.markPoints && p.markPoints.length > 0
+            ? { data: p.markPoints, label: { show: false } }
+            : undefined,
       },
     ],
   };
 }
 
-function pickValueAt(series: [number, number][], x: number): [number, number] | null {
+function pickValueAt(
+  series: [number, number][],
+  x: number,
+): [number, number] | null {
   if (series.length === 0) return null;
   for (let i = 0; i < series.length; i++) {
     if (series[i][0] >= x) return [x, series[i][1]];
@@ -302,5 +364,5 @@ function fmtSec(s: number): string {
   if (s < 60) return `${Math.round(s)}s`;
   const m = Math.floor(s / 60);
   const sec = Math.round(s % 60);
-  return `${m}:${String(sec).padStart(2, '0')}`;
+  return `${m}:${String(sec).padStart(2, "0")}`;
 }

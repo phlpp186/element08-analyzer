@@ -12,25 +12,25 @@
  * No depth alarms here (pool sessions don't use them); for pace coaching
  * we surface lap markers as bright vertical lines with labels (L1, L2, ...).
  */
-import { useCallback, useMemo } from 'react';
-import * as echarts from 'echarts/core';
-import ReactECharts from 'echarts-for-react';
-import type { PoolDiveData } from '../../lib/analytics/poolDiveProfile';
-import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
-import { useT } from '../../i18n';
+import { useCallback, useMemo } from "react";
+import * as echarts from "echarts/core";
+import ReactECharts from "echarts-for-react";
+import type { PoolDiveData } from "../../lib/analytics/poolDiveProfile";
+import { useChartTheme, type ChartTheme } from "../../lib/chartTheme";
+import { useT } from "../../i18n";
 
 interface Props {
   data: PoolDiveData;
   /** Unique chart-group id (stable across re-renders for the same dive). */
   groupId: string;
   /** Render just ONE track (fullscreen single-metric view). */
-  solo?: 'hr' | 'depth' | 'speed';
+  solo?: "hr" | "depth" | "speed";
   /** Chart height override in px (used by the fullscreen view). */
   chartHeight?: number;
 }
 
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
-const AXIS_POINTER_LINK = [{ xAxisIndex: 'all' as const }];
+const AXIS_POINTER_LINK = [{ xAxisIndex: "all" as const }];
 
 export function PoolDiveTracks({ data, groupId, solo, chartHeight }: Props) {
   const ct = useChartTheme();
@@ -43,9 +43,14 @@ export function PoolDiveTracks({ data, groupId, solo, chartHeight }: Props) {
           formatter: `L${i + 1}`,
           color: ct.green,
           fontSize: 10,
-          position: 'insideEndTop' as const,
+          position: "insideEndTop" as const,
         },
-        lineStyle: { color: ct.green, type: 'solid' as const, width: 1, opacity: 0.5 },
+        lineStyle: {
+          color: ct.green,
+          type: "solid" as const,
+          width: 1,
+          opacity: 0.5,
+        },
       })),
     [data.lapEndTimes],
   );
@@ -54,7 +59,7 @@ export function PoolDiveTracks({ data, groupId, solo, chartHeight }: Props) {
     () =>
       data.contractionTimes.map((t) => ({
         coord: pickValueAt(data.hrSeries, t) ?? [t, 0],
-        symbol: 'pin',
+        symbol: "pin",
         symbolSize: 14,
         itemStyle: { color: ct.red },
       })),
@@ -62,40 +67,52 @@ export function PoolDiveTracks({ data, groupId, solo, chartHeight }: Props) {
   );
 
   const hrOption = useMemo(
-    () => buildLineOption({
-      series: data.hrSeries,
-      color: ct.highlight,
-      unit: 'bpm',
-      startT: data.startT,
-      endT: data.endT,
-      markLines: lapLines,
-      markPoints: contractionMarks,
-    }, ct),
+    () =>
+      buildLineOption(
+        {
+          series: data.hrSeries,
+          color: ct.highlight,
+          unit: "bpm",
+          startT: data.startT,
+          endT: data.endT,
+          markLines: lapLines,
+          markPoints: contractionMarks,
+        },
+        ct,
+      ),
     [data, lapLines, contractionMarks, ct],
   );
 
   const depthOption = useMemo(
-    () => buildLineOption({
-      series: data.depthSeries,
-      color: ct.accent,
-      unit: 'm',
-      startT: data.startT,
-      endT: data.endT,
-      inverseY: true,
-      markLines: lapLines,
-    }, ct),
+    () =>
+      buildLineOption(
+        {
+          series: data.depthSeries,
+          color: ct.accent,
+          unit: "m",
+          startT: data.startT,
+          endT: data.endT,
+          inverseY: true,
+          markLines: lapLines,
+        },
+        ct,
+      ),
     [data, lapLines, ct],
   );
 
   const speedOption = useMemo(
-    () => buildLineOption({
-      series: data.speedSeries,
-      color: ct.amber,
-      unit: 'm/s',
-      startT: data.startT,
-      endT: data.endT,
-      markLines: lapLines,
-    }, ct),
+    () =>
+      buildLineOption(
+        {
+          series: data.speedSeries,
+          color: ct.amber,
+          unit: "m/s",
+          startT: data.startT,
+          endT: data.endT,
+          markLines: lapLines,
+        },
+        ct,
+      ),
     [data, lapLines, ct],
   );
 
@@ -107,41 +124,51 @@ export function PoolDiveTracks({ data, groupId, solo, chartHeight }: Props) {
     [groupId],
   );
 
-  const show = (track: 'hr' | 'depth' | 'speed') => !solo || solo === track;
+  const show = (track: "hr" | "depth" | "speed") => !solo || solo === track;
 
   return (
-    <div className="space-y-4">
-      {show('hr') && data.hasHR && (
+    <div
+      className={`space-y-4 ${solo ? "" : "chart-well rounded-2xl p-4 sm:p-5"}`}
+    >
+      {show("hr") && data.hasHR && (
         <>
-          <TrackHeader label={t('Heart Rate')} unit="bpm" hint={data.contractionTimes.length > 0 ? `${data.contractionTimes.length} ${data.contractionTimes.length === 1 ? t('contraction') : t('contractions')} ${t('marked')}` : undefined} />
+          <TrackHeader
+            label={t("Heart Rate")}
+            unit="bpm"
+            hint={
+              data.contractionTimes.length > 0
+                ? `${data.contractionTimes.length} ${data.contractionTimes.length === 1 ? t("contraction") : t("contractions")} ${t("marked")}`
+                : undefined
+            }
+          />
           <ReactECharts
             option={hrOption}
             style={{ height: chartHeight ?? 200 }}
-            opts={{ renderer: 'canvas' }}
+            opts={{ renderer: "canvas" }}
             onChartReady={handleReady}
             notMerge
           />
         </>
       )}
-      {show('depth') && data.hasDepth && (
+      {show("depth") && data.hasDepth && (
         <>
-          <TrackHeader label={t('Depth')} unit="m" />
+          <TrackHeader label={t("Depth")} unit="m" />
           <ReactECharts
             option={depthOption}
             style={{ height: chartHeight ?? 160 }}
-            opts={{ renderer: 'canvas' }}
+            opts={{ renderer: "canvas" }}
             onChartReady={handleReady}
             notMerge
           />
         </>
       )}
-      {show('speed') && data.hasSpeed && (
+      {show("speed") && data.hasSpeed && (
         <>
-          <TrackHeader label={t('Speed')} unit="m/s" />
+          <TrackHeader label={t("Speed")} unit="m/s" />
           <ReactECharts
             option={speedOption}
             style={{ height: chartHeight ?? 140 }}
-            opts={{ renderer: 'canvas' }}
+            opts={{ renderer: "canvas" }}
             onChartReady={handleReady}
             notMerge
           />
@@ -149,22 +176,34 @@ export function PoolDiveTracks({ data, groupId, solo, chartHeight }: Props) {
       )}
       {!data.hasHR && !data.hasDepth && !data.hasSpeed && (
         <div className="rounded-lg border border-dashed border-border bg-panel px-6 py-12 text-center text-textDim">
-          {t('No profile data recorded for this dive.')}
+          {t("No profile data recorded for this dive.")}
         </div>
       )}
     </div>
   );
 }
 
-function TrackHeader({ label, unit, hint }: { label: string; unit: string; hint?: string }) {
+function TrackHeader({
+  label,
+  unit,
+  hint,
+}: {
+  label: string;
+  unit: string;
+  hint?: string;
+}) {
   return (
     <div className="flex items-baseline gap-3 px-1">
       <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-textDim">
         {label}
       </h3>
-      <span className="font-mono text-[10px] text-textDim opacity-60">{unit}</span>
+      <span className="font-mono text-[10px] text-textDim opacity-60">
+        {unit}
+      </span>
       {hint && (
-        <span className="font-mono text-[10px] text-textDim opacity-50">· {hint}</span>
+        <span className="font-mono text-[10px] text-textDim opacity-50">
+          · {hint}
+        </span>
       )}
     </div>
   );
@@ -186,30 +225,41 @@ function buildLineOption(p: LineOptionParams, ct: ChartTheme) {
   return {
     grid: GRID,
     animation: false,
-    axisPointer: { link: AXIS_POINTER_LINK, lineStyle: { color: p.color, opacity: 0.4 } },
+    axisPointer: {
+      link: AXIS_POINTER_LINK,
+      lineStyle: { color: p.color, opacity: 0.4 },
+    },
     tooltip: {
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
-      trigger: 'axis',
-      axisPointer: { type: 'line' as const },
+      textStyle: {
+        color: ct.text,
+        fontFamily: "Nunito, system-ui",
+        fontSize: 12,
+      },
+      trigger: "axis",
+      axisPointer: { type: "line" as const },
       formatter: (params: any) => {
-        if (empty) return '';
+        if (empty) return "";
         const point = Array.isArray(params) ? params[0] : params;
         const [t, v] = point.value as [number, number];
-        return `t=${fmtSec(t)}<br/>${typeof v === 'number' ? v.toFixed(1) : v} ${p.unit}`;
+        return `t=${fmtSec(t)}<br/>${typeof v === "number" ? v.toFixed(1) : v} ${p.unit}`;
       },
     },
     xAxis: {
-      type: 'value',
+      type: "value",
       min: p.startT,
       max: p.endT,
-      axisLabel: { formatter: (v: number) => fmtSec(v), color: ct.textDim, fontSize: 10 },
+      axisLabel: {
+        formatter: (v: number) => fmtSec(v),
+        color: ct.textDim,
+        fontSize: 10,
+      },
       axisLine: { lineStyle: { color: ct.axisLine } },
       splitLine: { show: false },
     },
     yAxis: {
-      type: 'value',
+      type: "value",
       inverse: p.inverseY,
       axisLabel: { color: ct.textDim, fontSize: 10 },
       axisLine: { show: false },
@@ -217,17 +267,19 @@ function buildLineOption(p: LineOptionParams, ct: ChartTheme) {
     },
     series: [
       {
-        type: 'line',
+        type: "line",
         data: p.series,
         showSymbol: false,
         smooth: 0.2,
         lineStyle: { color: p.color, width: 1.8 },
-        markLine: p.markLines && p.markLines.length > 0
-          ? { silent: true, symbol: 'none', data: p.markLines }
-          : undefined,
-        markPoint: p.markPoints && p.markPoints.length > 0
-          ? { data: p.markPoints, label: { show: false } }
-          : undefined,
+        markLine:
+          p.markLines && p.markLines.length > 0
+            ? { silent: true, symbol: "none", data: p.markLines }
+            : undefined,
+        markPoint:
+          p.markPoints && p.markPoints.length > 0
+            ? { data: p.markPoints, label: { show: false } }
+            : undefined,
       },
     ],
   };
@@ -236,7 +288,10 @@ function buildLineOption(p: LineOptionParams, ct: ChartTheme) {
 /** Find the series y-value at or just past the given x — used to anchor
  *  a marker (e.g. contraction) onto the rendered line. Returns null when
  *  the series is empty or doesn't cover that x yet. */
-function pickValueAt(series: [number, number][], x: number): [number, number] | null {
+function pickValueAt(
+  series: [number, number][],
+  x: number,
+): [number, number] | null {
   if (series.length === 0) return null;
   for (let i = 0; i < series.length; i++) {
     if (series[i][0] >= x) return [x, series[i][1]];
@@ -248,5 +303,5 @@ function fmtSec(s: number): string {
   if (s < 60) return `${Math.round(s)}s`;
   const m = Math.floor(s / 60);
   const sec = Math.round(s % 60);
-  return `${m}:${String(sec).padStart(2, '0')}`;
+  return `${m}:${String(sec).padStart(2, "0")}`;
 }

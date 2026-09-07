@@ -7,8 +7,14 @@
  * exit. Purely an overlay: reliable on iOS Safari where the Fullscreen API
  * is not.
  */
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { useT } from '../i18n';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { useT } from "../i18n";
 
 export interface FullscreenTab {
   id: string;
@@ -46,9 +52,9 @@ export function FullscreenDive({
     if (!el) return;
     const measure = () => setBodyHeight(el.clientHeight);
     measure();
-    if (typeof ResizeObserver === 'undefined') {
-      window.addEventListener('resize', measure);
-      return () => window.removeEventListener('resize', measure);
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
     }
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -57,13 +63,13 @@ export function FullscreenDive({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === "Escape") onClose();
     };
-    window.addEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
     };
   }, [onClose]);
@@ -75,7 +81,9 @@ export function FullscreenDive({
     <div className="fixed inset-0 z-50 flex flex-col bg-deep">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-4 py-3 sm:px-6">
         <div className="min-w-0">
-          <div className="truncate font-heading text-lg tracking-wide text-text">{title}</div>
+          <div className="truncate font-heading text-lg tracking-wide text-text">
+            {title}
+          </div>
           {subtitle && (
             <div className="font-mono text-[10px] uppercase tracking-widest text-textDim">
               {subtitle}
@@ -89,11 +97,11 @@ export function FullscreenDive({
                 key={tab.id}
                 onClick={() => onTab(tab.id)}
                 className={[
-                  'rounded-full border px-4 py-1 font-mono text-[11px] uppercase tracking-widest transition-colors',
+                  "rounded-full border px-4 py-1 font-mono text-[11px] uppercase tracking-widest transition-colors",
                   active === tab.id
-                    ? 'border-accent bg-accent/10 text-accent'
-                    : 'border-border text-textDim hover:border-accent hover:text-accent',
-                ].join(' ')}
+                    ? "border-accent bg-accent/10 text-accent"
+                    : "border-border text-textDim hover:border-accent hover:text-accent",
+                ].join(" ")}
               >
                 {tab.label}
               </button>
@@ -102,7 +110,7 @@ export function FullscreenDive({
         </div>
         <button
           onClick={onClose}
-          title={`${t('Close')} (Esc)`}
+          title={`${t("Close")} (Esc)`}
           className="ml-auto rounded-full border border-border px-3 py-1 font-mono text-xs text-textDim transition-colors hover:border-accent hover:text-accent sm:ml-0"
         >
           ✕
@@ -120,8 +128,7 @@ export function FullscreenDive({
       <div className="min-h-0 flex-1 overflow-hidden p-3 sm:p-4">
         <div
           ref={bodyRef}
-          className="mx-auto h-full w-full max-w-[840px] overflow-auto rounded-2xl border border-border p-4 sm:px-6"
-          style={{ backgroundColor: 'rgb(var(--c-sunken))' }}
+          className="chart-well mx-auto h-full w-full max-w-[840px] overflow-auto rounded-2xl p-4 sm:px-6"
         >
           {bodyHeight > 0 && children(chartHeight)}
         </div>
