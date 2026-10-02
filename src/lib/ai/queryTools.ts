@@ -24,16 +24,22 @@ import type {
   BlockEntry,
   HoldStat,
   SuitThickness,
-} from './appTypes';
-import { peakSpeedsFromProfile } from './support/queryDives';
-import { extractHoldStats } from './support/extractHoldStats';
-import { resolveContractionMs } from './support/resolveContractionMs';
-import { sessionDay } from '../sessionDay';
-import type { ToolContext } from './trainingSummary';
+} from "./appTypes";
+import { peakSpeedsFromProfile } from "./support/queryDives";
+import { extractHoldStats } from "./support/extractHoldStats";
+import { resolveContractionMs } from "./support/resolveContractionMs";
+import { sessionDay } from "../sessionDay";
+import {
+  diveTempDepth,
+  diveTempDrop,
+  diveTempSurface,
+} from "./support/diveTemps";
+import type { ToolContext } from "./trainingSummary";
 
-export type Dataset = 'depth' | 'pool' | 'dry';
+export type Dataset = "depth" | "pool" | "dry";
 
-export type FilterOp = 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'between' | 'exists';
+export type FilterOp =
+  "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "in" | "between" | "exists";
 
 export interface QueryFilter {
   /** Field path, e.g. "diveTime", "weightDist.neck", "advanced.waves". */
@@ -43,7 +49,8 @@ export interface QueryFilter {
   value?: unknown;
 }
 
-export type Agg = 'avg' | 'min' | 'max' | 'sum' | 'count' | 'median' | 'stddev' | 'p90';
+export type Agg =
+  "avg" | "min" | "max" | "sum" | "count" | "median" | "stddev" | "p90";
 
 export interface QueryMetric {
   /** Field to aggregate. Use '*' with agg 'count' for a plain row count. */
@@ -87,19 +94,19 @@ export interface QueryResult {
 // breath-hold (Hold block) for dry sessions.
 
 interface DepthRow {
-  dataset: 'depth';
+  dataset: "depth";
   session: DepthSession;
   dive: Dive;
   diveIdx: number;
 }
 interface PoolRow {
-  dataset: 'pool';
+  dataset: "pool";
   session: PoolSession;
   dive: PoolDive;
   diveIdx: number;
 }
 interface DryRow {
-  dataset: 'dry';
+  dataset: "dry";
   session: DrySession;
   hold: BlockEntry;
   holdIdx: number;
@@ -114,33 +121,40 @@ export type Row = (DepthRow | PoolRow | DryRow) & {
 
 function suitMm(s?: SuitThickness | null): number | null {
   if (!s) return null;
-  return s.kind === 'none' ? 0 : s.mm;
+  return s.kind === "none" ? 0 : s.mm;
 }
 
 /** Normalise a discipline so ' cwt ' / 'CWT' all compare equal. */
 function normDiscipline(d: unknown): string | null {
-  if (typeof d !== 'string') return null;
+  if (typeof d !== "string") return null;
   const t = d.trim().toUpperCase();
   return t.length ? t : null;
 }
 
-export function buildRows(sessions: Session[], dataset: Dataset, tz?: string): Row[] {
+export function buildRows(
+  sessions: Session[],
+  dataset: Dataset,
+  tz?: string,
+): Row[] {
   const rows: Row[] = [];
   for (const s of sessions) {
     const day = s.date ? sessionDay(s.date, tz) : undefined;
-    if (dataset === 'depth' && s.mode === 'depth') {
+    if (dataset === "depth" && s.mode === "depth") {
       s.dives.forEach((dive, diveIdx) =>
-        rows.push({ dataset: 'depth', session: s, dive, diveIdx, day }),
+        rows.push({ dataset: "depth", session: s, dive, diveIdx, day }),
       );
-    } else if (dataset === 'pool' && s.mode === 'pool') {
-      s.dives.forEach((dive, diveIdx) => rows.push({ dataset: 'pool', session: s, dive, diveIdx, day }));
-    } else if (dataset === 'dry' && s.mode === 'dry') {
+    } else if (dataset === "pool" && s.mode === "pool") {
+      s.dives.forEach((dive, diveIdx) =>
+        rows.push({ dataset: "pool", session: s, dive, diveIdx, day }),
+      );
+    } else if (dataset === "dry" && s.mode === "dry") {
       // holdIdx is the Hold ORDINAL (0-based among Hold blocks), not the
       // blockTimeline position — that's what Contraction.holdIdx and
       // extractHoldStats key on, so per-hold joins line up.
       let hi = 0;
       for (const hold of s.blockTimeline) {
-        if (hold.type === 'Hold') rows.push({ dataset: 'dry', session: s, hold, holdIdx: hi++, day });
+        if (hold.type === "Hold")
+          rows.push({ dataset: "dry", session: s, hold, holdIdx: hi++, day });
       }
     }
   }
@@ -171,7 +185,7 @@ function sessionRanking(r: DepthRow | PoolRow): SessionRankInfo {
   const cached = sessionRankCache.get(session);
   if (cached) return cached;
   const metricOf =
-    r.dataset === 'depth'
+    r.dataset === "depth"
       ? (i: number) => (session.dives[i] as Dive).depth ?? null
       : (i: number) => (session.dives[i] as PoolDive).distance ?? null;
   const n = session.dives.length;
@@ -181,7 +195,10 @@ function sessionRanking(r: DepthRow | PoolRow): SessionRankInfo {
     .sort((a, b) => metricOf(b)! - metricOf(a)! || a - b);
   const rank = new Array<number>(n).fill(0);
   ordered.forEach((i, pos) => (rank[i] = pos + 1));
-  const info: SessionRankInfo = { bestIdx: ordered.length ? ordered[0] : -1, rank };
+  const info: SessionRankInfo = {
+    bestIdx: ordered.length ? ordered[0] : -1,
+    rank,
+  };
   sessionRankCache.set(session, info);
   return info;
 }
@@ -189,7 +206,7 @@ function sessionRanking(r: DepthRow | PoolRow): SessionRankInfo {
 // ─── Field resolution (nesting + session -> dive inheritance) ────────────────
 
 function advancedField(adv: unknown, path: string): unknown {
-  const key = path.slice('advanced.'.length);
+  const key = path.slice("advanced.".length);
   return (adv as Record<string, unknown> | undefined)?.[key] ?? null;
 }
 
@@ -204,161 +221,163 @@ export function getField(r: Row, path: string): unknown {
   // selecting by date bucket by day, and that day has to be the one they see
   // in the session list. The UTC slice filed an early-morning session under
   // the day before.
-  if (path === 'date') return dayOfRow(r);
+  if (path === "date") return dayOfRow(r);
   // Within-session position — shared by depth & pool (both carry diveIdx and a
   // `session.dives` array in chronological order). Lets the model answer
   // fatigue questions ("do my later dives get slower?") without eyeballing
   // list_dives. diveIdx is 0-based, so it IS the order within the session.
-  if (r.dataset !== 'dry') {
+  if (r.dataset !== "dry") {
     switch (path) {
-      case 'diveOrderInSession':
+      case "diveOrderInSession":
         return r.diveIdx;
-      case 'divesInSession':
+      case "divesInSession":
         return r.session.dives.length;
-      case 'isFirstInSession':
+      case "isFirstInSession":
         return r.diveIdx === 0;
-      case 'isLastInSession':
+      case "isLastInSession":
         return r.diveIdx === r.session.dives.length - 1;
       // Position RELATIVE TO the session's best (deepest/longest) dive.
-      case 'rankInSession':
+      case "rankInSession":
         return sessionRanking(r).rank[r.diveIdx] || null; // 0 (unranked) -> null
-      case 'isBestInSession':
+      case "isBestInSession":
         return r.diveIdx === sessionRanking(r).bestIdx;
-      case 'isAfterBestInSession': {
+      case "isAfterBestInSession": {
         const { bestIdx } = sessionRanking(r);
         return bestIdx >= 0 && r.diveIdx > bestIdx;
       }
-      case 'divesAfterBestInSession': {
+      case "divesAfterBestInSession": {
         const { bestIdx } = sessionRanking(r);
         return bestIdx >= 0 ? r.session.dives.length - 1 - bestIdx : null;
       }
     }
   }
-  if (r.dataset === 'depth') return depthField(r, path);
-  if (r.dataset === 'pool') return poolField(r, path);
+  if (r.dataset === "depth") return depthField(r, path);
+  if (r.dataset === "pool") return poolField(r, path);
   return dryField(r, path);
 }
 
 function depthField(r: DepthRow, path: string): unknown {
   const { dive, session } = r;
   switch (path) {
-    case 'location':
+    case "location":
       return session.location ?? null;
-    case 'waterType':
+    case "waterType":
       return session.waterType ?? null;
-    case 'waterTemp':
+    case "waterTemp":
       return session.waterTemp;
-    case 'tempSurface':
-      return dive.tempSurface ?? session.tempSurface;
-    case 'tempDepth':
-      return dive.tempDepth ?? session.tempDepth;
-    // Surface minus bottom, the thermocline in one number. Derived here
-    // because the model never does arithmetic (app, 2026-09-25: asked about a
-    // thermocline, it answered that only surface temperature is recorded).
-    case 'tempDrop': {
-      const top = dive.tempSurface ?? session.tempSurface;
-      const bottom = dive.tempDepth ?? session.tempDepth;
-      if (top == null || bottom == null) return null;
-      return Math.round((top - bottom) * 10) / 10;
-    }
-    case 'sessionType':
+    // Stored field, else the dive's own samples, else the session value
+    // (support/diveTemps, a copy of the app's). tempDrop is derived because
+    // the model never does arithmetic.
+    case "tempSurface":
+      return diveTempSurface(dive, session);
+    case "tempDepth":
+      return diveTempDepth(dive, session);
+    case "tempDrop":
+      return diveTempDrop(dive, session);
+    case "sessionType":
       return session.sessionType ?? null;
-    case 'deviceName':
+    case "deviceName":
       return session.deviceName ?? null;
-    case 'discipline':
+    case "discipline":
       return normDiscipline(dive.discipline);
     // Ballast + suit: dive override falls back to the session default.
-    case 'weightKg':
+    case "weightKg":
       return dive.weightKg ?? session.weightKg ?? null;
-    case 'weightDist.neck':
+    case "weightDist.neck":
       return dive.weightDist?.neck ?? session.weightDist?.neck ?? null;
-    case 'weightDist.belt':
+    case "weightDist.belt":
       return dive.weightDist?.belt ?? session.weightDist?.belt ?? null;
-    case 'weightDist.ankle':
+    case "weightDist.ankle":
       return dive.weightDist?.ankle ?? session.weightDist?.ankle ?? null;
-    case 'suit.mm':
+    case "suit.mm":
       return suitMm(dive.suit ?? session.suit);
-    case 'peakDescentSpeed':
+    case "peakDescentSpeed":
       return peakSpeedsFromProfile(dive).peakDescent;
-    case 'peakAscentSpeed':
+    case "peakAscentSpeed":
       return peakSpeedsFromProfile(dive).peakAscent;
-    case 'contractionOnset.depth':
+    case "contractionOnset.depth":
       return dive.contractionOnset?.depth ?? null;
-    case 'contractionOnset.direction':
+    case "contractionOnset.direction":
       return dive.contractionOnset?.direction ?? null;
     default:
-      if (path.startsWith('advanced.')) return advancedField(dive.advanced, path);
+      if (path.startsWith("advanced."))
+        return advancedField(dive.advanced, path);
       return (dive as unknown as Record<string, unknown>)[path] ?? null;
   }
 }
 
 /** First/second-half average lap time. Odd lap counts drop the middle lap so
  *  the halves compare like for like. Needs >= 2 laps. */
-function halfLapAvg(laps: number[], half: 'first' | 'second'): number | null {
+function halfLapAvg(laps: number[], half: "first" | "second"): number | null {
   if (!laps || laps.length < 2) return null;
   const n = Math.floor(laps.length / 2);
-  const slice = half === 'first' ? laps.slice(0, n) : laps.slice(laps.length - n);
+  const slice =
+    half === "first" ? laps.slice(0, n) : laps.slice(laps.length - n);
   return slice.reduce((a, b) => a + b, 0) / n;
 }
 
 function poolField(r: PoolRow, path: string): unknown {
   const { dive, session } = r;
   switch (path) {
-    case 'location':
+    case "location":
       return session.location ?? null;
-    case 'poolType':
+    case "poolType":
       return session.poolType;
-    case 'waterTemp':
+    case "waterTemp":
       return session.waterTemp;
-    case 'totalDistance':
+    case "totalDistance":
       return session.totalDistance;
-    case 'startTime':
+    case "startTime":
       return session.startTime;
-    case 'sessionType':
+    case "sessionType":
       return session.sessionType ?? null;
-    case 'discipline':
+    case "discipline":
       return dive.discipline;
     // Derived pace — the model never does arithmetic, so expose both forms.
-    case 'speed': // m/s
+    case "speed": // m/s
       return dive.distance != null && dive.distance > 0 && dive.diveTime > 0
         ? dive.distance / dive.diveTime
         : null;
-    case 'pace100': // seconds per 100 m
+    case "pace100": // seconds per 100 m
       return dive.distance != null && dive.distance > 0 && dive.diveTime > 0
         ? (dive.diveTime / dive.distance) * 100
         : null;
     // Lap-split summaries (never the raw lapTimes array).
-    case 'lapCount':
+    case "lapCount":
       return dive.lapTimes?.length || null;
-    case 'avgLapTime':
+    case "avgLapTime":
       return dive.lapTimes?.length
         ? dive.lapTimes.reduce((a, b) => a + b, 0) / dive.lapTimes.length
         : null;
-    case 'bestLapTime':
+    case "bestLapTime":
       return dive.lapTimes?.length
         ? dive.lapTimes.reduce((a, b) => (b < a ? b : a), dive.lapTimes[0])
         : null;
-    case 'firstHalfAvgLap':
-      return halfLapAvg(dive.lapTimes ?? [], 'first');
-    case 'secondHalfAvgLap':
-      return halfLapAvg(dive.lapTimes ?? [], 'second');
+    case "firstHalfAvgLap":
+      return halfLapAvg(dive.lapTimes ?? [], "first");
+    case "secondHalfAvgLap":
+      return halfLapAvg(dive.lapTimes ?? [], "second");
     // Seconds from dive start to the first contraction.
-    case 'firstContractionSec':
+    case "firstContractionSec":
       return dive.contractions?.length
-        ? dive.contractions.reduce((a, b) => (b < a ? b : a), dive.contractions[0])
+        ? dive.contractions.reduce(
+            (a, b) => (b < a ? b : a),
+            dive.contractions[0],
+          )
         : null;
-    case 'weightKg':
+    case "weightKg":
       return dive.weightKg ?? session.weightKg ?? null;
-    case 'weightDist.neck':
+    case "weightDist.neck":
       return dive.weightDist?.neck ?? session.weightDist?.neck ?? null;
-    case 'weightDist.belt':
+    case "weightDist.belt":
       return dive.weightDist?.belt ?? session.weightDist?.belt ?? null;
-    case 'weightDist.ankle':
+    case "weightDist.ankle":
       return dive.weightDist?.ankle ?? session.weightDist?.ankle ?? null;
-    case 'suit.mm':
+    case "suit.mm":
       return suitMm(dive.suit ?? session.suit);
     default:
-      if (path.startsWith('advanced.')) return advancedField(dive.advanced, path);
+      if (path.startsWith("advanced."))
+        return advancedField(dive.advanced, path);
       return (dive as unknown as Record<string, unknown>)[path] ?? null;
   }
 }
@@ -382,7 +401,7 @@ function holdStatFor(session: DrySession, holdIdx: number): HoldStat | null {
 /** HR-only straps log a constant SpO2 of 0 — their SpO2-derived stats are
  *  meaningless and must read as "not logged". */
 function hasSpo2(session: DrySession): boolean {
-  return (session.deviceType ?? 'oximeter') === 'oximeter';
+  return (session.deviceType ?? "oximeter") === "oximeter";
 }
 
 /** Hold-relative contraction times (s, ascending) for one hold. Computed from
@@ -396,7 +415,7 @@ function dryContractionTimes(session: DrySession, holdIdx: number): number[] {
   let hi = 0;
   let holdStart: number | null = null;
   for (const b of session.blockTimeline ?? []) {
-    if (b.type === 'Hold') {
+    if (b.type === "Hold") {
       if (hi === holdIdx) {
         holdStart = cursor;
         break;
@@ -407,7 +426,9 @@ function dryContractionTimes(session: DrySession, holdIdx: number): number[] {
   }
   if (holdStart === null) return [];
   return cs
-    .map((c) => resolveContractionMs(c, session.blockTimeline) / 1000 - holdStart!)
+    .map(
+      (c) => resolveContractionMs(c, session.blockTimeline) / 1000 - holdStart!,
+    )
     .filter((t) => t >= -2)
     .map((t) => Math.max(0, t))
     .sort((a, b) => a - b);
@@ -417,28 +438,29 @@ function dryField(r: DryRow, path: string): unknown {
   const { hold, session } = r;
   switch (path) {
     // Canonical hold-time field for the dry dataset.
-    case 'holdSeconds':
+    case "holdSeconds":
       return hold.seconds;
-    case 'rating':
+    case "rating":
       return hold.rating ?? session.rating;
-    case 'lungVol':
+    case "lungVol":
       return hold.lungVol ?? session.lungVol;
-    case 'packs':
+    case "packs":
       return hold.packs ?? session.advanced?.packs ?? null;
-    case 'dryActivity':
+    case "dryActivity":
       return session.dryActivity ?? null;
-    case 'breathingStyle':
+    case "breathingStyle":
       return session.breathingStyle ?? null;
-    case 'holdIdx':
+    case "holdIdx":
       return r.holdIdx;
     // Contractions are tap-logged and exist without any oximeter.
-    case 'contractionCount':
-      return (session.contractions ?? []).filter((c) => c.holdIdx === r.holdIdx).length;
-    case 'firstContractionSec': {
+    case "contractionCount":
+      return (session.contractions ?? []).filter((c) => c.holdIdx === r.holdIdx)
+        .length;
+    case "firstContractionSec": {
       const t = dryContractionTimes(session, r.holdIdx);
       return t.length ? t[0] : null;
     }
-    case 'avgContractionInterval': {
+    case "avgContractionInterval": {
       const t = dryContractionTimes(session, r.holdIdx);
       if (t.length < 2) return null;
       const ivs: number[] = [];
@@ -446,36 +468,49 @@ function dryField(r: DryRow, path: string): unknown {
       return ivs.reduce((a, v) => a + v, 0) / ivs.length;
     }
     // Oximeter-derived per-hold stats (SpO2 % / HR bpm / seconds).
-    case 'minSpo2':
-      return hasSpo2(session) ? (holdStatFor(session, r.holdIdx)?.minSpo2 ?? null) : null;
-    case 'spo2Baseline':
-      return hasSpo2(session) ? (holdStatFor(session, r.holdIdx)?.baseline ?? null) : null;
-    case 'spo2AtEnd':
-      return hasSpo2(session) ? (holdStatFor(session, r.holdIdx)?.atEnd ?? null) : null;
-    case 'afterdrop':
-      return hasSpo2(session) ? (holdStatFor(session, r.holdIdx)?.adMag ?? null) : null;
-    case 'recoverySec':
-      return hasSpo2(session) ? (holdStatFor(session, r.holdIdx)?.recovSec ?? null) : null;
-    case 'minHr':
+    case "minSpo2":
+      return hasSpo2(session)
+        ? (holdStatFor(session, r.holdIdx)?.minSpo2 ?? null)
+        : null;
+    case "spo2Baseline":
+      return hasSpo2(session)
+        ? (holdStatFor(session, r.holdIdx)?.baseline ?? null)
+        : null;
+    case "spo2AtEnd":
+      return hasSpo2(session)
+        ? (holdStatFor(session, r.holdIdx)?.atEnd ?? null)
+        : null;
+    case "afterdrop":
+      return hasSpo2(session)
+        ? (holdStatFor(session, r.holdIdx)?.adMag ?? null)
+        : null;
+    case "recoverySec":
+      return hasSpo2(session)
+        ? (holdStatFor(session, r.holdIdx)?.recovSec ?? null)
+        : null;
+    case "minHr":
       return holdStatFor(session, r.holdIdx)?.hrMin ?? null;
-    case 'maxHr':
+    case "maxHr":
       return holdStatFor(session, r.holdIdx)?.hrMax ?? null;
-    case 'avgHr':
+    case "avgHr":
       return holdStatFor(session, r.holdIdx)?.hrAvg ?? null;
     // Dive-reflex HR analytics (need HR before + during the hold).
-    case 'restingHr':
+    case "restingHr":
       return holdStatFor(session, r.holdIdx)?.hrBaseline ?? null;
-    case 'diveReflexPct':
+    case "diveReflexPct":
       return holdStatFor(session, r.holdIdx)?.diveReflexPct ?? null;
-    case 'hrDrop1min':
+    case "hrDrop1min":
       return holdStatFor(session, r.holdIdx)?.diveReflex1minPct ?? null;
-    case 'hrAtFirstContraction':
+    case "hrAtFirstContraction":
       return holdStatFor(session, r.holdIdx)?.hrAtFirstContraction ?? null;
-    case 'hrDropAfterContraction':
-      return holdStatFor(session, r.holdIdx)?.diveReflexPostContractionPct ?? null;
+    case "hrDropAfterContraction":
+      return (
+        holdStatFor(session, r.holdIdx)?.diveReflexPostContractionPct ?? null
+      );
     default:
       // Dry advanced chips live at the session level, not per-hold.
-      if (path.startsWith('advanced.')) return advancedField(session.advanced, path);
+      if (path.startsWith("advanced."))
+        return advancedField(session.advanced, path);
       return (hold as unknown as Record<string, unknown>)[path] ?? null;
   }
 }
@@ -483,8 +518,8 @@ function dryField(r: DryRow, path: string): unknown {
 // ─── Filtering ───────────────────────────────────────────────────────────────
 
 function toNum(v: unknown): number | null {
-  if (typeof v === 'number' && Number.isFinite(v)) return v;
-  if (typeof v === 'boolean') return v ? 1 : 0;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "boolean") return v ? 1 : 0;
   return null;
 }
 
@@ -497,33 +532,38 @@ function equalLoose(a: unknown, b: unknown): boolean {
   return String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
 }
 
-export function applyFilter(value: unknown, op: FilterOp, target: unknown): boolean {
+export function applyFilter(
+  value: unknown,
+  op: FilterOp,
+  target: unknown,
+): boolean {
   switch (op) {
-    case 'exists':
+    case "exists":
       return value != null;
-    case 'eq':
+    case "eq":
       return equalLoose(value, target);
-    case 'ne':
+    case "ne":
       return !equalLoose(value, target);
-    case 'in':
+    case "in":
       return Array.isArray(target) && target.some((t) => equalLoose(value, t));
-    case 'between': {
+    case "between": {
       const n = toNum(value);
-      if (n == null || !Array.isArray(target) || target.length < 2) return false;
+      if (n == null || !Array.isArray(target) || target.length < 2)
+        return false;
       const lo = toNum(target[0]);
       const hi = toNum(target[1]);
       return lo != null && hi != null && n >= lo && n <= hi;
     }
-    case 'gt':
-    case 'gte':
-    case 'lt':
-    case 'lte': {
+    case "gt":
+    case "gte":
+    case "lt":
+    case "lte": {
       const n = toNum(value);
       const t = toNum(target);
       if (n == null || t == null) return false;
-      if (op === 'gt') return n > t;
-      if (op === 'gte') return n >= t;
-      if (op === 'lt') return n < t;
+      if (op === "gt") return n > t;
+      if (op === "gte") return n >= t;
+      if (op === "lt") return n < t;
       return n <= t;
     }
     default:
@@ -538,20 +578,20 @@ export function applyFilter(value: unknown, op: FilterOp, target: unknown): bool
 function aggregate(vals: number[], agg: Agg): number | null {
   if (!vals.length) return null;
   switch (agg) {
-    case 'sum':
+    case "sum":
       return vals.reduce((a, b) => a + b, 0);
-    case 'avg':
+    case "avg":
       return vals.reduce((a, b) => a + b, 0) / vals.length;
-    case 'min':
+    case "min":
       return vals.reduce((a, b) => (b < a ? b : a), vals[0]);
-    case 'max':
+    case "max":
       return vals.reduce((a, b) => (b > a ? b : a), vals[0]);
-    case 'median': {
+    case "median": {
       const s = [...vals].sort((a, b) => a - b);
       const m = Math.floor(s.length / 2);
       return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
     }
-    case 'p90': {
+    case "p90": {
       const s = [...vals].sort((a, b) => a - b);
       // Type-7 interpolated percentile (matches strokeDetection.quantileSorted /
       // computeBoxStats), so the assistant's p90 agrees with every other
@@ -561,9 +601,10 @@ function aggregate(vals: number[], agg: Agg): number | null {
       const hi = Math.ceil(pos);
       return lo === hi ? s[lo] : s[lo] + (pos - lo) * (s[hi] - s[lo]);
     }
-    case 'stddev': {
+    case "stddev": {
       const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
-      const varc = vals.reduce((a, b) => a + (b - mean) * (b - mean), 0) / vals.length;
+      const varc =
+        vals.reduce((a, b) => a + (b - mean) * (b - mean), 0) / vals.length;
       return Math.sqrt(varc);
     }
     default:
@@ -571,13 +612,18 @@ function aggregate(vals: number[], agg: Agg): number | null {
   }
 }
 
-function computeMetrics(rows: Row[], metrics: QueryMetric[]): Record<string, number | null> {
+function computeMetrics(
+  rows: Row[],
+  metrics: QueryMetric[],
+): Record<string, number | null> {
   const out: Record<string, number | null> = {};
   for (const m of metrics) {
     const label = `${m.field}.${m.agg}`;
-    if (m.agg === 'count') {
+    if (m.agg === "count") {
       out[label] =
-        m.field === '*' ? rows.length : rows.filter((r) => getField(r, m.field) != null).length;
+        m.field === "*"
+          ? rows.length
+          : rows.filter((r) => getField(r, m.field) != null).length;
       continue;
     }
     const vals: number[] = [];
@@ -592,9 +638,13 @@ function computeMetrics(rows: Row[], metrics: QueryMetric[]): Record<string, num
 
 // ─── Public entry point ──────────────────────────────────────────────────────
 
-export function runQuery(sessions: Session[], spec: QuerySpec, ctx: ToolContext = {}): QueryResult {
+export function runQuery(
+  sessions: Session[],
+  spec: QuerySpec,
+  ctx: ToolContext = {},
+): QueryResult {
   const notes: string[] = [];
-  const noun = spec.dataset === 'dry' ? 'holds' : 'dives';
+  const noun = spec.dataset === "dry" ? "holds" : "dives";
 
   let rows = buildRows(sessions, spec.dataset, ctx.tz);
 
@@ -617,7 +667,7 @@ export function runQuery(sessions: Session[], spec: QuerySpec, ctx: ToolContext 
     let missing = 0;
     for (const r of rows) {
       const v = getField(r, gkey);
-      if (v == null || v === '') {
+      if (v == null || v === "") {
         missing++;
         continue;
       }
@@ -638,9 +688,16 @@ export function runQuery(sessions: Session[], spec: QuerySpec, ctx: ToolContext 
     }));
     // Largest group first, so a `limit` keeps the most-supported buckets.
     groups.sort((a, b) => b.n - a.n);
-    if (spec.limit != null && spec.limit >= 0) groups = groups.slice(0, spec.limit);
+    if (spec.limit != null && spec.limit >= 0)
+      groups = groups.slice(0, spec.limit);
   } else {
-    groups = [{ key: null, n: rows.length, metrics: computeMetrics(rows, spec.metrics) }];
+    groups = [
+      {
+        key: null,
+        n: rows.length,
+        metrics: computeMetrics(rows, spec.metrics),
+      },
+    ];
   }
 
   return { total_n, groups, notes };
@@ -649,56 +706,78 @@ export function runQuery(sessions: Session[], spec: QuerySpec, ctx: ToolContext 
 // ─── Tool schema (the model calls this) ──────────────────────────────────────
 
 export const QUERY_DIVES_TOOL = {
-  name: 'query_dives',
+  name: "query_dives",
   description:
     "Filter and aggregate the user's own logged dives and return exact numbers with a sample " +
-    'size n per group. Use two separate calls to compare two different conditions. Always report ' +
-    'n to the user and do not over-claim on small samples.',
+    "size n per group. Use two separate calls to compare two different conditions. Always report " +
+    "n to the user and do not over-claim on small samples.",
   input_schema: {
-    type: 'object',
+    type: "object",
     properties: {
-      dataset: { type: 'string', enum: ['depth', 'pool', 'dry'] },
+      dataset: { type: "string", enum: ["depth", "pool", "dry"] },
       filters: {
-        type: 'array',
-        description: 'AND-combined conditions.',
+        type: "array",
+        description: "AND-combined conditions.",
         items: {
-          type: 'object',
+          type: "object",
           properties: {
-            field: { type: 'string' },
+            field: { type: "string" },
             op: {
-              type: 'string',
-              enum: ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'between', 'exists'],
+              type: "string",
+              enum: [
+                "eq",
+                "ne",
+                "gt",
+                "gte",
+                "lt",
+                "lte",
+                "in",
+                "between",
+                "exists",
+              ],
             },
             value: {},
           },
-          required: ['field', 'op'],
+          required: ["field", "op"],
         },
       },
       group_by: {
-        type: 'string',
-        description: 'Optional single dimension to break results down by.',
+        type: "string",
+        description: "Optional single dimension to break results down by.",
       },
       metrics: {
-        type: 'array',
+        type: "array",
         items: {
-          type: 'object',
+          type: "object",
           properties: {
-            field: { type: 'string', description: "Field to aggregate, or '*' with agg 'count'." },
+            field: {
+              type: "string",
+              description: "Field to aggregate, or '*' with agg 'count'.",
+            },
             agg: {
-              type: 'string',
-              enum: ['avg', 'min', 'max', 'sum', 'count', 'median', 'stddev', 'p90'],
+              type: "string",
+              enum: [
+                "avg",
+                "min",
+                "max",
+                "sum",
+                "count",
+                "median",
+                "stddev",
+                "p90",
+              ],
             },
           },
-          required: ['field', 'agg'],
+          required: ["field", "agg"],
         },
       },
-      date_from: { type: 'string', description: 'ISO date, inclusive.' },
-      date_to: { type: 'string', description: 'ISO date, inclusive.' },
+      date_from: { type: "string", description: "ISO date, inclusive." },
+      date_to: { type: "string", description: "ISO date, inclusive." },
       limit: {
-        type: 'integer',
-        description: 'When grouping, cap the number of groups (largest first).',
+        type: "integer",
+        description: "When grouping, cap the number of groups (largest first).",
       },
     },
-    required: ['dataset', 'metrics'],
+    required: ["dataset", "metrics"],
   },
 } as const;

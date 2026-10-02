@@ -9,10 +9,15 @@
  *
  * Pure, no RN imports (runs in app / Deno / browser).
  */
-import type { DrySession, Session } from './appTypes';
-import type { ToolContext } from './trainingSummary';
-import { extractHoldStats } from './support/extractHoldStats';
-import { sessionDay } from '../sessionDay';
+import type { DrySession, Session } from "./appTypes";
+import type { ToolContext } from "./trainingSummary";
+import { extractHoldStats } from "./support/extractHoldStats";
+import { sessionDay } from "../sessionDay";
+import {
+  diveTempDepth,
+  diveTempDrop,
+  diveTempSurface,
+} from "./support/diveTemps";
 
 /** Format a UTC ISO timestamp as "YYYY-MM-DD HH:MM" in the user's timezone, so
  *  the model reports LOCAL time instead of doing (error-prone) UTC math itself.
@@ -20,19 +25,19 @@ import { sessionDay } from '../sessionDay';
 function localDateTime(iso: string, tz?: string): string | null {
   if (!tz) return null;
   try {
-    const parts = new Intl.DateTimeFormat('en-CA', {
+    const parts = new Intl.DateTimeFormat("en-CA", {
       timeZone: tz,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: false,
     }).formatToParts(new Date(iso));
-    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
-    const date = `${get('year')}-${get('month')}-${get('day')}`;
-    const hour = get('hour') === '24' ? '00' : get('hour'); // some ICU emit 24
-    return `${date} ${hour}:${get('minute')}`;
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+    const date = `${get("year")}-${get("month")}-${get("day")}`;
+    const hour = get("hour") === "24" ? "00" : get("hour"); // some ICU emit 24
+    return `${date} ${hour}:${get("minute")}`;
   } catch {
     return null;
   }
@@ -55,7 +60,7 @@ export interface DiveDetailResult {
 function compact(obj: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(obj)) {
-    if (v !== null && v !== undefined && v !== '') out[k] = v;
+    if (v !== null && v !== undefined && v !== "") out[k] = v;
   }
   return out;
 }
@@ -68,9 +73,12 @@ function compact(obj: Record<string, unknown>): Record<string, unknown> {
  * match first; otherwise the ONE session within 1 of it (newSessionId keeps
  * the integer parts unique), never a guess between two.
  */
-export function findSession<S extends { id: number }>(sessions: S[], id: unknown): S | undefined {
-  const n = typeof id === 'string' ? Number(id) : id;
-  if (typeof n !== 'number' || !Number.isFinite(n)) return undefined;
+export function findSession<S extends { id: number }>(
+  sessions: S[],
+  id: unknown,
+): S | undefined {
+  const n = typeof id === "string" ? Number(id) : id;
+  if (typeof n !== "number" || !Number.isFinite(n)) return undefined;
   const exact = sessions.find((x) => x.id === n);
   if (exact) return exact;
   const near = sessions.filter((x) => Math.abs(x.id - n) < 1);
@@ -83,7 +91,8 @@ export function getDiveDetail(
   ctx?: ToolContext,
 ): DiveDetailResult {
   const s = findSession(sessions, spec.session_id);
-  if (!s) return { found: false, error: `No session with id ${spec.session_id}.` };
+  if (!s)
+    return { found: false, error: `No session with id ${spec.session_id}.` };
 
   // Present the date/time in the user's LOCAL timezone (stored value is UTC).
   const local = localDateTime(s.date, ctx?.tz);
@@ -99,16 +108,16 @@ export function getDiveDetail(
     rating: s.rating,
   });
 
-  if (s.mode === 'dry') {
+  if (s.mode === "dry") {
     // Dry sessions have no per-dive rows; return the session-level record
     // plus a per-hold breakdown (oximeter stats when the device logged them;
     // HR-only straps record SpO2 as a constant 0, so those fields are
     // withheld for them).
     const dry = s as DrySession;
     const stats = extractHoldStats([dry]);
-    const spo2Ok = (dry.deviceType ?? 'oximeter') === 'oximeter';
+    const spo2Ok = (dry.deviceType ?? "oximeter") === "oximeter";
     const holds = (dry.blockTimeline ?? [])
-      .filter((b) => b.type === 'Hold')
+      .filter((b) => b.type === "Hold")
       .slice(0, 20)
       .map((b, i) => {
         const st = stats.find((h) => h.holdIdx === i);
@@ -127,7 +136,9 @@ export function getDiveDetail(
           maxHr: st?.hrMax,
           diveReflexPct: st?.diveReflexPct,
           hrAtFirstContraction: st?.hrAtFirstContraction,
-          contractionCount: (dry.contractions ?? []).filter((c) => c.holdIdx === i).length,
+          contractionCount: (dry.contractions ?? []).filter(
+            (c) => c.holdIdx === i,
+          ).length,
         });
       });
     return {
@@ -146,7 +157,10 @@ export function getDiveDetail(
   const idx = spec.dive_index ?? 0;
   const dive = (s as { dives?: unknown[] }).dives?.[idx];
   if (!dive) {
-    return { found: false, error: `Session ${spec.session_id} has no dive at index ${idx}.` };
+    return {
+      found: false,
+      error: `Session ${spec.session_id} has no dive at index ${idx}.`,
+    };
   }
 
   return {
@@ -156,7 +170,14 @@ export function getDiveDetail(
       dive_index: idx,
       // The full dive record minus its heavy 1 Hz profile arrays (the model
       // reasons over the summary fields, not raw samples).
-      dive: compact(stripHeavy(dive as Record<string, unknown>)),
+      // Temperatures resolved like everywhere else (diveTemps): many dives
+      // carry them only in the profile samples stripped below.
+      dive: compact({
+        ...stripHeavy(dive as Record<string, unknown>),
+        tempSurface: diveTempSurface(dive as never, s as never),
+        tempDepth: diveTempDepth(dive as never, s as never),
+        tempDrop: diveTempDrop(dive as never, s as never),
+      }),
     },
   };
 }
@@ -172,22 +193,25 @@ function stripHeavy(dive: Record<string, unknown>): Record<string, unknown> {
 }
 
 export const GET_DIVE_DETAIL_TOOL = {
-  name: 'get_dive_detail',
+  name: "get_dive_detail",
   description:
-    'Get the full record for ONE specific dive, including free-text remarks. Use for questions ' +
+    "Get the full record for ONE specific dive, including free-text remarks. Use for questions " +
     'about a particular dive (e.g. "tell me about my deepest dive") after query_dives has ' +
-    'identified it. Never use it to scan many dives — use query_dives for aggregation.',
+    "identified it. Never use it to scan many dives — use query_dives for aggregation.",
   input_schema: {
-    type: 'object',
+    type: "object",
     properties: {
       session_id: {
-        type: 'number',
+        type: "number",
         description:
-          'Session.id of the parent session, copied EXACTLY as list_dives / query_dives gave it, ' +
-          'decimals included (ids are not integers).',
+          "Session.id of the parent session, copied EXACTLY as list_dives / query_dives gave it, " +
+          "decimals included (ids are not integers).",
       },
-      dive_index: { type: 'integer', description: '0-based dive index within the session.' },
+      dive_index: {
+        type: "integer",
+        description: "0-based dive index within the session.",
+      },
     },
-    required: ['session_id'],
+    required: ["session_id"],
   },
 } as const;
