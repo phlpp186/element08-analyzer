@@ -45,6 +45,9 @@ const FIELDS: Record<Dataset, { field: string; enumerate?: boolean }[]> = {
     { field: 'location', enumerate: true },
     { field: 'waterType', enumerate: true },
     { field: 'waterTemp' },
+    { field: 'tempSurface' },
+    { field: 'tempDepth' },
+    { field: 'tempDrop' },
     // Within-session position (fatigue analysis) — always present.
     { field: 'diveOrderInSession' },
     { field: 'divesInSession' },

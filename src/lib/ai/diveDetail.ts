@@ -60,12 +60,29 @@ function compact(obj: Record<string, unknown>): Record<string, unknown> {
   return out;
 }
 
+/**
+ * The session for an id the MODEL handed back. Session ids carry a fractional
+ * part (newSessionId: Date.now() + Math.random()), and the tool once declared
+ * session_id an integer, so the model dropped the decimals and every imported
+ * session came back "not found" (Philipp's Preview APK, 2026-10-02). Exact
+ * match first; otherwise the ONE session within 1 of it (newSessionId keeps
+ * the integer parts unique), never a guess between two.
+ */
+export function findSession<S extends { id: number }>(sessions: S[], id: unknown): S | undefined {
+  const n = typeof id === 'string' ? Number(id) : id;
+  if (typeof n !== 'number' || !Number.isFinite(n)) return undefined;
+  const exact = sessions.find((x) => x.id === n);
+  if (exact) return exact;
+  const near = sessions.filter((x) => Math.abs(x.id - n) < 1);
+  return near.length === 1 ? near[0] : undefined;
+}
+
 export function getDiveDetail(
   sessions: Session[],
   spec: DiveDetailSpec,
   ctx?: ToolContext,
 ): DiveDetailResult {
-  const s = sessions.find((x) => x.id === spec.session_id);
+  const s = findSession(sessions, spec.session_id);
   if (!s) return { found: false, error: `No session with id ${spec.session_id}.` };
 
   // Present the date/time in the user's LOCAL timezone (stored value is UTC).
@@ -163,7 +180,12 @@ export const GET_DIVE_DETAIL_TOOL = {
   input_schema: {
     type: 'object',
     properties: {
-      session_id: { type: 'integer', description: 'Session.id of the parent session.' },
+      session_id: {
+        type: 'number',
+        description:
+          'Session.id of the parent session, copied EXACTLY as list_dives / query_dives gave it, ' +
+          'decimals included (ids are not integers).',
+      },
       dive_index: { type: 'integer', description: '0-based dive index within the session.' },
     },
     required: ['session_id'],

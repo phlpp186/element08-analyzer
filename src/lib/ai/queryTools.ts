@@ -252,6 +252,15 @@ function depthField(r: DepthRow, path: string): unknown {
       return dive.tempSurface ?? session.tempSurface;
     case 'tempDepth':
       return dive.tempDepth ?? session.tempDepth;
+    // Surface minus bottom, the thermocline in one number. Derived here
+    // because the model never does arithmetic (app, 2026-09-25: asked about a
+    // thermocline, it answered that only surface temperature is recorded).
+    case 'tempDrop': {
+      const top = dive.tempSurface ?? session.tempSurface;
+      const bottom = dive.tempDepth ?? session.tempDepth;
+      if (top == null || bottom == null) return null;
+      return Math.round((top - bottom) * 10) / 10;
+    }
     case 'sessionType':
       return session.sessionType ?? null;
     case 'deviceName':
