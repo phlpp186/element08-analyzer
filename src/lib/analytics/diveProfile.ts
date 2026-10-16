@@ -66,9 +66,29 @@ interface DiveLike {
   depth: number;
 }
 
+/**
+ * Vertical speed (m/s, negative = descending) from depth alone, central
+ * difference per sample. Only for dives that carry no `v`: many records have
+ * none (some Garmin apnea modes, other vendors, the ELEMENT | 08 depth
+ * sensor, CSV imports), and the app derives speed from depth for every dive,
+ * so without this the Speed views were missing here for exactly those dives
+ * (user report 2026-10-16).
+ */
+export function withDerivedSpeed(sorted: ProfilePoint[]): ProfilePoint[] {
+  const stored = sorted.filter((p) => p.v != null && Number.isFinite(p.v)).length;
+  if (stored >= 2 || sorted.length < 2) return sorted;
+  return sorted.map((p, i) => {
+    const a = sorted[Math.max(0, i - 1)];
+    const b = sorted[Math.min(sorted.length - 1, i + 1)];
+    const dt = b.t - a.t;
+    if (!(dt > 0)) return p;
+    return { ...p, v: +(-(b.d - a.d) / dt).toFixed(3) };
+  });
+}
+
 export function extractDiveData(dive: DiveLike): DepthDiveData {
   const points = dive.profile ?? [];
-  const sorted = [...points].sort((a, b) => a.t - b.t);
+  const sorted = withDerivedSpeed([...points].sort((a, b) => a.t - b.t));
 
   const depthSeries: [number, number][] = [];
   const hrSeries: [number, number][] = [];
