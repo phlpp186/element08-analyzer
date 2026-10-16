@@ -27,12 +27,20 @@ interface Props {
   solo?: "hr" | "depth" | "speed";
   /** Chart height override in px (used by the fullscreen view). */
   chartHeight?: number;
+  /** Embedded in a page that labels the chart itself: no track headers. */
+  bare?: boolean;
 }
 
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
 const AXIS_POINTER_LINK = [{ xAxisIndex: "all" as const }];
 
-export function PoolDiveTracks({ data, groupId, solo, chartHeight }: Props) {
+export function PoolDiveTracks({
+  data,
+  groupId,
+  solo,
+  chartHeight,
+  bare = false,
+}: Props) {
   const ct = useChartTheme();
   const t = useT();
   const lapLines = useMemo(
@@ -132,15 +140,17 @@ export function PoolDiveTracks({ data, groupId, solo, chartHeight }: Props) {
     >
       {show("hr") && data.hasHR && (
         <>
-          <TrackHeader
-            label={t("Heart Rate")}
-            unit="bpm"
-            hint={
-              data.contractionTimes.length > 0
-                ? `${data.contractionTimes.length} ${data.contractionTimes.length === 1 ? t("contraction") : t("contractions")} ${t("marked")}`
-                : undefined
-            }
-          />
+          {!bare && (
+            <TrackHeader
+              label={t("Heart Rate")}
+              unit="bpm"
+              hint={
+                data.contractionTimes.length > 0
+                  ? `${data.contractionTimes.length} ${data.contractionTimes.length === 1 ? t("contraction") : t("contractions")} ${t("marked")}`
+                  : undefined
+              }
+            />
+          )}
           <ReactECharts
             option={hrOption}
             style={{ height: chartHeight ?? 200 }}
@@ -152,7 +162,7 @@ export function PoolDiveTracks({ data, groupId, solo, chartHeight }: Props) {
       )}
       {show("depth") && data.hasDepth && (
         <>
-          <TrackHeader label={t("Depth")} unit="m" />
+          {!bare && <TrackHeader label={t("Depth")} unit="m" />}
           <ReactECharts
             option={depthOption}
             style={{ height: chartHeight ?? 160 }}
@@ -164,7 +174,7 @@ export function PoolDiveTracks({ data, groupId, solo, chartHeight }: Props) {
       )}
       {show("speed") && data.hasSpeed && (
         <>
-          <TrackHeader label={t("Speed")} unit="m/s" />
+          {!bare && <TrackHeader label={t("Speed")} unit="m/s" />}
           <ReactECharts
             option={speedOption}
             style={{ height: chartHeight ?? 140 }}

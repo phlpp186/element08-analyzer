@@ -53,7 +53,7 @@ import { RangeReadout } from "../RangeReadout";
 
 type TFn = (s: string) => string;
 
-interface AlarmLite {
+export interface AlarmLite {
   type: "depth" | "time" | "speed";
   depth?: number | null;
   time?: number | null;
@@ -90,6 +90,13 @@ interface Props {
   /** Over-depth layout: mirrored butterfly (default) or both branches
    *  overlaid on the same positive axis for direct comparison. */
   speedDepthOverlay?: boolean;
+  /** Embedded in a page that labels the chart itself: no track header and
+   *  no width cap, so the chart fills its card. */
+  bare?: boolean;
+  /** Controlled measure mode. When `onMeasuringChange` is set the page owns
+   *  the Measure button and this component does not draw its own. */
+  measuring?: boolean;
+  onMeasuringChange?: (on: boolean) => void;
 }
 
 const GRID = { left: 56, right: 16, top: 10, bottom: 24 };
@@ -108,6 +115,9 @@ export function DepthDiveTracks({
   chartHeight,
   speedAxis = "time",
   speedDepthOverlay = false,
+  bare = false,
+  measuring: measuringProp,
+  onMeasuringChange,
 }: Props) {
   const ct = useChartTheme();
   const t = useT();
@@ -223,7 +233,10 @@ export function DepthDiveTracks({
   );
 
   // ── Measure A→B ──────────────────────────────────────────────────────────
-  const [measuring, setMeasuring] = useState(false);
+  const [measuringOwn, setMeasuringOwn] = useState(false);
+  const measureControlled = onMeasuringChange != null;
+  const measuring = measureControlled ? !!measuringProp : measuringOwn;
+  const setMeasuring = onMeasuringChange ?? setMeasuringOwn;
   const [range, setRange] = useState<[number, number] | null>(null);
   const depthChartRef = useRef<any>(null);
 
@@ -273,9 +286,12 @@ export function DepthDiveTracks({
     depthChartRef.current?.dispatchAction?.({ type: "brush", areas: [] });
   }, []);
 
+  // Gated on measuring too: a controlled parent can switch measuring off
+  // without going through clearRange, and the readout must go with it.
   const rangeResult = useMemo(
-    () => (range ? rangeStats(data.points, range[0], range[1]) : null),
-    [range, data.points],
+    () =>
+      range && measuring ? rangeStats(data.points, range[0], range[1]) : null,
+    [range, measuring, data.points],
   );
 
   const show = (track: "depth" | "hr" | "speed" | "temp") =>
@@ -285,29 +301,33 @@ export function DepthDiveTracks({
     // Capped + centred so the graphs read at a comfortable width instead of
     // stretching across the page (speed-by-depth especially).
     <div
-      className={`mx-auto max-w-[840px] space-y-4 ${solo ? "" : "chart-well rounded-2xl p-4 sm:p-5"}`}
+      className={`space-y-4 ${bare ? "" : "mx-auto max-w-[840px]"} ${solo ? "" : "chart-well rounded-2xl p-4 sm:p-5"}`}
     >
       {show("depth") && (
         <>
-          <div className="flex items-baseline gap-3">
-            <TrackHeader label={t("Depth")} unit="m" />
-            <button
-              onClick={() => {
-                if (measuring) clearRange();
-                setMeasuring((m) => !m);
-              }}
-              title={t(
-                "Drag across the profile to measure a stretch of the dive",
+          {!(bare && measureControlled) && (
+            <div className="flex items-baseline gap-3">
+              {!bare && <TrackHeader label={t("Depth")} unit="m" />}
+              {!measureControlled && (
+                <button
+                  onClick={() => {
+                    if (measuring) clearRange();
+                    setMeasuring(!measuring);
+                  }}
+                  title={t(
+                    "Drag across the profile to measure a stretch of the dive",
+                  )}
+                  className={`ml-auto rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                    measuring
+                      ? "border-accent text-accent"
+                      : "border-border text-textDim hover:border-accent hover:text-accent"
+                  }`}
+                >
+                  ⇤⇥ {t("Measure A→B")}
+                </button>
               )}
-              className={`ml-auto rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-widest transition-colors ${
-                measuring
-                  ? "border-accent text-accent"
-                  : "border-border text-textDim hover:border-accent hover:text-accent"
-              }`}
-            >
-              ⇤⇥ {t("Measure A→B")}
-            </button>
-          </div>
+            </div>
+          )}
           <ReactECharts
             option={depthOption}
             style={{ height: chartHeight ?? 260 }}
@@ -336,7 +356,7 @@ export function DepthDiveTracks({
 
       {show("hr") && data.hasHR && (
         <>
-          <TrackHeader label={t("Heart Rate")} unit="bpm" />
+          {!bare && <TrackHeader label={t("Heart Rate")} unit="bpm" />}
           <ReactECharts
             option={hrOption}
             style={{ height: chartHeight ?? 140 }}
@@ -349,11 +369,13 @@ export function DepthDiveTracks({
 
       {show("speed") && data.hasSpeed && speedAxis === "time" && (
         <>
-          <TrackHeader
-            label={t("Vertical Speed")}
-            unit="m/s"
-            hint={t("negative = descending")}
-          />
+          {!bare && (
+            <TrackHeader
+              label={t("Vertical Speed")}
+              unit="m/s"
+              hint={t("negative = descending")}
+            />
+          )}
           <ReactECharts
             option={speedOption}
             style={{ height: chartHeight ?? 140 }}
@@ -366,11 +388,13 @@ export function DepthDiveTracks({
 
       {show("speed") && data.hasSpeed && speedAxis === "depth" && (
         <>
-          <TrackHeader
-            label={t("Speed by depth")}
-            unit="m/s"
-            hint={t("descent and ascent as separate branches")}
-          />
+          {!bare && (
+            <TrackHeader
+              label={t("Speed by depth")}
+              unit="m/s"
+              hint={t("descent and ascent as separate branches")}
+            />
+          )}
           {/* Depth runs down the y-axis here (profile orientation), so this
               chart deliberately stays OUT of the shared time-crosshair group
               and gets a taller default than the time-based tracks. */}
@@ -385,7 +409,7 @@ export function DepthDiveTracks({
 
       {show("temp") && data.hasTemp && (
         <>
-          <TrackHeader label={t("Temperature")} unit="°C" />
+          {!bare && <TrackHeader label={t("Temperature")} unit="°C" />}
           <ReactECharts
             option={tempOption}
             style={{ height: chartHeight ?? 140 }}

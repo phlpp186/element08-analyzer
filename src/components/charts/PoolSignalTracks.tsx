@@ -42,11 +42,18 @@ interface Props {
   data: PoolTraceData;
   /** Unique chart-group id, distinct from the dive's HR group. */
   groupId: string;
+  /** Fit the whole stack into this many pixels (tracks share it) and drop
+   *  the chart-well frame: the dive page's chart card is the frame. */
+  fitHeight?: number;
 }
+
+// Per-track label row + gap, and the title + legend rows above the stack.
+const TRACK_CHROME = 28;
+const STACK_CHROME = 56;
 
 const GRID = { left: 56, right: 16, top: 8, bottom: 22 };
 
-export function PoolSignalTracks({ data, groupId }: Props) {
+export function PoolSignalTracks({ data, groupId, fitHeight }: Props) {
   const ct = useChartTheme();
   const t = useT();
 
@@ -150,8 +157,17 @@ export function PoolSignalTracks({ data, groupId }: Props) {
 
   if (tracks.length === 0) return null;
 
+  const trackHeight = fitHeight
+    ? Math.max(
+        80,
+        Math.floor((fitHeight - STACK_CHROME) / tracks.length - TRACK_CHROME),
+      )
+    : 110;
+
   return (
-    <div className="chart-well space-y-3 rounded-2xl p-4 sm:p-5">
+    <div
+      className={`space-y-3 ${fitHeight ? "" : "chart-well rounded-2xl p-4 sm:p-5"}`}
+    >
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-1">
         <h3 className="font-mono text-[10px] uppercase tracking-[0.3em] text-textDim">
           {t("Motion trace")}
@@ -193,7 +209,7 @@ export function PoolSignalTracks({ data, groupId }: Props) {
               },
               ct,
             )}
-            style={{ height: 110 }}
+            style={{ height: trackHeight }}
             opts={{ renderer: "canvas" }}
             onChartReady={handleReady}
             notMerge

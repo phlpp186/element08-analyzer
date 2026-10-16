@@ -27,6 +27,16 @@ function PersistGate({ children }: { children: React.ReactNode }) {
   const hydrated = useBackupStore((s) => s.hydrated);
   const hydrate = useBackupStore((s) => s.hydrate);
   useEffect(() => {
+    // Dev-only fixture (`?fixture=dives`): the DEV guard makes this branch
+    // dead code in a production build, so the fixture module never ships.
+    if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('fixture') === 'dives') {
+      void import('./dev/fixtureBackup').then(({ fixtureBackup }) => {
+        // setState, not setBackup: setBackup would wipe a persisted backup.
+        useBackupStore.setState({ backup: fixtureBackup(), filename: 'fixture.e08backup.json' });
+        void hydrate();
+      });
+      return;
+    }
     void hydrate();
   }, [hydrate]);
   if (!hydrated) return null;
