@@ -551,5 +551,8 @@
   "O₂ Table": "O₂-Tabelle",
   "Comfy": "Entspannt",
   "PB Attempt": "PB-Versuch",
-  "No sessions in this period.": "Keine Sessions in diesem Zeitraum."
+  "No sessions in this period.": "Keine Sessions in diesem Zeitraum.",
+  "Each dot is one dive, stacked at its max depth. Click a dot to open the dive. Warm-ups and safeties are excluded.": "Jeder Punkt ist ein Tauchgang, gestapelt bei seiner Maximaltiefe. Klick auf einen Punkt öffnet den Tauchgang. Aufwärm- und Sicherungstauchgänge sind ausgenommen.",
+  "Each dot is a dive; the line is each session’s pace. Higher on the chart = faster.": "Jeder Punkt ist ein Tauchgang, die Linie das Tempo jeder Session. Weiter oben = schneller.",
+  "Session pace": "Session-Tempo"
 }

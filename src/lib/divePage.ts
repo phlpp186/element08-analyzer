@@ -52,6 +52,27 @@ export function useElementHeight<T extends HTMLElement>() {
   return [ref, height] as const;
 }
 
+/** Pixel width of an element, kept current with a ResizeObserver (charts
+ *  that size their marks to the space they get). */
+export function useElementWidth<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [width, setWidth] = useState(0);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setWidth(el.clientWidth);
+    measure();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', measure);
+      return () => window.removeEventListener('resize', measure);
+    }
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, width] as const;
+}
+
 /** The dive pages that fit one screen; the footer goes compact on these. */
 export function isOneScreenRoute(pathname: string): boolean {
   return /^\/session\/[^/]+\/(dive|pool)\/[^/]+\/?$/.test(pathname);

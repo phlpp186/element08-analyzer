@@ -79,6 +79,43 @@ export function depthDistribution(
   return bins;
 }
 
+/** One dive for the dot plot: where it sits and how to open it. */
+export interface DepthDot {
+  depth: number;
+  discipline: string;
+  color: string;
+  /** Session date, ISO. */
+  date: string;
+  sessionId: number | string;
+  /** Index into the session's dives (the dive page's route index). */
+  diveIdx: number;
+}
+
+/** Every counted dive (warm-ups, safeties and excluded dives left out, as in
+ *  depthDistribution), for the Insights dot plot. */
+export function depthDots(sessions: ParsedSession[]): DepthDot[] {
+  const out: DepthDot[] = [];
+  for (const s of sessions) {
+    if (s.mode !== 'depth') continue;
+    const dives = (s as { dives?: DepthDiveLite[] }).dives;
+    if (!dives || Number.isNaN(Date.parse(s.date))) continue;
+    dives.forEach((dive, diveIdx) => {
+      if (!includeDive(dive.diveType)) return;
+      if (typeof dive.depth !== 'number' || dive.depth <= 0) return;
+      const discipline = (dive.discipline ?? '').toString().toUpperCase().trim() || 'OTHER';
+      out.push({
+        depth: dive.depth,
+        discipline,
+        color: disciplineColor(discipline),
+        date: s.date,
+        sessionId: s.id,
+        diveIdx,
+      });
+    });
+  }
+  return out;
+}
+
 // ─── 2. Avg speed per depth band ────────────────────────────────────────────
 
 export type BandStep = 5 | 10 | 20;
@@ -203,6 +240,10 @@ const DISCIPLINE_COLORS: Record<string, string> = {
   NLT:  '#e24b3c', // red (rare)
 };
 
+export function disciplineColor(discipline: string): string {
+  return DISCIPLINE_COLORS[discipline] ?? '#5e828a';
+}
+
 export function disciplineProgression(
   sessions: ParsedSession[],
 ): DisciplineSeries[] {
@@ -235,7 +276,7 @@ export function disciplineProgression(
     }
     out.push({
       discipline,
-      color: DISCIPLINE_COLORS[discipline] ?? '#5e828a',
+      color: disciplineColor(discipline),
       points,
     });
   }

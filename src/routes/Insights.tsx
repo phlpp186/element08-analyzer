@@ -12,7 +12,7 @@
  * shared package later without rewriting the components.
  */
 import { useMemo, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useT } from '../i18n';
 import { useBackupStore } from '../stores/useBackupStore';
 import { spo2LowestPerSession } from '../lib/analytics/spo2Zones';
@@ -27,6 +27,7 @@ import {
 } from '../lib/analytics/balance';
 import {
   depthDistribution,
+  depthDots,
   speedPerDepthBand,
   hangTimeDistribution,
   disciplineProgression,
@@ -111,7 +112,12 @@ const TABS: { id: Tab; label: string }[] = [
 export function Insights() {
   const t = useT();
   const backup = useBackupStore((s) => s.backup);
-  const [tab, setTab] = useState<Tab>('breathhold');
+  // The tab lives in the URL, so Back from a dive opened off a chart returns
+  // to the same tab.
+  const [params, setParams] = useSearchParams();
+  const rawTab = params.get('tab');
+  const tab: Tab = TABS.some((x) => x.id === rawTab) ? (rawTab as Tab) : 'breathhold';
+  const setTab = (next: Tab) => setParams({ tab: next }, { replace: true });
   const [bandStep, setBandStep] = useState<BandStep>(10);
   /** Tab-wide lung-volume filter for the Breath Hold tab. Null = all. */
   const [lungVol, setLungVol] = useState<LungVol | null>(null);
@@ -137,6 +143,7 @@ export function Insights() {
   const effortDist = useMemo(() => effortDistribution(sessions), [sessions]);
   const weekVol = useMemo(() => weeklyVolume(sessions), [sessions]);
   const depthBins = useMemo(() => depthDistribution(sessions), [sessions]);
+  const dots = useMemo(() => depthDots(sessions), [sessions]);
   const speedBands = useMemo(
     () => speedPerDepthBand(sessions, bandStep),
     [sessions, bandStep],
@@ -263,7 +270,9 @@ export function Insights() {
             <div className="lg:col-span-2">
               <DisciplineProgressionChart series={progression} />
             </div>
-            <DepthDistributionChart bins={depthBins} />
+            <div className="lg:col-span-2">
+              <DepthDistributionChart dots={dots} />
+            </div>
             <SpeedPerDepthBandChart
               bands={speedBands}
               step={bandStep}

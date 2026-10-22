@@ -551,5 +551,8 @@
   "O₂ Table": "ตาราง O₂",
   "Comfy": "สบาย",
   "PB Attempt": "พยายามทำสถิติ",
-  "No sessions in this period.": "ไม่มีเซสชันในช่วงนี้"
+  "No sessions in this period.": "ไม่มีเซสชันในช่วงนี้",
+  "Each dot is one dive, stacked at its max depth. Click a dot to open the dive. Warm-ups and safeties are excluded.": "แต่ละจุดคือหนึ่งไดฟ์ ซ้อนกันที่ความลึกสูงสุด คลิกจุดเพื่อเปิดไดฟ์ ไม่รวมไดฟ์วอร์มอัพและเซฟตี้",
+  "Each dot is a dive; the line is each session’s pace. Higher on the chart = faster.": "แต่ละจุดคือหนึ่งไดฟ์ เส้นคือเพซของแต่ละเซสชัน ยิ่งสูงยิ่งเร็ว",
+  "Session pace": "เพซของเซสชัน"
 }

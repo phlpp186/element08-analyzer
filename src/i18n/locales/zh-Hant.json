@@ -551,5 +551,8 @@
   "O₂ Table": "O₂ 表",
   "Comfy": "舒適",
   "PB Attempt": "PB 嘗試",
-  "No sessions in this period.": "此期間沒有訓練。"
+  "No sessions in this period.": "此期間沒有訓練。",
+  "Each dot is one dive, stacked at its max depth. Click a dot to open the dive. Warm-ups and safeties are excluded.": "每個點是一次潛水，按最大深度堆疊。點擊一個點即可打開該潛水。不含熱身和安全潛水。",
+  "Each dot is a dive; the line is each session’s pace. Higher on the chart = faster.": "每個點是一次潛水，線是每次訓練的配速。越靠上越快。",
+  "Session pace": "訓練配速"
 }

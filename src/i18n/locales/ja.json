@@ -551,5 +551,8 @@
   "O₂ Table": "O₂テーブル",
   "Comfy": "快適",
   "PB Attempt": "PB挑戦",
-  "No sessions in this period.": "この期間にセッションはありません。"
+  "No sessions in this period.": "この期間にセッションはありません。",
+  "Each dot is one dive, stacked at its max depth. Click a dot to open the dive. Warm-ups and safeties are excluded.": "1つの点が1本のダイブで、最大深度に積み上がります。点をクリックするとダイブが開きます。ウォームアップとセーフティは除外。",
+  "Each dot is a dive; the line is each session’s pace. Higher on the chart = faster.": "点は各ダイブ、線は各セッションのペースです。上ほど速い。",
+  "Session pace": "セッションペース"
 }

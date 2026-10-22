@@ -551,5 +551,8 @@
   "O₂ Table": "O₂ 테이블",
   "Comfy": "편안함",
   "PB Attempt": "PB 시도",
-  "No sessions in this period.": "이 기간에는 세션이 없습니다."
+  "No sessions in this period.": "이 기간에는 세션이 없습니다.",
+  "Each dot is one dive, stacked at its max depth. Click a dot to open the dive. Warm-ups and safeties are excluded.": "점 하나가 다이브 하나이며 최대 수심에 쌓입니다. 점을 클릭하면 다이브가 열립니다. 워밍업과 세이프티는 제외됩니다.",
+  "Each dot is a dive; the line is each session’s pace. Higher on the chart = faster.": "점은 다이브, 선은 세션별 페이스입니다. 위로 갈수록 빠릅니다.",
+  "Session pace": "세션 페이스"
 }
