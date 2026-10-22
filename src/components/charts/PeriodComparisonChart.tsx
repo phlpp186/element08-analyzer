@@ -6,7 +6,7 @@
  * had a stronger build, a sharper taper, or a different peak position
  * compared to previous seasons.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { AggregatedSeries, MetricDef } from '../../lib/analytics/periodCompare';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -40,7 +40,7 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
     tooltip: {
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontSize: 12 },
       trigger: 'axis',
       axisPointer: { type: 'line', lineStyle: { color: ct.accent, opacity: 0.4 } },
       formatter: (params: any) => {
@@ -67,7 +67,7 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
     legend: {
       bottom: 4,
       left: 'center',
-      textStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 11 },
+      textStyle: { color: ct.textDim, fontSize: 11 },
       itemWidth: 16,
       itemHeight: 8,
       icon: 'rect',
@@ -79,7 +79,6 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (val: string, idx: number) => {
           // Reduce density when the period is long.
@@ -93,12 +92,10 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
       name: metric.unit,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         // Duration metrics format the tick as m:ss.
         ...(metric.format ? { formatter: (v: number) => metric.format!(v) } : {}),
@@ -122,7 +119,7 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
   };
 
   return (
-    <div className="rounded-lg border border-border bg-panel p-3">
+    <div className="board p-3">
       <ReactECharts option={option} style={{ height: 360 }} notMerge />
     </div>
   );

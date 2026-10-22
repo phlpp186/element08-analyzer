@@ -35,7 +35,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts/core";
-import ReactECharts from "echarts-for-react";
+import ReactECharts from "./EChart";
 import type {
   ContractionOnset,
   DepthDiveData,
@@ -317,11 +317,7 @@ export function DepthDiveTracks({
                   title={t(
                     "Drag across the profile to measure a stretch of the dive",
                   )}
-                  className={`ml-auto rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-widest transition-colors ${
-                    measuring
-                      ? "border-accent text-accent"
-                      : "border-border text-textDim hover:border-accent hover:text-accent"
-                  }`}
+                  className={`ml-auto pill px-3 py-1 font-mono text-[10px] uppercase tracking-widest ${measuring ? 'pill-on' : ''}`}
                 >
                   ⇤⇥ {t("Measure A→B")}
                 </button>
@@ -745,7 +741,7 @@ function buildDepthOption(
         data: data.depthSeries,
         showSymbol: false,
         smooth: 0.2,
-        lineStyle: { color: ct.accent, width: 2 },
+        lineStyle: { color: ct.profile, width: 2 },
         areaStyle: {
           color: {
             type: "linear",
@@ -754,8 +750,8 @@ function buildDepthOption(
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: withAlpha(ct.accent, 0.4) },
-              { offset: 1, color: withAlpha(ct.accent, 0.02) },
+              { offset: 0, color: withAlpha(ct.profile, 0.4) },
+              { offset: 1, color: withAlpha(ct.profile, 0.02) },
             ],
           },
         },
@@ -773,8 +769,7 @@ function buildDepthOption(
                   position: "insideTop",
                   color: ct.textDim,
                   fontSize: 10,
-                  fontFamily: "Nunito, system-ui",
-                },
+                  },
                 data: hangBands.map((b) => [
                   {
                     xAxis: b.startT,
@@ -1019,8 +1014,7 @@ function buildSpeedByDepthOption(
       textStyle: {
         color: ct.textDim,
         fontSize: 10,
-        fontFamily: "Nunito, system-ui",
-      },
+        },
       itemWidth: 14,
       data: [descName, ascName],
     },
@@ -1070,8 +1064,9 @@ function buildSpeedByDepthOption(
       splitLine: { show: false },
     },
     series: [
-      ...branch(descName, desc, ct.amber, descSign),
-      ...branch(ascName, asc, ct.red, 1),
+      // Descent in the profile colour, ascent amber (the app's rule).
+      ...branch(descName, desc, ct.profile, descSign),
+      ...branch(ascName, asc, ct.amber, 1),
       // Zero centre-line divider (descent | ascent) — mirrored layout only.
       ...(overlay
         ? []
@@ -1103,7 +1098,6 @@ function baseTooltip(ct: ChartTheme) {
     borderColor: ct.axisLine,
     textStyle: {
       color: ct.text,
-      fontFamily: "Nunito, system-ui",
       fontSize: 12,
     },
     axisPointer: { type: "line" as const },

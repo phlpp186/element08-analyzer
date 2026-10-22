@@ -2,7 +2,7 @@
  * Distance Distribution — histogram of pool dive distances bucketed in
  * 25-metre bins. STA dives are excluded by the analytics function.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { DistanceBin } from '../../lib/analytics/poolDistance';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -34,7 +34,7 @@ export function DistanceDistributionChart({ bins }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const bin = bins[p.dataIndex];
@@ -48,7 +48,6 @@ export function DistanceDistributionChart({ bins }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (val: string, idx: number) => {
           // Show every other label when bins are dense.
@@ -60,7 +59,6 @@ export function DistanceDistributionChart({ bins }: Props) {
       nameGap: 28,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -71,7 +69,6 @@ export function DistanceDistributionChart({ bins }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       minInterval: 1,

@@ -13,9 +13,9 @@ const MODE_LABELS: Record<ParsedSession['mode'], string> = {
 };
 
 const MODE_COLORS: Record<ParsedSession['mode'], string> = {
-  dry: 'text-recover',     // green
-  depth: 'text-accent',    // blue
-  pool: 'text-highlight',  // pink
+  dry: 'text-modeDry',
+  depth: 'text-modeDepth',
+  pool: 'text-modePool',
 };
 
 export function modeLabel(mode: ParsedSession['mode']): string {

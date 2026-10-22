@@ -97,7 +97,7 @@ export function DrySessionPlayer() {
               setFullscreen(true);
             }}
             title={t('Fullscreen analysis')}
-            className="rounded-full border border-border px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-textDim transition-colors hover:border-accent hover:text-accent"
+            className="pill px-3 py-1 font-mono text-[11px] uppercase tracking-widest"
           >
             ⛶ {t('Fullscreen')}
           </button>

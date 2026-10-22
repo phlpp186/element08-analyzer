@@ -31,6 +31,7 @@ import {
 } from '../lib/format';
 import type { ParsedSession } from '../schema/backup';
 import { useT } from '../i18n';
+import { ModeBlock } from '../components/ModeBlock';
 
 const PAGE = 60;
 
@@ -203,12 +204,7 @@ export function SessionList() {
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
-              className={[
-                'rounded-full border px-4 py-1.5 text-sm transition-colors',
-                active
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border text-textDim hover:border-accent hover:text-accent',
-              ].join(' ')}
+              className={`pill px-4 py-1.5 text-sm ${active ? 'pill-on' : ''}`}
             >
               {t(f.label)} <span className="ml-1 text-xs opacity-60">{count}</span>
             </button>
@@ -217,12 +213,7 @@ export function SessionList() {
         <span className="mx-2 text-textDim opacity-40">·</span>
         <button
           onClick={() => setOnlyWithNotes((v) => !v)}
-          className={[
-            'rounded-full border px-4 py-1.5 text-sm transition-colors',
-            onlyWithNotes
-              ? 'border-accent bg-accent/10 text-accent'
-              : 'border-border text-textDim hover:border-accent hover:text-accent',
-          ].join(' ')}
+          className={`pill px-4 py-1.5 text-sm ${onlyWithNotes ? 'pill-on' : ''}`}
         >
           {t('Has notes')}{' '}
           <span className="ml-1 text-xs opacity-60">{counts.withNotes}</span>
@@ -312,7 +303,7 @@ function LoadMore({ remaining, onMore }: { remaining: number; onMore: () => void
     <div ref={ref} className="py-6 text-center">
       <button
         onClick={onMore}
-        className="rounded-full border border-border px-5 py-2 font-mono text-xs uppercase tracking-widest text-textDim transition-colors hover:border-accent hover:text-accent"
+        className="pill px-5 py-2 font-mono text-xs uppercase tracking-widest"
       >
         {t('Show more')} <span className="opacity-60">({remaining})</span>
       </button>
@@ -331,68 +322,71 @@ function SessionRow({ session }: { session: ParsedSession }) {
   const location = (session as { location?: string | null }).location?.trim();
 
   return (
-    <li className="glass-card overflow-hidden rounded-lg">
+    <li className="board overflow-hidden">
       <Link
         to={`/session/${session.id}`}
-        className="block px-4 py-3 transition-colors hover:bg-abyss"
+        className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-abyss/60"
       >
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span
-            className={[
-              'font-mono text-[10px] uppercase tracking-widest',
-              modeColorClass(session.mode),
-            ].join(' ')}
-          >
-            {modeLabel(session.mode)}
-          </span>
-          <span className="font-mono text-xs text-textDim">
-            {formatDate(session.date)}
-          </span>
-          <span className="truncate font-heading text-base tracking-wide text-text">
-            {session.name || t('Untitled session')}
-          </span>
-          {location && (
-            <span className="font-mono text-xs text-textDim">📍 {location}</span>
-          )}
-          {session.rating != null && (
-            <span className="ml-auto font-mono text-xs text-textDim">
-              ★ {session.rating}/10
+        <ModeBlock mode={session.mode} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span
+              className={[
+                'font-mono text-[10px] uppercase tracking-widest',
+                modeColorClass(session.mode),
+              ].join(' ')}
+            >
+              {modeLabel(session.mode)}
             </span>
-          )}
-        </div>
-        <div className="mt-0.5 font-mono text-xs text-textDim">
-          {summaryLine(session)}
-          {session.sessionTag && (
-            <span className="ml-2 rounded border border-border px-1.5 py-px text-[10px] uppercase tracking-wider opacity-80">
-              {session.sessionTag.replace(/_/g, ' ')}
+            <span className="font-mono text-xs text-textDim">
+              {formatDate(session.date)}
             </span>
-          )}
-        </div>
-
-        {hasNotes && (
-          <div className="mt-3 border-l-2 border-accent/40 pl-3">
-            {session.remarks?.trim() && (
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">
-                {session.remarks}
-              </p>
+            <span className="truncate font-heading text-base tracking-wide text-text">
+              {session.name || t('Untitled session')}
+            </span>
+            {location && (
+              <span className="font-mono text-xs text-textDim">📍 {location}</span>
             )}
-            {notes.length > 0 && (
-              <ul className="mt-2 space-y-1.5">
-                {notes.map((n) => (
-                  <li
-                    key={n.index}
-                    className="flex gap-2 text-xs leading-relaxed text-textDim"
-                  >
-                    <span className="font-mono shrink-0 text-textDim opacity-60">
-                      {t('Dive')} {n.index + 1}
-                    </span>
-                    <span className="text-text/85">{n.text}</span>
-                  </li>
-                ))}
-              </ul>
+            {session.rating != null && (
+              <span className="ml-auto font-mono text-xs text-textDim">
+                ★ {session.rating}/10
+              </span>
             )}
           </div>
-        )}
+          <div className="mt-0.5 font-mono text-xs text-textDim">
+            {summaryLine(session)}
+            {session.sessionTag && (
+              <span className="ml-2 rounded border border-border px-1.5 py-px text-[10px] uppercase tracking-wider opacity-80">
+                {session.sessionTag.replace(/_/g, ' ')}
+              </span>
+            )}
+          </div>
+
+          {hasNotes && (
+            <div className="mt-3 border-l-2 border-accent/40 pl-3">
+              {session.remarks?.trim() && (
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">
+                  {session.remarks}
+                </p>
+              )}
+              {notes.length > 0 && (
+                <ul className="mt-2 space-y-1.5">
+                  {notes.map((n) => (
+                    <li
+                      key={n.index}
+                      className="flex gap-2 text-xs leading-relaxed text-textDim"
+                    >
+                      <span className="font-mono shrink-0 text-textDim opacity-60">
+                        {t('Dive')} {n.index + 1}
+                      </span>
+                      <span className="text-text/85">{n.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
       </Link>
     </li>
   );

@@ -3,7 +3,7 @@
  * discipline. The line plateaus between PBs and steps up on each new PB.
  * Trailing segment extends to today so the current PB reads as a plateau.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { DisciplineSeries } from '../../lib/analytics/depthInsights';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -38,7 +38,7 @@ export function DisciplineProgressionChart({ series }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: any) => {
         const [date, depth] = p.value as [string, number];
         return `<span style="color:${p.color}">●</span> ${p.seriesName}<br/>${date} · ${depth.toFixed(1)}m`;
@@ -48,7 +48,6 @@ export function DisciplineProgressionChart({ series }: Props) {
       top: 0,
       textStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       itemWidth: 14,
@@ -60,7 +59,6 @@ export function DisciplineProgressionChart({ series }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       splitLine: { show: false },
@@ -74,7 +72,6 @@ export function DisciplineProgressionChart({ series }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value}m',
       },

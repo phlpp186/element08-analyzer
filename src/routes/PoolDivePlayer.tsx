@@ -32,6 +32,7 @@ import {
   StatsCard,
   type ChartTab,
   type StatTile,
+  type Tone,
 } from '../components/DivePageLayout';
 import { fmtSec, formatClock } from '../lib/divePage';
 import type { ParsedSession } from '../schema/backup';
@@ -204,7 +205,7 @@ function PoolDiveView({
               setFullscreen(true);
             }}
             title={t('Fullscreen analysis')}
-            className="rounded-full border border-border px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-textDim transition-colors hover:border-accent hover:text-accent"
+            className="pill px-3 py-1 font-mono text-[11px] uppercase tracking-widest"
           >
             ⛶ {t('Fullscreen')}
           </button>
@@ -277,7 +278,8 @@ function PoolDiveView({
     <DiveHeader
       backTo={`/session/${session.id}`}
       backLabel={session.name || t('session')}
-      title={`${t('Dive')} ${idx + 1} · ${dive.discipline} · ${headline(dive)}`}
+      title={`${t('Dive')} ${idx + 1} · ${dive.discipline}`}
+      hero={headline(dive)}
       meta={[
         fmtSec(dive.diveTime),
         `${formatDate(session.date)}${startTime ? ` ${startTime}` : ''}`,
@@ -343,8 +345,26 @@ function statTiles(
 ): StatTile[] {
   const { dive, data, trace } = ctx;
   const tiles: StatTile[] = [];
+  // Each tile's colour by what it measures (see Tone).
+  const tones: [string, Tone][] = [
+    ['Distance', 'hero'],
+    ['Dive time', 'highlight'],
+    ['Max depth', 'profile'],
+    ['Avg depth', 'profile'],
+    ['Avg speed', 'amber'],
+    ['Peak speed', 'amber'],
+    ['Fastest lap', 'recover'],
+    ['Slowest lap', 'amber'],
+    ['Start', 'red'],
+    ['Minimum', 'red'],
+    ['Drop', 'red'],
+    ['At surface', 'red'],
+    ['HR high', 'red'],
+    ['HR low', 'red'],
+  ];
+  const toneOf = (label: string): Tone => tones.find(([k]) => t(k) === label)?.[1] ?? 'accent';
   const add = (label: string, value: string | null, sub?: string) => {
-    if (value != null) tiles.push({ label, value, sub });
+    if (value != null) tiles.push({ label, value, sub, tone: toneOf(label) });
   };
   const distance = dive.distance != null && dive.distance > 0 ? dive.distance : null;
   const laps = lapSplits(dive);

@@ -2,7 +2,7 @@
  * Pool CO₂/O₂ Training Mix — count of pool sessions per training-type
  * tag. Horizontal bar chart so labels read left-to-right at any width.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { PoolTypeBucket } from '../../lib/analytics/poolSessionTypes';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -40,7 +40,7 @@ export function PoolSessionTypeMixChart({ buckets }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: any) => {
         const b = ordered[p.dataIndex];
         const pct = total > 0 ? Math.round((b.count / total) * 100) : 0;
@@ -54,7 +54,6 @@ export function PoolSessionTypeMixChart({ buckets }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       minInterval: 1,
@@ -66,7 +65,6 @@ export function PoolSessionTypeMixChart({ buckets }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 11,
       },
     },
@@ -82,7 +80,6 @@ export function PoolSessionTypeMixChart({ buckets }: Props) {
           show: true,
           position: 'right',
           color: ct.textDim,
-          fontFamily: 'Nunito, system-ui',
           fontSize: 10,
         },
       },

@@ -19,7 +19,7 @@ interface Props {
 /** Mode identity colours from the chart theme — matches ExerciseScatter:
  *  green = dry, accent = depth, highlight = pool. */
 function modeColors(ct: ChartTheme) {
-  return { dry: ct.green, depth: ct.accent, pool: ct.highlight } as const;
+  return ct.mode;
 }
 
 const MODE_LABELS = {
@@ -39,7 +39,7 @@ export function PeriodsSummary({ summaries }: Props) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-panel">
+    <div className="overflow-x-auto board">
       <table className="w-full min-w-[820px]">
         <thead className="bg-abyss">
           <tr className="font-mono text-[10px] uppercase tracking-widest text-textDim">

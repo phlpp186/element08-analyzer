@@ -23,12 +23,7 @@ export function formatClock(iso: string): string | null {
 
 /** Shared pill-button styling for the small control rows. */
 export function pillCls(active: boolean): string {
-  return [
-    'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
-    active
-      ? 'border-accent bg-accent/10 text-accent'
-      : 'border-border text-textDim hover:border-accent hover:text-accent',
-  ].join(' ');
+  return `pill px-3 py-0.5 font-mono text-[11px] ${active ? 'pill-on' : ''}`;
 }
 
 export function ctrlLabelCls(): string {

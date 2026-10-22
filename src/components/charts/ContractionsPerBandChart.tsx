@@ -4,7 +4,7 @@
  * hold contractions tend to start (and how that distribution looks
  * across the diver's history).
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { ContractionBand } from '../../lib/analytics/holdTrends';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -42,7 +42,7 @@ export function ContractionsPerBandChart({ bands }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const b = bands[p.dataIndex];
@@ -56,7 +56,6 @@ export function ContractionsPerBandChart({ bands }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (val: string, idx: number) => (bands.length > 10 && idx % 2 !== 0 ? '' : val),
       },
@@ -65,7 +64,6 @@ export function ContractionsPerBandChart({ bands }: Props) {
       nameGap: 28,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -76,7 +74,6 @@ export function ContractionsPerBandChart({ bands }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       minInterval: 1,

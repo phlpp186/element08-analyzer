@@ -2,7 +2,7 @@
  * Pool Pace per Dive — pace progression (s/100m) per training dive over
  * time, one line per discipline. Lower = faster.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { PaceSeries } from '../../lib/analytics/poolPace';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -50,7 +50,7 @@ export function PoolPaceChart({ series }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: any) => {
         const [date, pace, meta] = p.value as [string, number, { distance: number; diveTime: number }];
         const dateStr = new Date(date).toLocaleDateString();
@@ -61,7 +61,6 @@ export function PoolPaceChart({ series }: Props) {
       top: 0,
       textStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       itemWidth: 14,
@@ -73,7 +72,6 @@ export function PoolPaceChart({ series }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       splitLine: { show: false },
@@ -88,7 +86,6 @@ export function PoolPaceChart({ series }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => fmtPace(v),
       },

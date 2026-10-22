@@ -3,7 +3,7 @@
  * series per sessionTag. Reads at a glance whether the diver is making
  * progress on max attempts vs. just doing CO₂ sets.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { HoldDurationSeries } from '../../lib/analytics/holdTrends';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -44,7 +44,7 @@ export function HoldDurationTrendChart({ series }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: any) => {
         const [date, dur] = p.value as [string, number];
         const dateStr = new Date(date).toLocaleDateString();
@@ -55,7 +55,6 @@ export function HoldDurationTrendChart({ series }: Props) {
       top: 0,
       textStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       itemWidth: 14,
@@ -67,7 +66,6 @@ export function HoldDurationTrendChart({ series }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       splitLine: { show: false },
@@ -81,7 +79,6 @@ export function HoldDurationTrendChart({ series }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => fmtSec(v),
       },

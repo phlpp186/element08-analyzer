@@ -27,7 +27,7 @@ export function PeriodHeatmap({ matrix }: Props) {
   const gridTemplate = `80px repeat(${cellColumns}, minmax(80px, 1fr))`;
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-panel">
+    <div className="overflow-x-auto board">
       <div className="min-w-[640px]">
         {/* Header */}
         <div

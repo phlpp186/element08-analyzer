@@ -87,7 +87,7 @@ export function Landing() {
       <button
         onClick={loadDemo}
         disabled={demoBusy}
-        className="mt-6 rounded-md border border-border bg-panel px-6 py-3 font-mono text-xs uppercase tracking-widest text-text transition-colors hover:border-accent hover:text-accent disabled:opacity-60"
+        className="pill mt-6 px-6 py-3 font-mono text-xs uppercase tracking-widest disabled:opacity-60"
       >
         {demoBusy ? t('Loading demo…') : t('Try with demo data')}
       </button>

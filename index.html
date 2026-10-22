@@ -7,12 +7,12 @@
     <script>
       // FOUC prevention — resolve the theme before first paint. An explicit
       // stored choice ('light' = Caribbean / 'mid' = Titanium / 'dark' = Chalk
-      // Dark) wins; anything else (no preference, or a retired value like
+      // Dark / 'arcade' = Block Arcade) wins; anything else (no preference, or a retired value like
       // 'neon'/'sky') falls back to the OS prefers-color-scheme (light/dark).
       (function () {
         var t = null;
         try { t = localStorage.getItem('element08.theme'); } catch (e) { /* localStorage blocked */ }
-        if (t === 'mid') { document.documentElement.classList.add('mid'); return; }
+        if (t === 'mid' || t === 'arcade') { document.documentElement.classList.add(t); return; }
         var light = (t === 'light' || t === 'dark')
           ? t === 'light'
           : !(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);

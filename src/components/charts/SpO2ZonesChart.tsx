@@ -9,7 +9,7 @@
  * one-liner above the chart carries the absolute volume that the bars
  * used to convey.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import {
   fmtZoneDuration,
   SPO2_ZONES,
@@ -76,7 +76,7 @@ export function SpO2ZonesChart({ data }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: any) => {
         const point = p.data.p as typeof points[number];
         const dateStr = new Date(point.date).toLocaleDateString();
@@ -94,7 +94,6 @@ export function SpO2ZonesChart({ data }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       splitLine: { show: false },
@@ -109,7 +108,6 @@ export function SpO2ZonesChart({ data }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine, opacity: 0.4 } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value}%',
       },

@@ -20,12 +20,20 @@ export default {
         recover:   'rgb(var(--c-recover) / <alpha-value>)',
         amber:     'rgb(var(--c-amber) / <alpha-value>)',
         red:       'rgb(var(--c-red) / <alpha-value>)',
+        surface:   'rgb(var(--c-surface) / <alpha-value>)',
+        profile:   'rgb(var(--c-profile) / <alpha-value>)',
+        hero:      'rgb(var(--c-hero) / <alpha-value>)',
+        modeDepth: 'rgb(var(--c-modeDepth) / <alpha-value>)',
+        modePool:  'rgb(var(--c-modePool) / <alpha-value>)',
+        modeDry:   'rgb(var(--c-modeDry) / <alpha-value>)',
       },
       fontFamily: {
         // Open Water: Nunito everywhere. `heading` renders at weight 800
         // (see index.css); `mono` is Nunito with tabular numerals.
         body:    ['"Nunito"', 'system-ui', 'sans-serif'],
-        heading: ['"Nunito"', 'system-ui', 'sans-serif'],
+        // Per theme (index.css): Nunito, or Fredoka in Block Arcade.
+        heading: ['var(--font-heading)'],
+        num:     ['var(--font-num)'],
         mono:    ['"Nunito"', 'system-ui', 'sans-serif'],
       },
     },

@@ -5,7 +5,7 @@
  * ±2 m bracket; the label shows the standard deviation within that bracket
  * (lower = more repeatable charge). Mirrors the mobile app's MF consistency.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { MouthfillStats } from '../../lib/analytics/technique';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -40,7 +40,7 @@ export function MouthfillCard({ stats }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.tooltipBorder,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const b = stats.brackets[p.dataIndex];
@@ -57,19 +57,19 @@ export function MouthfillCard({ stats }: Props) {
       name: t('charge depth'),
       nameLocation: 'middle',
       nameGap: 26,
-      nameTextStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 10 },
+      nameTextStyle: { color: ct.textDim, fontSize: 10 },
       axisLine: { lineStyle: { color: ct.axisLine } },
       axisTick: { show: false },
-      axisLabel: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 10 },
+      axisLabel: { color: ct.textDim, fontSize: 10 },
     },
     yAxis: {
       type: 'value',
       name: t('MF factor'),
-      nameTextStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 10 },
+      nameTextStyle: { color: ct.textDim, fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
       splitLine: { lineStyle: { color: ct.splitLine } },
-      axisLabel: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 10 },
+      axisLabel: { color: ct.textDim, fontSize: 10 },
     },
     series: [
       {
@@ -81,7 +81,6 @@ export function MouthfillCard({ stats }: Props) {
           show: true,
           position: 'top',
           color: ct.textDim,
-          fontFamily: 'Nunito, system-ui',
           fontSize: 9,
           formatter: (p: any) => `σ${stats.brackets[p.dataIndex].stdev.toFixed(2)}`,
         },

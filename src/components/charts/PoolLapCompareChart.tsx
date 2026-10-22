@@ -13,7 +13,7 @@
  * for the shorter one would be a lie about the swim.
  */
 import { useMemo } from 'react';
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import type { LapSplit } from '../../lib/analytics/lapSplits';
@@ -125,14 +125,14 @@ function buildBarOption(series: BarSeries[], categories: string[], unit: string,
     grid: { left: 48, right: 16, top: 34, bottom: 24 },
     legend: {
       top: 0,
-      textStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 11 },
+      textStyle: { color: ct.textDim, fontSize: 11 },
       itemWidth: 12,
       itemHeight: 8,
     },
     tooltip: {
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontSize: 12 },
       trigger: 'axis' as const,
       axisPointer: { type: 'shadow' as const },
       valueFormatter: (v: number | null) =>

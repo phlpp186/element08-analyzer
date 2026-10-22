@@ -3,7 +3,7 @@
  * by how many tagged sessions carry it. Untagged sessions don't count
  * (handled by the analytics function).
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { TagCount } from '../../lib/analytics/balance';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -42,7 +42,7 @@ export function SessionTagDistributionChart({ data }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         return `${p.name}<br/>${p.value} ${p.value === 1 ? t('session') : t('sessions')}`;
@@ -56,7 +56,6 @@ export function SessionTagDistributionChart({ data }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -67,7 +66,6 @@ export function SessionTagDistributionChart({ data }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -81,7 +79,6 @@ export function SessionTagDistributionChart({ data }: Props) {
           show: true,
           position: 'right',
           color: ct.textDim,
-          fontFamily: 'Nunito, system-ui',
           fontSize: 10,
         },
       },

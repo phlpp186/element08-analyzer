@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -29,6 +29,28 @@
   --c-red: 232 67 147; /* chalk-dark uses pink as its red */
   /* Text on an accent fill — dark ink on the cyan accent. */
   --c-ink: 16 34 43;
+  /* Raised controls (pills, tabs, buttons) sit on this, above the panel. */
+  --c-surface: 58 54 50;
+  /* Board bevel: a lighter top rim and a thick darker bottom edge, so cards
+   * read as raised boards (the app's cardBevel). */
+  --c-bevelTop: 70 66 60;
+  --c-bevelBot: 14 13 11;
+  /* The dive profile line, and so the descent colour (the app's option B:
+   * descent = profile, ascent = amber). */
+  --c-profile: 27 175 224;
+  /* The hero number (a dive's depth in its header) and its glow. */
+  --c-hero: 27 175 224;
+  --hero-glow: rgba(27, 175, 224, 0.35);
+  /* Session modes (logbook rows, mode labels). */
+  --c-modeDepth: var(--c-accent);
+  --c-modePool: var(--c-highlight);
+  --c-modeDry: var(--c-recover);
+  /* Stat tiles: 1 = solid coloured blocks, 0 = tinted (see .tile). */
+  --tile-solid: 0;
+  --radius-card: 16px;
+  --font-heading: "Nunito", system-ui, sans-serif;
+  --font-num: "Nunito", system-ui, sans-serif;
+  --heading-weight: 800;
   color-scheme: dark;
 }
 
@@ -50,6 +72,12 @@
   --c-red: 226 75 60;
   /* Text on an accent fill — white on coral. */
   --c-ink: 255 255 255;
+  --c-surface: 232 246 249;
+  --c-bevelTop: 255 255 255;
+  --c-bevelBot: 158 204 214;
+  --c-profile: 242 118 79;
+  --c-hero: 242 118 79;
+  --hero-glow: transparent;
   color-scheme: light;
 }
 
@@ -72,7 +100,51 @@
   --c-amber: 181 115 10;
   --c-red: 211 0 42;
   --c-ink: 255 255 255;
+  --c-surface: 226 231 234;
+  --c-bevelTop: 255 255 255;
+  --c-bevelBot: 136 148 159;
+  --c-profile: 224 0 42;
+  --c-hero: 224 0 42;
+  --hero-glow: transparent;
   color-scheme: light;
+}
+
+:root.arcade {
+  /* Block Arcade — the app's game theme: periwinkle page, deep navy boards,
+   * bevelled candy blocks and a glowing red score. Cyan is the profile (and
+   * so the descent), yellow the ascent, green the accent. Fredoka for
+   * headings and numbers, Nunito for body text. */
+  --c-deep: 61 85 153;
+  --c-abyss: 29 38 69;
+  --c-sunken: 26 34 66;
+  --c-sunkenEdge: 20 27 58;
+  --shadow-well: inset 0 2px 7px rgba(8, 12, 30, 0.55);
+  --c-panel: 36 49 106;
+  --c-border: 42 56 112;
+  --c-text: 238 242 255;
+  --c-textDim: 180 193 234;
+  --c-accent: 70 208 70;
+  --c-highlight: 54 185 236;
+  --c-recover: 70 208 70;
+  --c-amber: 255 194 26;
+  --c-red: 255 68 54;
+  --c-ink: 14 61 19;
+  --c-surface: 52 74 146;
+  --c-bevelTop: 58 76 146;
+  --c-bevelBot: 20 27 58;
+  --c-profile: 127 214 247;
+  --c-hero: 255 68 54;
+  --hero-glow: rgba(255, 92, 40, 0.85);
+  --tile-solid: 1;
+  /* The app's Block Arcade mode colours: depth purple, pool green, dry cyan. */
+  --c-modeDepth: 156 136 255;
+  --c-modePool: 70 208 70;
+  --c-modeDry: 54 185 236;
+  --radius-card: 12px;
+  --font-heading: "Fredoka", "Nunito", system-ui, sans-serif;
+  --font-num: "Fredoka", "Nunito", system-ui, sans-serif;
+  --heading-weight: 600;
+  color-scheme: dark;
 }
 
 /* Brand-level baseline. Tailwind tokens defined in tailwind.config.js. */
@@ -109,6 +181,13 @@ body::before {
     transparent 60%
   );
 }
+:root.arcade body::before {
+  /* The game board grid behind everything. */
+  background-image:
+    linear-gradient(rgba(109, 132, 200, 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(109, 132, 200, 0.35) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
 :root.mid body::before {
   background: radial-gradient(
     90% 55% at 50% -8%,
@@ -126,6 +205,7 @@ body::before {
 /* Accent CTA shadow — a soft elevation shadow on primary action buttons
  * (the neon halo is retired). Pair with bg-accent. */
 .glow-accent {
+  border-bottom: 4px solid color-mix(in srgb, rgb(var(--c-accent)), #000 35%);
   box-shadow: 0 4px 14px -4px rgb(var(--c-accent) / 0.45);
   transition:
     box-shadow 0.18s ease,
@@ -171,14 +251,109 @@ body::before {
   box-shadow: var(--shadow-well);
 }
 
-.glass-card {
+.glass-card,
+.board {
   background: rgb(var(--c-panel));
   border: 1px solid rgb(var(--c-border) / 0.85);
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
+  border-top-color: rgb(var(--c-bevelTop));
+  border-bottom: 4px solid rgb(var(--c-bevelBot));
+  border-radius: var(--radius-card);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
 }
 :root.light .glass-card,
-:root.mid .glass-card {
-  box-shadow: 0 6px 22px rgba(18, 26, 31, 0.1);
+:root.light .board,
+:root.mid .glass-card,
+:root.mid .board {
+  box-shadow: 0 6px 18px rgba(18, 26, 31, 0.08);
+}
+
+/* Raised pill: tabs, filters, small buttons. Sits on --c-surface with a
+ * darker bottom edge; .pill-on is the selected / primary state. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  background: rgb(var(--c-surface));
+  color: rgb(var(--c-text) / 0.85);
+  border: 1px solid rgb(var(--c-border) / 0.6);
+  border-bottom: 3px solid rgb(var(--c-bevelBot) / 0.9);
+  font-weight: 800;
+  transition:
+    filter 0.15s ease,
+    transform 0.05s ease;
+}
+.pill:hover {
+  filter: brightness(1.12);
+  color: rgb(var(--c-text));
+}
+.pill:active {
+  transform: translateY(1px);
+}
+.pill:disabled {
+  opacity: 0.4;
+  filter: none;
+}
+.pill-on,
+.pill-on:hover {
+  background: rgb(var(--c-accent));
+  color: rgb(var(--c-ink));
+  border-color: rgb(var(--c-accent));
+  border-bottom-color: color-mix(in srgb, rgb(var(--c-accent)), #000 35%);
+}
+
+/* Primary button: the accent, raised. */
+.btn-raised {
+  border-bottom: 4px solid color-mix(in srgb, rgb(var(--c-accent)), #000 35%);
+}
+
+/* Stat tile in a tone (set --tone to a colour). Block themes (--tile-solid
+ * 1) draw a solid bevelled block with ink of the same hue; the others a
+ * tint with the value in the tone. */
+.tile {
+  --tone: rgb(var(--c-accent));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--tone) 14%, rgb(var(--c-panel)));
+  border-top: 2px solid color-mix(in srgb, var(--tone) 55%, transparent);
+  border-bottom: 3px solid color-mix(in srgb, var(--tone) 30%, rgb(var(--c-bevelBot)));
+}
+.tile .tile-value {
+  color: var(--tone);
+}
+.tile .tile-label {
+  color: rgb(var(--c-textDim));
+}
+:root.light .tile .tile-value,
+:root.mid .tile .tile-value {
+  color: color-mix(in srgb, var(--tone), #000 30%);
+}
+:root.arcade .tile {
+  background: var(--tone);
+  border-top-color: color-mix(in srgb, var(--tone), #fff 40%);
+  border-bottom: 4px solid color-mix(in srgb, var(--tone), #000 35%);
+}
+:root.arcade .tile .tile-value {
+  color: color-mix(in srgb, var(--tone), #000 78%);
+}
+:root.arcade .tile .tile-label {
+  color: color-mix(in srgb, var(--tone), #000 64%);
+}
+
+/* The fastest band's bar glows in its colour; on the pale themes a glow
+ * reads as a smudge, so they go without. */
+.bar-best {
+  box-shadow: 0 0 10px var(--tone);
+}
+:root.light .bar-best,
+:root.mid .bar-best {
+  box-shadow: none;
+}
+
+/* The hero number: a dive's depth in its header. */
+.hero-num {
+  font-family: var(--font-num);
+  color: rgb(var(--c-hero));
+  text-shadow: 0 0 14px var(--hero-glow);
 }
 
 /* Headings — Nunito 800 replaces the old condensed display face, so the
@@ -186,8 +361,8 @@ body::before {
 h1,
 h2,
 h3 {
-  font-family: theme("fontFamily.heading");
-  font-weight: 800;
+  font-family: var(--font-heading);
+  font-weight: var(--heading-weight);
   letter-spacing: 0.01em;
 }
 
@@ -195,6 +370,10 @@ h3 {
  * columns of numbers aligned. */
 @layer utilities {
   .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+  .font-num {
+    font-family: var(--font-num);
     font-variant-numeric: tabular-nums;
   }
 }

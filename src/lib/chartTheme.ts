@@ -40,6 +40,15 @@ export interface ChartTheme {
   red: string;
   /** 5-stop low→high intensity ramp for calendar heatmaps. */
   heatRamp: string[];
+  /** The dive profile line and so the descent (ascent is `amber`). */
+  profile: string;
+  /** Chart label font (Fredoka in Block Arcade). */
+  fontFamily: string;
+  /** Glow under lines and the strongest bars (dark themes only: on a pale
+   *  page a glow reads as a smudge). */
+  glow: boolean;
+  /** Session mode colours (mirror --c-modeDepth/Pool/Dry in index.css). */
+  mode: { depth: string; pool: string; dry: string };
 }
 
 // Hex values mirror the CSS palette tokens in index.css so charts and chrome
@@ -59,6 +68,10 @@ const dark: ChartTheme = {
   amber: '#f0a500',
   red: '#ff5078', // NOT the pink UI red — must read apart from `highlight`
   heatRamp: ['#38342f', '#14495c', '#166f8f', '#188fb8', '#1bafe0'],
+  profile: '#1bafe0',
+  fontFamily: 'Nunito, system-ui, sans-serif',
+  glow: true,
+  mode: { depth: '#1bafe0', pool: '#e84393', dry: '#3dc96b' },
 };
 
 const light: ChartTheme = {
@@ -76,6 +89,10 @@ const light: ChartTheme = {
   amber: '#e8942a',
   red: '#e24b3c',
   heatRamp: ['#e3f0f4', '#f8cdbc', '#f7ab8d', '#f58f66', '#f2764f'],
+  profile: '#f2764f',
+  fontFamily: 'Nunito, system-ui, sans-serif',
+  glow: false,
+  mode: { depth: '#f2764f', pool: '#e8a93a', dry: '#1fb894' },
 };
 
 // Titanium — a light theme (carbon-ink text, near-white cards), so it mirrors
@@ -96,12 +113,40 @@ const mid: ChartTheme = {
   amber: '#b5730a',
   red: '#d3002a',
   heatRamp: ['#dbe0e3', '#f2c2c8', '#e88a95', '#e24a60', '#e0002a'],
+  profile: '#e0002a',
+  fontFamily: 'Nunito, system-ui, sans-serif',
+  glow: false,
+  mode: { depth: '#e0002a', pool: '#2e6e8f', dry: '#0e7a54' },
+};
+
+// Block Arcade — mirrors :root.arcade in index.css (the app's theme of the
+// same name): navy boards, cyan profile, yellow ascent, green accent.
+const arcade: ChartTheme = {
+  surface: '#24316a', // panel
+  page: '#3d5599', // deep
+  tooltipBg: '#1d2645', // abyss
+  tooltipBorder: '#3a4c92', // bevel top
+  axisLine: '#3a4c92',
+  splitLine: '#2f3f80',
+  text: '#eef2ff',
+  textDim: '#b4c1ea',
+  accent: '#46d046', // green block
+  highlight: '#36b9ec', // cyan
+  green: '#46d046',
+  amber: '#ffc21a',
+  red: '#ff4436',
+  heatRamp: ['#2f3f80', '#1f6a8c', '#2690b8', '#30aedc', '#7fd6f7'],
+  profile: '#7fd6f7',
+  fontFamily: 'Fredoka, Nunito, system-ui, sans-serif',
+  glow: true,
+  mode: { depth: '#9c88ff', pool: '#46d046', dry: '#36b9ec' },
 };
 
 export function useChartTheme(): ChartTheme {
   const theme = useThemeStore((s) => s.theme);
   if (theme === 'light') return light;
   if (theme === 'mid') return mid;
+  if (theme === 'arcade') return arcade;
   return dark;
 }
 

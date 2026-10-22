@@ -5,7 +5,7 @@
  * proxies for improving cardiovascular conditioning. Dot size encodes
  * hold length so very short comfortable holds don't dominate visually.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { RecoveryPoint } from '../../lib/analytics/holdTrends';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -64,7 +64,7 @@ export function RecoveryTimeChart({ points }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: any) => {
         const point = p.data.p as RecoveryPoint;
         const dateStr = new Date(point.date).toLocaleDateString();
@@ -77,7 +77,6 @@ export function RecoveryTimeChart({ points }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       splitLine: { show: false },
@@ -91,7 +90,6 @@ export function RecoveryTimeChart({ points }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => fmtSec(v),
       },

@@ -11,7 +11,7 @@
  */
 import { useCallback, useMemo } from "react";
 import * as echarts from "echarts/core";
-import ReactECharts from "echarts-for-react";
+import ReactECharts from "./EChart";
 import type {
   DryBlock,
   DrySessionData,
@@ -231,7 +231,7 @@ function BlockStrip({
   // `GRID` at the top of this file — keep them in sync.
   return (
     <div
-      className="rounded-md border border-border bg-panel py-3"
+      className="board py-3"
       style={{ paddingLeft: 56, paddingRight: 16 }}
     >
       <div className="flex h-8 overflow-hidden rounded">
@@ -289,7 +289,6 @@ function buildLineOption(p: LineOptionParams, ct: ChartTheme) {
       borderColor: ct.axisLine,
       textStyle: {
         color: ct.text,
-        fontFamily: "Nunito, system-ui",
         fontSize: 12,
       },
       trigger: "axis",

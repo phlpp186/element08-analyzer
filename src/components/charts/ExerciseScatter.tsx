@@ -9,7 +9,7 @@
  * holds and pool STA dives — both on a seconds y-axis. Depth and Pool
  * modes are a single series each (metres).
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type {
   ExerciseMode,
   ExercisePoint,
@@ -30,10 +30,10 @@ interface Props {
  *  chart with), accent = depth. */
 function sourceColors(ct: ChartTheme): Record<ExerciseSource, string> {
   return {
-    dry: ct.green,
-    'pool-sta': ct.highlight,
-    depth: ct.accent,
-    pool: ct.highlight,
+    dry: ct.mode.dry,
+    'pool-sta': ct.mode.pool,
+    depth: ct.mode.depth,
+    pool: ct.mode.pool,
   };
 }
 
@@ -122,7 +122,7 @@ export function ExerciseScatter({ data, mode }: Props) {
       ? {
           top: 0,
           right: 0,
-          textStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 11 },
+          textStyle: { color: ct.textDim, fontSize: 11 },
           itemWidth: 10,
           itemHeight: 10,
           icon: 'circle',
@@ -132,7 +132,7 @@ export function ExerciseScatter({ data, mode }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontSize: 12 },
       formatter: (p: any) => {
         const meta = p.data._meta as ExercisePoint;
         const unit = meta.source === 'dry' ? t('Hold') : t('Dive');
@@ -151,7 +151,6 @@ export function ExerciseScatter({ data, mode }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       splitLine: { lineStyle: { color: ct.splitLine } },
@@ -161,7 +160,6 @@ export function ExerciseScatter({ data, mode }: Props) {
       name: t(Y_LABEL[mode]),
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       min: 0,
@@ -170,7 +168,6 @@ export function ExerciseScatter({ data, mode }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => fmtValue(mode, v),
       },
@@ -186,7 +183,7 @@ export function ExerciseScatter({ data, mode }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-lg border border-border bg-panel p-3">
+      <div className="board p-3">
         <ReactECharts option={option} style={{ height: 360 }} notMerge />
       </div>
       <p className="font-mono text-[11px] text-textDim">

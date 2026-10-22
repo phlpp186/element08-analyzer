@@ -15,7 +15,7 @@
  */
 import { useCallback, useMemo, useRef } from 'react';
 import * as echarts from 'echarts/core';
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 
@@ -188,7 +188,7 @@ function buildPanel(
     },
     legend: {
       top: 0,
-      textStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 11 },
+      textStyle: { color: ct.textDim, fontSize: 11 },
       itemWidth: 12,
       itemHeight: 6,
     },
@@ -196,7 +196,7 @@ function buildPanel(
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontSize: 12 },
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];

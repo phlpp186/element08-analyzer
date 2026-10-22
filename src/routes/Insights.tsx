@@ -134,19 +134,14 @@ export function Insights() {
         </Link>
       </header>
 
-      <nav className="mb-6 flex gap-1 border-b border-border">
+      <nav className="board mb-6 flex w-fit max-w-full flex-wrap gap-1.5 p-1.5">
         {TABS.map((tabItem) => {
           const active = tab === tabItem.id;
           return (
             <button
               key={tabItem.id}
               onClick={() => setTab(tabItem.id)}
-              className={[
-                'border-b-2 px-4 py-3 font-mono text-xs uppercase tracking-widest transition-colors',
-                active
-                  ? 'border-accent text-accent'
-                  : 'border-transparent text-textDim hover:text-text',
-              ].join(' ')}
+              className={`pill px-5 py-2 font-mono text-xs uppercase tracking-widest ${active ? 'pill-on' : ''}`}
             >
               {t(tabItem.label)}
             </button>
@@ -252,12 +247,7 @@ function LungVolFilterPills({
           <button
             key={o.label}
             onClick={() => onChange(o.id)}
-            className={[
-              'rounded-full border px-3 py-1 font-mono text-[11px] transition-colors',
-              active
-                ? 'border-accent bg-accent/10 text-accent'
-                : 'border-border text-textDim hover:border-accent hover:text-accent',
-            ].join(' ')}
+            className={`pill px-3 py-1 font-mono text-[11px] ${active ? 'pill-on' : ''}`}
           >
             {o.id === null ? t(o.label) : o.label}
           </button>

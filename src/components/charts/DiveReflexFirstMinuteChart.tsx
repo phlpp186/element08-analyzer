@@ -7,7 +7,7 @@
  * see when the late seconds get thin because their typical hold doesn't
  * reach a full minute.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { FirstMinutePoint } from '../../lib/analytics/holdTrends';
 import { useChartTheme, withAlpha } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -48,7 +48,7 @@ export function DiveReflexFirstMinuteChart({ points }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: any) => {
         const point = points[p.dataIndex];
         return `<span style="color:${p.color}">●</span> ${point.t}s ${t('into hold')}<br/>${Math.round(point.hr)} bpm<br/><span style="opacity:0.7">${point.n} ${point.n === 1 ? t('hold') : t('holds')}</span>`;
@@ -63,7 +63,6 @@ export function DiveReflexFirstMinuteChart({ points }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value}s',
       },
@@ -78,7 +77,6 @@ export function DiveReflexFirstMinuteChart({ points }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value} bpm',
       },

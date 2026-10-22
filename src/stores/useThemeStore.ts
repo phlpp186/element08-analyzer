@@ -1,5 +1,6 @@
 /**
- * useThemeStore — Caribbean (light) / Chalk Dark (dark) UI preference.
+ * useThemeStore — the UI theme: Caribbean (light), Titanium (mid), Chalk Dark
+ * (dark) or Block Arcade (arcade).
  *
  * Theme is a UI preference, not user data, so persisting it to localStorage
  * is outside the analyzer's "your data never leaves the browser" promise.
@@ -13,9 +14,10 @@
  */
 import { create } from 'zustand';
 
-export type ThemeMode = 'light' | 'mid' | 'dark';
+export type ThemeMode = 'light' | 'mid' | 'dark' | 'arcade';
 
-const ORDER: ThemeMode[] = ['light', 'mid', 'dark'];
+export const THEMES: ThemeMode[] = ['arcade', 'dark', 'light', 'mid'];
+const ORDER: ThemeMode[] = ['light', 'mid', 'dark', 'arcade'];
 const STORAGE_KEY = 'element08.theme';
 
 function readInitial(): ThemeMode {
@@ -25,6 +27,7 @@ function readInitial(): ThemeMode {
   const cl = document.documentElement.classList;
   if (cl.contains('light')) return 'light';
   if (cl.contains('mid')) return 'mid';
+  if (cl.contains('arcade')) return 'arcade';
   return 'dark';
 }
 
@@ -33,6 +36,7 @@ function applyClass(theme: ThemeMode) {
   const cl = document.documentElement.classList;
   cl.toggle('light', theme === 'light');
   cl.toggle('mid', theme === 'mid');
+  cl.toggle('arcade', theme === 'arcade');
 }
 
 interface ThemeState {

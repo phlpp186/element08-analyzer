@@ -12,7 +12,7 @@
  * When nothing is plottable the route still shows the stat table.
  */
 import { useMemo } from 'react';
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 
@@ -66,7 +66,7 @@ export function PoolOverlayChart({ dives }: Props) {
       {hasSpeed && (
         <>
           <PanelHeader label={t('Average speed')} unit="m/s" />
-          <div className="space-y-2 rounded-lg border border-border bg-panel p-4">
+          <div className="space-y-2 board p-4">
             {dives.map((d) => (
               <div key={d.label} className="flex items-center gap-3">
                 <span
@@ -129,7 +129,7 @@ function buildHrOption(dives: OverlayPoolDive[], ct: ChartTheme) {
     animation: false,
     legend: {
       top: 0,
-      textStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 11 },
+      textStyle: { color: ct.textDim, fontSize: 11 },
       itemWidth: 12,
       itemHeight: 6,
     },
@@ -137,7 +137,7 @@ function buildHrOption(dives: OverlayPoolDive[], ct: ChartTheme) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontSize: 12 },
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];

@@ -17,7 +17,7 @@
  */
 import { useCallback, useMemo } from 'react';
 import * as echarts from 'echarts/core';
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { DepthDiveData, ProfilePoint } from '../../lib/analytics/diveProfile';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 
@@ -176,7 +176,7 @@ function buildOption(
     legend: showLegend
       ? {
           top: 0,
-          textStyle: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 12 },
+          textStyle: { color: ct.textDim, fontSize: 12 },
           itemWidth: 14,
           itemHeight: 8,
         }
@@ -185,7 +185,7 @@ function buildOption(
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 12 },
+      textStyle: { color: ct.text, fontSize: 12 },
       axisPointer: { type: 'line' as const },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];

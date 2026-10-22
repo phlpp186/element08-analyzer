@@ -13,7 +13,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './charts/EChart';
 import { useBackupStore } from '../stores/useBackupStore';
 import { useAuth } from '../lib/supabase/AuthProvider';
 import {
@@ -64,20 +64,20 @@ function SeriesMiniChart({ chart }: { chart: SeriesChartDirective }) {
     grid: { left: 8, right: 8, top: 24, bottom: 20, containLabel: true },
     title: {
       text: chart.title,
-      textStyle: { color: ct.textDim, fontSize: 10, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.textDim, fontSize: 10 },
     },
     tooltip: {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui', fontSize: 11 },
+      textStyle: { color: ct.text, fontSize: 11 },
       formatter: (p: { name: string; value: number }) =>
         `${p.name}: ${fmtVal(p.value, chart.format)}`,
     },
     xAxis: {
       type: 'category',
       data: chart.series.map((s) => s.label),
-      axisLabel: { color: ct.textDim, fontSize: 9, fontFamily: 'Nunito, system-ui' },
+      axisLabel: { color: ct.textDim, fontSize: 9 },
       axisLine: { lineStyle: { color: ct.axisLine } },
       axisTick: { show: false },
     },
@@ -86,7 +86,6 @@ function SeriesMiniChart({ chart }: { chart: SeriesChartDirective }) {
       axisLabel: {
         color: ct.textDim,
         fontSize: 9,
-        fontFamily: 'Nunito, system-ui',
         formatter: (v: number) => fmtVal(v, chart.format),
       },
       splitLine: { lineStyle: { color: ct.splitLine } },
@@ -118,7 +117,7 @@ function ChartBlock({ chart }: { chart: ChartDirective }) {
   const t = useT();
   if (isSeries(chart)) {
     return (
-      <div className="mt-2 rounded-lg border border-border bg-panel/60 p-2">
+      <div className="mt-2 board/60 p-2">
         <SeriesMiniChart chart={chart} />
       </div>
     );
@@ -202,7 +201,7 @@ export function AskPanel() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-50 rounded-full border border-border bg-panel px-5 py-3 font-mono text-xs uppercase tracking-widest text-accent shadow-lg hover:border-accent"
+          className="pill pill-on btn-raised fixed bottom-6 right-6 z-50 px-5 py-3 font-mono text-xs uppercase tracking-widest shadow-lg"
           aria-label={t('Open the AI copilot')}
         >
           {t('Ask')} ✦
@@ -227,7 +226,7 @@ export function AskPanel() {
 
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {!session && (
-              <div className="rounded-lg border border-border bg-panel p-3 text-sm text-textDim">
+              <div className="board p-3 text-sm text-textDim">
                 {t('The copilot needs your account for the monthly question quota.')}{' '}
                 <Link to="/" className="text-accent hover:underline">
                   {t('Sign in on the start page')}
@@ -236,7 +235,7 @@ export function AskPanel() {
               </div>
             )}
             {session && turns.length === 0 && (
-              <div className="rounded-lg border border-border bg-panel p-3 text-sm text-textDim">
+              <div className="board p-3 text-sm text-textDim">
                 {t('Ask anything about the loaded logbook, for example:')}
                 <ul className="mt-2 list-inside list-disc space-y-1 text-xs">
                   <li>{t('How did my CWT depths develop this year?')}</li>
@@ -264,7 +263,7 @@ export function AskPanel() {
               ),
             )}
             {busy && (
-              <div className="mr-4 animate-pulse rounded-xl border border-border bg-panel px-3 py-2 text-sm text-textDim">
+              <div className="mr-4 animate-pulse board px-3 py-2 text-sm text-textDim">
                 {t('Analyzing your logbook…')}
               </div>
             )}

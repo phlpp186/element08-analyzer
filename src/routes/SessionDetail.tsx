@@ -11,6 +11,7 @@
  */
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useT } from '../i18n';
+import { ModeBlock } from '../components/ModeBlock';
 import { useChartTheme, type ChartTheme } from '../lib/chartTheme';
 import { useBackupStore } from '../stores/useBackupStore';
 import { Sparkline } from '../components/Sparkline';
@@ -55,19 +56,22 @@ export function SessionDetail() {
     <div className="mx-auto max-w-5xl px-6 py-10">
       <BackLink />
 
-      <header className="mt-6 mb-8">
-        <span
-          className={[
-            'font-mono text-[10px] uppercase tracking-widest',
-            modeColorClass(session.mode),
-          ].join(' ')}
-        >
-          {modeLabel(session.mode)} · {formatDate(session.date)}
-        </span>
-        <h1 className="mt-1 font-heading text-3xl tracking-wide text-text">
-          {session.name || t('Untitled session')}
-        </h1>
-        <p className="mt-2 font-mono text-sm text-textDim">{summaryLine(session)}</p>
+      <header className="mt-6 mb-8 flex items-center gap-4">
+        <ModeBlock mode={session.mode} size={56} />
+        <div className="min-w-0">
+          <span
+            className={[
+              'font-mono text-[10px] uppercase tracking-widest',
+              modeColorClass(session.mode),
+            ].join(' ')}
+          >
+            {modeLabel(session.mode)} · {formatDate(session.date)}
+          </span>
+          <h1 className="mt-1 font-heading text-3xl tracking-wide text-text">
+            {session.name || t('Untitled session')}
+          </h1>
+          <p className="mt-2 font-mono text-sm text-textDim">{summaryLine(session)}</p>
+        </div>
       </header>
 
       {session.mode === 'depth' && <DepthDiveList session={session} />}
@@ -115,7 +119,7 @@ function DepthDiveList({ session }: { session: any }) {
     );
   }
   return (
-    <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+    <ul className="board divide-y divide-border overflow-hidden">
       {dives.map((d, idx) => {
         const depths = Array.isArray(d.profile)
           ? sample(d.profile.map((p) => p.d).filter((x) => typeof x === 'number'))
@@ -124,18 +128,18 @@ function DepthDiveList({ session }: { session: any }) {
           <li key={idx}>
             <Link
               to={`/session/${session.id}/dive/${idx}`}
-              className="flex items-center gap-4 bg-panel px-4 py-3 transition-colors hover:bg-abyss"
+              className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-abyss/60"
             >
               <div className="w-16 shrink-0 font-mono text-xs uppercase tracking-widest text-textDim">
                 {t('Dive')} {idx + 1}
               </div>
               {depths.length > 1 ? (
-                <Sparkline values={depths} invert color={ct.accent} />
+                <Sparkline values={depths} invert color={ct.profile} />
               ) : (
                 <div className="w-24 shrink-0" aria-hidden />
               )}
               <div className="min-w-0 flex-1">
-                <div className="font-heading text-lg tracking-wide text-accent">
+                <div className="font-num text-lg font-bold tracking-wide text-profile">
                   {d.depth}m
                 </div>
                 <div className="font-mono text-xs text-textDim">
@@ -196,7 +200,7 @@ function PoolDiveList({ session }: { session: any }) {
     );
   }
   return (
-    <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+    <ul className="board divide-y divide-border overflow-hidden">
       {dives.map((d, idx) => {
         const isSta = d.discipline === 'STA';
         const primary = isSta ? fmtSec(d.diveTime) : `${d.distance ?? 0}m`;
@@ -209,7 +213,7 @@ function PoolDiveList({ session }: { session: any }) {
           <li key={idx}>
             <Link
               to={`/session/${session.id}/pool/${idx}`}
-              className="flex items-center gap-4 bg-panel px-4 py-3 transition-colors hover:bg-abyss"
+              className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-abyss/60"
             >
               <div className="w-16 shrink-0 font-mono text-xs uppercase tracking-widest text-textDim">
                 {t('Dive')} {idx + 1}
@@ -247,7 +251,7 @@ function PoolDiveList({ session }: { session: any }) {
 function DryOpenPlayer({ sessionId }: { sessionId: number }) {
   const t = useT();
   return (
-    <div className="rounded-lg border border-border bg-panel p-6">
+    <div className="board p-6">
       <p className="text-sm text-textDim">
         {t('Dry sessions are a single continuous timeline, open the full player to scrub through SpO₂, HR, and the block timeline.')}
       </p>

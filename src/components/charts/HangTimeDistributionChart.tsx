@@ -2,7 +2,7 @@
  * Hang Time Distribution — bucketed histogram of bottom-hang durations,
  * with a one-line stat on how many dives include a hang at all.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { HangTimeStats } from '../../lib/analytics/depthInsights';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -40,7 +40,7 @@ export function HangTimeDistributionChart({ stats }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const bin = stats.bins[p.dataIndex];
@@ -54,7 +54,6 @@ export function HangTimeDistributionChart({ stats }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -65,7 +64,6 @@ export function HangTimeDistributionChart({ stats }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       minInterval: 1,
@@ -86,7 +84,6 @@ export function HangTimeDistributionChart({ stats }: Props) {
           show: true,
           position: 'top',
           color: ct.textDim,
-          fontFamily: 'Nunito, system-ui',
           fontSize: 10,
         },
       },

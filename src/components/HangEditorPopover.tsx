@@ -51,7 +51,7 @@ export function HangEditorPopover({
         left: clamp(position.x - 120, 8, window.innerWidth - 256 - 8),
         top: clamp(position.y - 160, 8, window.innerHeight - 200),
       }}
-      className="fixed z-30 w-64 rounded-lg border border-border bg-panel p-3 shadow-lg shadow-black/40"
+      className="fixed z-30 w-64 board p-3 shadow-lg shadow-black/40"
     >
       <div className="mb-2 flex items-center justify-between">
         <h4 className="font-mono text-[10px] uppercase tracking-widest text-textDim">
@@ -94,7 +94,7 @@ export function HangEditorPopover({
         </button>
         <button
           onClick={onClose}
-          className="rounded-full border border-accent bg-accent/10 px-3 py-0.5 font-mono text-[11px] text-accent hover:bg-accent/20"
+          className="pill pill-on px-3 py-0.5 font-mono text-[11px]"
         >
           {t('Done')}
         </button>

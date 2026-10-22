@@ -5,7 +5,7 @@
  * ECharts has a built-in calendar series that gives us GitHub-style
  * contribution graph visuals without bespoke layout code.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { HeatmapDay } from '../../lib/analytics/heatmap';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -37,7 +37,7 @@ export function TrainingHeatmap({ series }: Props) {
     tooltip: {
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: any) => {
         const date = p.value[0];
         const count = p.value[1];
@@ -69,7 +69,6 @@ export function TrainingHeatmap({ series }: Props) {
       yearLabel: { show: false },
       monthLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         nameMap: [
           t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'),
@@ -79,7 +78,6 @@ export function TrainingHeatmap({ series }: Props) {
       dayLabel: {
         firstDay: 1, // Monday first
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 9,
         nameMap: [t('Sun'), t('Mon'), t('Tue'), t('Wed'), t('Thu'), t('Fri'), t('Sat')],
       },

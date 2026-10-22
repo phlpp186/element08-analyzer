@@ -4,7 +4,7 @@
  * spread between them visualises each dive's HR range; lows trending
  * lower over time means the diver's dive reflex is strengthening.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { HrPoint } from '../../lib/analytics/poolHr';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -51,7 +51,7 @@ export function PoolHrChart({ points }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: any) => {
         const [date, hr, meta] = p.value as [string, number, HrPoint];
         const dateStr = new Date(date).toLocaleDateString();
@@ -64,7 +64,6 @@ export function PoolHrChart({ points }: Props) {
       data: [t('HR low'), t('HR high')],
       textStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       itemWidth: 14,
@@ -76,7 +75,6 @@ export function PoolHrChart({ points }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       splitLine: { show: false },
@@ -90,7 +88,6 @@ export function PoolHrChart({ points }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value} bpm',
       },

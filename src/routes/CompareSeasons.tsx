@@ -136,19 +136,14 @@ export function CompareSeasons() {
         description={t("Define one period per training cycle. The Overlay tab compares shapes across multiple periods; the Periodization tab zooms in on one period's week-by-week intensity profile.")}
       />
 
-      <nav className="mb-6 flex gap-1 border-b border-border">
+      <nav className="board mb-6 flex w-fit max-w-full flex-wrap gap-1.5 p-1.5">
         {TABS.map((tab_) => {
           const active = tab === tab_.id;
           return (
             <button
               key={tab_.id}
               onClick={() => setTab(tab_.id)}
-              className={[
-                'border-b-2 px-4 py-3 font-mono text-xs uppercase tracking-widest transition-colors',
-                active
-                  ? 'border-accent text-accent'
-                  : 'border-transparent text-textDim hover:text-text',
-              ].join(' ')}
+              className={`pill px-5 py-2 font-mono text-xs uppercase tracking-widest ${active ? 'pill-on' : ''}`}
               title={t(tab_.description)}
             >
               {t(tab_.label)}
@@ -208,12 +203,7 @@ export function CompareSeasons() {
                     <button
                       key={m.id}
                       onClick={() => setExerciseMode(m.id)}
-                      className={[
-                        'rounded-full border px-4 py-1.5 text-sm transition-colors',
-                        active
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-textDim hover:border-accent hover:text-accent',
-                      ].join(' ')}
+                      className={`pill px-4 py-1.5 text-sm ${active ? 'pill-on' : ''}`}
                     >
                       {t(m.label)}
                     </button>
@@ -252,12 +242,7 @@ function MetricSelector({
           <button
             key={m.id}
             onClick={() => onChange(m.id)}
-            className={[
-              'rounded-full border px-4 py-1.5 text-sm transition-colors',
-              active
-                ? 'border-accent bg-accent/10 text-accent'
-                : 'border-border text-textDim hover:border-accent hover:text-accent',
-            ].join(' ')}
+            className={`pill px-4 py-1.5 text-sm ${active ? 'pill-on' : ''}`}
           >
             {t(m.label)}
           </button>
@@ -288,12 +273,7 @@ function PeriodPicker({
           <button
             key={p.id}
             onClick={() => onChange(p.id)}
-            className={[
-              'flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors',
-              active
-                ? 'border-accent text-accent'
-                : 'border-border text-textDim hover:border-accent hover:text-accent',
-            ].join(' ')}
+            className={`flex items-center gap-2 pill px-3 py-1 text-sm ${active ? 'pill-on' : ''}`}
           >
             <span
               className="inline-block h-2 w-2 rounded-full"

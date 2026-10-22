@@ -65,7 +65,7 @@ export function PeriodEditor() {
   }
 
   return (
-    <section className="rounded-lg border border-border bg-panel p-5">
+    <section className="board p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-textDim">
           {t('Comparison periods')}

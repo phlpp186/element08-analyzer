@@ -14,7 +14,7 @@
  */
 import { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from '../components/charts/EChart';
 import { useT } from '../i18n';
 import { useChartTheme, type ChartTheme } from '../lib/chartTheme';
 import { useBackupStore } from '../stores/useBackupStore';
@@ -279,7 +279,7 @@ export function Playground() {
       </header>
 
       {/* Starter questions — one tap fills the pivot below. */}
-      <section className="mb-5 rounded-lg border border-border bg-panel p-5">
+      <section className="mb-5 board p-5">
         <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-textDim">
           {t('Starter questions')}
         </div>
@@ -303,7 +303,7 @@ export function Playground() {
               <button
                 key={qp.q}
                 onClick={() => applyPreset(qp)}
-                className="rounded-full border border-border px-3 py-1.5 text-sm text-textDim transition-colors hover:border-accent hover:text-accent"
+                className="pill px-3 py-1.5 text-sm"
               >
                 {t(qp.q)}
                 <span className="ml-1.5 font-mono text-[10px] opacity-50">
@@ -316,7 +316,7 @@ export function Playground() {
       </section>
 
       {/* Filters */}
-      <section className="space-y-5 rounded-lg border border-border bg-panel p-5">
+      <section className="space-y-5 board p-5">
         <FieldRow label={t('Date range')}>
           <div className="flex flex-wrap items-center gap-2">
             {PRESETS.map((p) => (
@@ -397,7 +397,7 @@ export function Playground() {
       </section>
 
       {/* Pivot knobs + chart */}
-      <section className="mt-5 space-y-4 rounded-lg border border-border bg-panel p-5">
+      <section className="mt-5 space-y-4 board p-5">
         <div className="grid gap-4 lg:grid-cols-3">
           <PickerColumn label={effRender === 'xy' ? t('Y (metric)') : t('What (metric)')}>
             <Dropdown value={metric?.id ?? ''} onChange={setMetricId} options={metricOptions} />
@@ -577,12 +577,7 @@ function Pill({
   return (
     <button
       onClick={onClick}
-      className={[
-        'rounded-full border px-3 py-1 text-sm transition-colors',
-        active
-          ? 'border-accent bg-accent/10 text-accent'
-          : 'border-border text-textDim hover:border-accent hover:text-accent',
-      ].join(' ')}
+      className={`pill px-3 py-1 text-sm ${active ? 'pill-on' : ''}`}
     >
       {children}
     </button>

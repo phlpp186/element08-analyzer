@@ -43,6 +43,7 @@ import {
   StatsCard,
   type ChartTab,
   type StatTile,
+  type Tone,
 } from '../components/DivePageLayout';
 import { ctrlLabelCls, fmtSec, formatClock, pillCls } from '../lib/divePage';
 import type { ParsedSession } from '../schema/backup';
@@ -355,7 +356,7 @@ function DepthDiveView({
             {hasOverride && (
               <button
                 onClick={handleResetHangs}
-                className="rounded-full border border-border px-3 py-0.5 font-mono text-[11px] text-textDim transition-colors hover:border-red hover:text-red"
+                className="pill px-3 py-0.5 font-mono text-[11px] hover:text-red"
               >
                 {t('Reset')}
               </button>
@@ -393,7 +394,7 @@ function DepthDiveView({
               setFullscreen(true);
             }}
             title={t('Fullscreen analysis')}
-            className="rounded-full border border-border px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-textDim transition-colors hover:border-accent hover:text-accent"
+            className="pill px-3 py-1 font-mono text-[11px] uppercase tracking-widest"
           >
             ⛶ {t('Fullscreen')}
           </button>
@@ -469,7 +470,8 @@ function DepthDiveView({
     <DiveHeader
       backTo={`/session/${session.id}`}
       backLabel={session.name || t('session')}
-      title={`${t('Dive')} ${idx + 1} · ${dive.discipline ?? t('Depth dive')} · ${dive.depth}m`}
+      title={`${t('Dive')} ${idx + 1} · ${dive.discipline ?? t('Depth dive')}`}
+      hero={`${dive.depth}m`}
       meta={[
         fmtSec(dive.diveTime),
         `${formatDate(session.date)}${clock ? ` ${clock}` : ''}`,
@@ -566,8 +568,10 @@ function statTiles(
 ): StatTile[] {
   const { dive, data, times, bands, hasProfile } = ctx;
   const tiles: StatTile[] = [];
+  // The colour of the tiles added next (see Tone).
+  let tone: Tone = 'accent';
   const add = (label: string, value: string | null, sub?: string) => {
-    if (value != null) tiles.push({ label, value, sub });
+    if (value != null) tiles.push({ label, value, sub, tone });
   };
   // Without a profile the stored per-dive figures are all there is.
   const descentTime = hasProfile ? times.descentTime : (dive.descentTime ?? 0);
@@ -575,13 +579,19 @@ function statTiles(
   const hangTime = hasProfile ? times.hangTime : (dive.hangTime ?? 0);
 
   if (tab === 'profile') {
+    tone = 'hero';
     add(t('Max depth'), `${dive.depth}m`);
+    tone = 'highlight';
     add(t('Dive time'), dive.diveTime > 0 ? fmtSec(dive.diveTime) : null);
+    tone = 'profile';
     add(t('Descent'), descentTime > 0 ? fmtSec(descentTime) : null);
+    tone = 'amber';
     add(t('Ascent'), ascentTime > 0 ? fmtSec(ascentTime) : null);
+    tone = 'recover';
     add(t('Hang'), hangTime > 0 ? fmtSec(hangTime) : null);
     const c = dive.contractionOnset;
     if (c) {
+      tone = 'red';
       add(
         t('First contraction'),
         `${c.depth}m`,
@@ -591,15 +601,22 @@ function statTiles(
   } else if (tab === 'speed') {
     const descentSpeed = hasProfile ? times.descentSpeed : (dive.descentSpeed ?? null);
     const ascentSpeed = hasProfile ? times.ascentSpeed : (dive.ascentSpeed ?? null);
-    add(t('Descent speed'), descentSpeed != null ? ms(descentSpeed) : null);
-    add(t('Ascent speed'), ascentSpeed != null ? ms(ascentSpeed) : null);
     const edge = edgeSpeeds(data.points, data.maxDepth);
-    add(t('Descent, first 10 m'), edge.firstDescent != null ? ms(edge.firstDescent) : null);
-    add(t('Ascent, last 10 m'), edge.lastAscent != null ? ms(edge.lastAscent) : null);
     const peaks = speedPeaks(data.speedSeries);
+    tone = 'profile';
+    add(t('Descent speed'), descentSpeed != null ? ms(descentSpeed) : null);
+    tone = 'amber';
+    add(t('Ascent speed'), ascentSpeed != null ? ms(ascentSpeed) : null);
+    tone = 'profile';
+    add(t('Descent, first 10 m'), edge.firstDescent != null ? ms(edge.firstDescent) : null);
+    tone = 'amber';
+    add(t('Ascent, last 10 m'), edge.lastAscent != null ? ms(edge.lastAscent) : null);
+    tone = 'profile';
     add(t('Peak descent'), peaks.descent != null ? ms(peaks.descent) : null);
+    tone = 'amber';
     add(t('Peak ascent'), peaks.ascent != null ? ms(peaks.ascent) : null);
   } else if (tab === 'hr') {
+    tone = 'highlight';
     const s = seriesSummary(data.hrSeries);
     if (s) {
       add(t('Start'), bpm(s.start));
@@ -633,16 +650,28 @@ function statTiles(
     };
     const desc = pick('desc');
     const asc = pick('asc');
-    if (desc) {
+    // Descent left, ascent right, as in the bars.
+    if (desc && asc) {
+      tone = 'profile';
       add(t('Fastest descent'), ms(desc.fast.v), bandLabel(desc.fast.r));
-      add(t('Slowest descent'), ms(desc.slow.v), bandLabel(desc.slow.r));
-    }
-    if (asc) {
+      tone = 'amber';
       add(t('Fastest ascent'), ms(asc.fast.v), bandLabel(asc.fast.r));
+      tone = 'profile';
+      add(t('Slowest descent'), ms(desc.slow.v), bandLabel(desc.slow.r));
+      tone = 'amber';
       add(t('Slowest ascent'), ms(asc.slow.v), bandLabel(asc.slow.r));
+    } else {
+      tone = desc ? 'profile' : 'amber';
+      const one = desc ?? asc;
+      if (one) {
+        add(t(desc ? 'Fastest descent' : 'Fastest ascent'), ms(one.fast.v), bandLabel(one.fast.r));
+        add(t(desc ? 'Slowest descent' : 'Slowest ascent'), ms(one.slow.v), bandLabel(one.slow.r));
+      }
     }
     // Time-weighted over the bands: metres moved / seconds moving, hangs out.
+    tone = 'profile';
     add(t('Descent avg'), desc?.avg != null ? ms(desc.avg) : null, t('hangs excluded'));
+    tone = 'amber';
     add(t('Ascent avg'), asc?.avg != null ? ms(asc.avg) : null, t('hangs excluded'));
   }
   return tiles;

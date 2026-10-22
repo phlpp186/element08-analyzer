@@ -9,7 +9,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from '../components/charts/EChart';
 import { useBackupStore } from '../stores/useBackupStore';
 import { useAuth } from '../lib/supabase/AuthProvider';
 import { pullAthleteGoals } from '../lib/supabase/athleteProfile';
@@ -35,18 +35,21 @@ function KpiTile({
   value,
   label,
   delta,
+  tone,
 }: {
   value: string;
   label: string;
   delta?: string | null;
+  /** CSS colour of the tile (see .tile). */
+  tone: string;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-panel px-5 py-4">
-      <div className="text-2xl font-extrabold text-text">{value}</div>
-      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-textDim">
+    <div className="tile px-5 py-4" style={{ '--tone': tone } as React.CSSProperties}>
+      <div className="tile-value font-num text-2xl font-extrabold">{value}</div>
+      <div className="tile-label mt-0.5 font-mono text-[10px] font-extrabold uppercase tracking-widest">
         {label}
       </div>
-      {delta ? <div className="mt-1 text-xs font-bold text-recover">{delta}</div> : null}
+      {delta ? <div className="tile-label mt-1 text-xs font-bold">{delta}</div> : null}
     </div>
   );
 }
@@ -75,7 +78,7 @@ function TrajectoryChart({ mode }: { mode: Exclude<TrajectoryMode, 'depth'> }) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: { value: [number, number] }) => {
         const [ts, v] = p.value;
         return `${new Date(ts).toLocaleDateString()} · ${fmt(v)}`;
@@ -85,7 +88,7 @@ function TrajectoryChart({ mode }: { mode: Exclude<TrajectoryMode, 'depth'> }) {
       type: 'time',
       axisLine: { lineStyle: { color: ct.axisLine } },
       axisTick: { show: false },
-      axisLabel: { color: ct.textDim, fontFamily: 'Nunito, system-ui', fontSize: 10 },
+      axisLabel: { color: ct.textDim, fontSize: 10 },
       splitLine: { show: false },
     },
     yAxis: {
@@ -96,7 +99,6 @@ function TrajectoryChart({ mode }: { mode: Exclude<TrajectoryMode, 'depth'> }) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => fmt(v),
       },
@@ -170,7 +172,7 @@ function GoalsCard({ goals }: { goals: CloudGoal[] }) {
   );
   if (rows.length === 0) return null;
   return (
-    <div className="rounded-xl border border-border bg-panel p-5">
+    <div className="board p-5">
       <h2 className="mb-3 font-mono text-[10px] uppercase tracking-widest text-textDim">
         {t('Goals')}
       </h2>
@@ -300,11 +302,13 @@ export function Progress() {
               : t('Deepest')
           }
           delta={deltaTxt(kpis.deepest.delta, (v) => `${v.toFixed(1)}m`)}
+          tone="rgb(var(--c-hero))"
         />
         <KpiTile
           value={kpis.longestHold.value > 0 ? fmtHold(kpis.longestHold.value) : '—'}
           label={t('Longest hold')}
           delta={deltaTxt(kpis.longestHold.delta, fmtHold)}
+          tone="rgb(var(--c-highlight))"
         />
         <KpiTile
           value={kpis.longestPoolDive.value > 0 ? `${Math.round(kpis.longestPoolDive.value)}m` : '—'}
@@ -314,6 +318,7 @@ export function Progress() {
               : t('Longest pool dive')
           }
           delta={deltaTxt(kpis.longestPoolDive.delta, (v) => `${Math.round(v)}m`)}
+          tone="rgb(var(--c-amber))"
         />
         <KpiTile
           value={String(kpis.sessions4w.current)}
@@ -323,6 +328,7 @@ export function Progress() {
               ? `${t('vs')} ${kpis.sessions4w.prior} ${t('the 4 weeks before')}`
               : null
           }
+          tone="rgb(var(--c-accent))"
         />
       </div>
 
@@ -339,11 +345,7 @@ export function Progress() {
           <button
             key={m.id}
             onClick={() => setMode(m.id)}
-            className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-widest ${
-              activeMode === m.id
-                ? 'border-accent bg-accent/10 text-accent'
-                : 'border-border text-textDim hover:text-accent'
-            }`}
+            className={`pill px-3 py-1 font-mono text-[10px] uppercase tracking-widest ${activeMode === m.id ? 'pill-on' : ''}`}
           >
             {t(m.label)}
           </button>

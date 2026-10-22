@@ -6,7 +6,7 @@
  * The band height is a user-controlled toggle (5 / 10 / 20 m) so the same
  * data set can be inspected coarse or fine.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { BandStep, SpeedBand } from '../../lib/analytics/depthInsights';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -45,7 +45,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];
         const idx = arr[0]?.dataIndex ?? 0;
@@ -67,7 +67,6 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       right: 0,
       textStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       itemWidth: 12,
@@ -80,7 +79,6 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       name: t('metres'),
@@ -88,7 +86,6 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       nameGap: 24,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -99,7 +96,6 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value}',
       },
@@ -109,7 +105,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
         name: t('Descent'),
         type: 'bar',
         data: bands.map((b) => round2(b.descentSpeed)),
-        itemStyle: { color: ct.amber, borderRadius: [3, 3, 0, 0] }, // amber descent — matches the depth player
+        itemStyle: { color: ct.profile, borderRadius: [3, 3, 0, 0] }, // descent = profile colour, as in the depth player
         barWidth: '36%',
         barGap: '15%',
       },
@@ -117,7 +113,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
         name: t('Ascent'),
         type: 'bar',
         data: bands.map((b) => round2(b.ascentSpeed)),
-        itemStyle: { color: ct.red, borderRadius: [3, 3, 0, 0] }, // red ascent
+        itemStyle: { color: ct.amber, borderRadius: [3, 3, 0, 0] }, // amber ascent
         barWidth: '36%',
       },
     ],
@@ -151,12 +147,7 @@ function StepPills({
         <button
           key={s}
           onClick={() => onChange(s)}
-          className={[
-            'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
-            value === s
-              ? 'border-accent bg-accent/10 text-accent'
-              : 'border-border text-textDim hover:border-accent hover:text-accent',
-          ].join(' ')}
+          className={`pill px-3 py-0.5 font-mono text-[11px] ${value === s ? 'pill-on' : ''}`}
         >
           {s}m
         </button>

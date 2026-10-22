@@ -8,7 +8,7 @@
  * reflex asserting). A positive value = HR ticks up (contraction
  * provoking a small startle response).
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { HrAroundContraction } from '../../lib/analytics/holdTrends';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -49,7 +49,7 @@ export function HrAroundContractionsChart({ points }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: any) => {
         const point = points[p.dataIndex];
         const sign = point.delta > 0 ? '+' : '';
@@ -65,7 +65,6 @@ export function HrAroundContractionsChart({ points }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => (v > 0 ? `+${v}s` : `${v}s`),
       },
@@ -80,7 +79,6 @@ export function HrAroundContractionsChart({ points }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => `${v > 0 ? '+' : ''}${v} bpm`,
       },

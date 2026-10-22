@@ -10,29 +10,14 @@ import {
   type BandSize,
   type PhaseAgg,
 } from '../lib/analytics/speedBands';
-import { useChartTheme } from '../lib/chartTheme';
 import { useT } from '../i18n';
+import { pillCls } from '../lib/divePage';
 
 function fmtTime(s: number): string {
   if (s < 60) return `${s.toFixed(1).replace(/\.0$/, '')}s`;
   const m = Math.floor(s / 60);
   const sec = Math.round(s % 60);
   return `${m}:${String(sec).padStart(2, '0')}`;
-}
-
-function PhaseCell({ agg, color }: { agg: PhaseAgg; color: string }) {
-  const speed = bandSpeed(agg);
-  if (speed == null) {
-    return <span className="font-mono text-xs text-textDim opacity-40">–</span>;
-  }
-  return (
-    <span className="font-mono text-xs tabular-nums">
-      <span className="font-semibold" style={{ color }}>
-        {speed.toFixed(2)} m/s
-      </span>
-      <span className="ml-2 text-textDim">{fmtTime(agg.time)}</span>
-    </span>
-  );
 }
 
 /** Band-size switch; lives in the dive page's control row. */
@@ -53,12 +38,7 @@ export function BandSizePicker({
         <button
           key={s}
           onClick={() => onSize(s)}
-          className={[
-            'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
-            size === s
-              ? 'border-accent bg-accent/10 text-accent'
-              : 'border-border text-textDim hover:border-accent hover:text-accent',
-          ].join(' ')}
+          className={pillCls(size === s)}
         >
           {s}m
         </button>
@@ -67,32 +47,105 @@ export function BandSizePicker({
   );
 }
 
+/** One side's bar: grows from the centre labels outward (descent to the
+ *  left, ascent to the right), its length the band's speed against the
+ *  dive's fastest band. The fastest band of each side glows. */
+function Bar({
+  agg,
+  max,
+  side,
+  best,
+}: {
+  agg: PhaseAgg;
+  max: number;
+  side: 'desc' | 'asc';
+  best: boolean;
+}) {
+  const speed = bandSpeed(agg);
+  const tone = side === 'desc' ? 'rgb(var(--c-profile))' : 'rgb(var(--c-amber))';
+  const value = (
+    // On a phone the time drops out so the bar keeps its room.
+    <span className="w-9 shrink-0 font-num text-xs tabular-nums sm:w-24">
+      {speed == null ? (
+        <span className="text-textDim opacity-40">–</span>
+      ) : (
+        <>
+          <span className="font-bold" style={{ color: tone }}>
+            {speed.toFixed(2)}
+          </span>
+          <span className="ml-1.5 hidden text-textDim sm:inline">{fmtTime(agg.time)}</span>
+        </>
+      )}
+    </span>
+  );
+  const bar = (
+    <div className={`flex min-w-0 flex-1 ${side === 'desc' ? 'justify-end' : ''}`}>
+      {speed != null && (
+        <div
+          className={`h-3.5 ${best ? 'bar-best' : ''}`}
+          style={{
+            '--tone': tone,
+            width: `${Math.max(2, (speed / max) * 100)}%`,
+            background: tone,
+            borderRadius: side === 'desc' ? '7px 3px 3px 7px' : '3px 7px 7px 3px',
+            borderBottom: `3px solid color-mix(in srgb, ${tone}, #000 35%)`,
+          } as React.CSSProperties}
+        />
+      )}
+    </div>
+  );
+  return (
+    <div className={`flex min-w-0 items-center gap-2 ${side === 'desc' ? 'text-right' : ''}`}>
+      {side === 'desc' ? (
+        <>
+          {value}
+          {bar}
+        </>
+      ) : (
+        <>
+          {bar}
+          {value}
+        </>
+      )}
+    </div>
+  );
+}
+
 export function SpeedBandsTable({ rows }: { rows: BandRow[] }) {
   const t = useT();
-  const ct = useChartTheme();
   if (rows.length === 0) return null;
+  const speeds = (phase: 'desc' | 'asc') => rows.map((r) => bandSpeed(r[phase]) ?? 0);
+  const desc = speeds('desc');
+  const asc = speeds('asc');
+  const argmax = (xs: number[]) => xs.reduce((best, v, i) => (v > xs[best] ? i : best), 0);
+  const bestDesc = argmax(desc);
+  const bestAsc = argmax(asc);
+  const max = Math.max(desc[bestDesc] ?? 0, asc[bestAsc] ?? 0);
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
-      <div className="grid grid-cols-[5.5rem_1fr_1fr] gap-x-4 border-b border-border bg-abyss px-4 py-2">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
+    <div className="chart-well rounded-xl px-3 py-2 sm:px-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)] items-center gap-x-2 pb-2 sm:grid-cols-[minmax(0,1fr)_5.5rem_minmax(0,1fr)] sm:gap-x-3">
+        <span className="text-right font-mono text-[10px] uppercase tracking-widest text-profile">
+          ‹ {t('Descent')} m/s
+        </span>
+        <span className="text-center font-mono text-[10px] uppercase tracking-widest text-textDim">
           {t('Band')}
         </span>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-          {t('Descent')}
-        </span>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
-          {t('Ascent')}
+        <span className="font-mono text-[10px] uppercase tracking-widest text-amber">
+          {t('Ascent')} m/s ›
         </span>
       </div>
-      <ul className="divide-y divide-border bg-panel">
-        {rows.map((r) => (
-          <li key={r.lo} className="grid grid-cols-[5.5rem_1fr_1fr] items-center gap-x-4 px-4 py-2">
-            <span className="inline-flex w-fit rounded-full border border-border bg-abyss px-2.5 py-0.5 font-mono text-[11px] text-text tabular-nums">
+      <ul className="space-y-1.5">
+        {rows.map((r, i) => (
+          <li
+            key={r.lo}
+            className="grid grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)] items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_5.5rem_minmax(0,1fr)] sm:gap-x-3"
+          >
+            <Bar agg={r.desc} max={max} side="desc" best={i === bestDesc && desc[i] > 0} />
+            <span className="text-center font-num text-xs font-bold text-text tabular-nums">
               {bandLabel(r)}
             </span>
-            <PhaseCell agg={r.desc} color={ct.amber} />
-            <PhaseCell agg={r.asc} color={ct.red} />
+            <Bar agg={r.asc} max={max} side="asc" best={i === bestAsc && asc[i] > 0} />
           </li>
         ))}
       </ul>

@@ -96,12 +96,7 @@ export function FullscreenDive({
               <button
                 key={tab.id}
                 onClick={() => onTab(tab.id)}
-                className={[
-                  "rounded-full border px-4 py-1 font-mono text-[11px] uppercase tracking-widest transition-colors",
-                  active === tab.id
-                    ? "border-accent bg-accent/10 text-accent"
-                    : "border-border text-textDim hover:border-accent hover:text-accent",
-                ].join(" ")}
+                className={`pill px-4 py-1 font-mono text-[11px] uppercase tracking-widest ${active === tab.id ? 'pill-on' : ''}`}
               >
                 {tab.label}
               </button>
@@ -111,7 +106,7 @@ export function FullscreenDive({
         <button
           onClick={onClose}
           title={`${t("Close")} (Esc)`}
-          className="ml-auto rounded-full border border-border px-3 py-1 font-mono text-xs text-textDim transition-colors hover:border-accent hover:text-accent sm:ml-0"
+          className="ml-auto pill px-3 py-1 font-mono text-xs sm:ml-0"
         >
           ✕
         </button>

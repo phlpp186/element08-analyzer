@@ -7,7 +7,7 @@
  * The tab-wide lung-volume filter is applied upstream; this chart is
  * just a visualiser.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import {
   SPO2_ZONES,
   type HoldMinSpo2Point,
@@ -72,7 +72,7 @@ export function MinSpo2VsDurationChart({ points }: Props) {
       trigger: 'item',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (p: any) => {
         const point = p.data.p as HoldMinSpo2Point;
         const dateStr = new Date(point.date).toLocaleDateString();
@@ -92,7 +92,6 @@ export function MinSpo2VsDurationChart({ points }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (v: number) => fmtSec(v),
       },
@@ -102,7 +101,6 @@ export function MinSpo2VsDurationChart({ points }: Props) {
       nameGap: 24,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -116,7 +114,6 @@ export function MinSpo2VsDurationChart({ points }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine, opacity: 0.4 } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: '{value}%',
       },

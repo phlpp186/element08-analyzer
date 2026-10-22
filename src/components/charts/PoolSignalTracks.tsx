@@ -29,7 +29,7 @@
  */
 import { useCallback, useMemo } from "react";
 import * as echarts from "echarts/core";
-import ReactECharts from "echarts-for-react";
+import ReactECharts from "./EChart";
 import type { PoolTraceData } from "../../lib/analytics/poolTrace";
 import {
   useChartTheme,
@@ -301,7 +301,6 @@ function buildSignalOption(p: SignalOptionParams, ct: ChartTheme) {
       borderColor: ct.axisLine,
       textStyle: {
         color: ct.text,
-        fontFamily: "Nunito, system-ui",
         fontSize: 12,
       },
       trigger: "axis" as const,

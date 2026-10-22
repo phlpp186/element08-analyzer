@@ -145,12 +145,7 @@ export function CompareDives() {
               setMode(m.id);
               setQuery('');
             }}
-            className={[
-              'rounded-full border px-4 py-1.5 text-sm transition-colors',
-              mode === m.id
-                ? 'border-accent bg-accent/10 text-accent'
-                : 'border-border text-textDim hover:border-accent hover:text-accent',
-            ].join(' ')}
+            className={`pill px-4 py-1.5 text-sm ${mode === m.id ? 'pill-on' : ''}`}
           >
             {t(m.label)}
           </button>
@@ -460,7 +455,7 @@ function StatTable({
 }) {
   const t = useT();
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-panel">
+    <div className="overflow-x-auto board">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border">
@@ -536,12 +531,7 @@ function PillToggle<T extends string | number>({
           key={o.id}
           onClick={() => onChange(o.id)}
           title={o.hint}
-          className={[
-            'rounded-full border px-3 py-0.5 font-mono text-[11px] transition-colors',
-            value === o.id
-              ? 'border-accent bg-accent/10 text-accent'
-              : 'border-border text-textDim hover:border-accent hover:text-accent',
-          ].join(' ')}
+          className={`pill px-3 py-0.5 font-mono text-[11px] ${value === o.id ? 'pill-on' : ''}`}
         >
           {o.label}
         </button>
@@ -581,7 +571,7 @@ function Picker({
   const noun = mode === 'holds' ? t('Holds') : t('Dives');
 
   return (
-    <div className="rounded-lg border border-border bg-panel p-4">
+    <div className="board p-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-mono text-[10px] uppercase tracking-widest text-textDim">
           {noun} · {slots.length}/{max}

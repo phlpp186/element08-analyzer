@@ -3,7 +3,7 @@
  * session effort is spread. Unrated sessions are excluded (handled by the
  * analytics function).
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { EffortCount } from '../../lib/analytics/balance';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -35,7 +35,7 @@ export function EffortDistributionChart({ data }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         return `${t('Effort')} ${p.name}/10<br/>${p.value} ${p.value === 1 ? t('session') : t('sessions')}`;
@@ -48,7 +48,6 @@ export function EffortDistributionChart({ data }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       name: t('effort rating'),
@@ -56,7 +55,6 @@ export function EffortDistributionChart({ data }: Props) {
       nameGap: 26,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -67,7 +65,6 @@ export function EffortDistributionChart({ data }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       minInterval: 1,
@@ -82,7 +79,6 @@ export function EffortDistributionChart({ data }: Props) {
           show: true,
           position: 'top',
           color: ct.textDim,
-          fontFamily: 'Nunito, system-ui',
           fontSize: 10,
         },
       },

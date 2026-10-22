@@ -2,7 +2,7 @@
  * Depth Distribution — histogram of per-dive max depth bucketed in 5 m bins.
  * Warm-up / safety / excluded dives are filtered out upstream.
  */
-import ReactECharts from 'echarts-for-react';
+import ReactECharts from './EChart';
 import type { DepthBin } from '../../lib/analytics/depthInsights';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
@@ -34,7 +34,7 @@ export function DepthDistributionChart({ bins }: Props) {
       trigger: 'axis',
       backgroundColor: ct.tooltipBg,
       borderColor: ct.axisLine,
-      textStyle: { color: ct.text, fontFamily: 'Nunito, system-ui' },
+      textStyle: { color: ct.text },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const bin = bins[p.dataIndex];
@@ -48,7 +48,6 @@ export function DepthDistributionChart({ bins }: Props) {
       axisTick: { show: false },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
         formatter: (val: string, idx: number) =>
           bins.length > 12 && idx % 2 !== 0 ? '' : val,
@@ -58,7 +57,6 @@ export function DepthDistributionChart({ bins }: Props) {
       nameGap: 28,
       nameTextStyle: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
     },
@@ -69,7 +67,6 @@ export function DepthDistributionChart({ bins }: Props) {
       splitLine: { lineStyle: { color: ct.splitLine } },
       axisLabel: {
         color: ct.textDim,
-        fontFamily: 'Nunito, system-ui',
         fontSize: 10,
       },
       minInterval: 1,

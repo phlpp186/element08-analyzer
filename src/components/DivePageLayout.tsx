@@ -46,12 +46,15 @@ export function DiveHeader({
   backTo,
   backLabel,
   title,
+  hero,
   meta,
   nav,
 }: {
   backTo: To;
   backLabel: string;
   title: string;
+  /** The dive's headline figure (depth, distance), shown as the hero number. */
+  hero?: string;
   meta: ReactNode;
   nav?: ReactNode;
 }) {
@@ -65,7 +68,10 @@ export function DiveHeader({
         >
           ← {backLabel}
         </Link>
-        <h1 className="mt-1 font-heading text-2xl tracking-wide text-text">{title}</h1>
+        <h1 className="mt-1 flex flex-wrap items-baseline gap-x-3 font-heading text-2xl tracking-wide text-text">
+          <span>{title}</span>
+          {hero && <span className="hero-num whitespace-nowrap text-[2rem] leading-none">{hero}</span>}
+        </h1>
       </div>
       <div className="pb-1 font-mono text-[11px] uppercase tracking-widest text-textDim">
         {meta}
@@ -94,19 +100,11 @@ export function PrevNext({
 }) {
   return (
     <nav className="flex items-center gap-3 font-mono text-xs uppercase tracking-widest">
-      <button
-        disabled={!hasPrev}
-        onClick={onPrev}
-        className={hasPrev ? 'text-textDim hover:text-accent' : 'text-textDim opacity-30'}
-      >
+      <button disabled={!hasPrev} onClick={onPrev} className="pill whitespace-nowrap px-3 py-1">
         ← {prevLabel}
       </button>
-      <span className="text-textDim">{label}</span>
-      <button
-        disabled={!hasNext}
-        onClick={onNext}
-        className={hasNext ? 'text-textDim hover:text-accent' : 'text-textDim opacity-30'}
-      >
+      <span className="whitespace-nowrap text-textDim">{label}</span>
+      <button disabled={!hasNext} onClick={onNext} className="pill whitespace-nowrap px-3 py-1">
         {nextLabel} →
       </button>
     </nav>
@@ -138,7 +136,7 @@ export function ChartCard<T extends string>({
   children: ReactNode;
 }) {
   return (
-    <div className="glass-card flex flex-1 flex-col rounded-2xl p-3 sm:p-4 min-[960px]:min-h-0">
+    <div className="board flex flex-1 flex-col p-3 sm:p-4 min-[960px]:min-h-0">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <div role="tablist" className="flex flex-wrap gap-1.5">
           {tabs.map((tab) => (
@@ -147,12 +145,7 @@ export function ChartCard<T extends string>({
               role="tab"
               aria-selected={active === tab.id}
               onClick={() => onTab(tab.id)}
-              className={[
-                'rounded-full border px-3.5 py-1 font-mono text-[11px] uppercase tracking-widest transition-colors',
-                active === tab.id
-                  ? 'border-accent bg-accent text-ink'
-                  : 'border-border text-textDim hover:border-accent hover:text-accent',
-              ].join(' ')}
+              className={`pill px-3.5 py-1 font-mono text-[11px] uppercase tracking-widest ${active === tab.id ? 'pill-on' : ''}`}
             >
               {tab.label}
             </button>
@@ -199,7 +192,7 @@ export function SideCard({
   className?: string;
 }) {
   return (
-    <div className={`glass-card rounded-2xl p-4 ${className}`}>
+    <div className={`board p-4 ${className}`}>
       <h2 className="mb-3 font-mono text-[10px] uppercase tracking-[0.3em] text-textDim">
         {title}
       </h2>
@@ -208,11 +201,26 @@ export function SideCard({
   );
 }
 
+/** A stat tile's colour, by what it measures: the profile colour for
+ *  descent, amber for ascent, the hero colour for the headline figure. */
+export type Tone = 'hero' | 'profile' | 'amber' | 'accent' | 'highlight' | 'recover' | 'red';
+
 export interface StatTile {
   label: string;
   value: string;
   sub?: string;
+  tone?: Tone;
 }
+
+const TONE_VAR: Record<Tone, string> = {
+  hero: 'rgb(var(--c-hero))',
+  profile: 'rgb(var(--c-profile))',
+  amber: 'rgb(var(--c-amber))',
+  accent: 'rgb(var(--c-accent))',
+  highlight: 'rgb(var(--c-highlight))',
+  recover: 'rgb(var(--c-recover))',
+  red: 'rgb(var(--c-red))',
+};
 
 export function StatsCard({ title, tiles, empty }: { title: string; tiles: StatTile[]; empty: string }) {
   return (
@@ -225,16 +233,15 @@ export function StatsCard({ title, tiles, empty }: { title: string; tiles: StatT
             <div
               key={tile.label}
               // break-words: German compounds outgrow a 140 px tile.
-              className="min-w-0 break-words rounded-lg border border-border bg-abyss/50 px-3 py-2"
+              className="tile min-w-0 break-words px-3 py-2"
+              style={{ '--tone': TONE_VAR[tile.tone ?? 'accent'] } as React.CSSProperties}
             >
-              <div className="font-heading text-lg tracking-wide text-text tabular-nums">
-                {tile.value}
-              </div>
-              <div className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-textDim">
+              <div className="tile-value font-num text-xl font-bold tabular-nums">{tile.value}</div>
+              <div className="tile-label mt-0.5 font-mono text-[10px] font-extrabold uppercase tracking-widest">
                 {tile.label}
               </div>
               {tile.sub && (
-                <div className="font-mono text-[10px] text-textDim opacity-70">{tile.sub}</div>
+                <div className="tile-label font-mono text-[10px] opacity-80">{tile.sub}</div>
               )}
             </div>
           ))}
@@ -313,7 +320,7 @@ export function DiveListCard({ title, items }: { title: string; items: DiveListI
               className={[
                 'flex items-baseline justify-between gap-3 rounded-md px-2 py-1.5 font-mono text-xs transition-colors',
                 it.current
-                  ? 'bg-accent/15 text-accent'
+                  ? 'bg-accent/15 font-bold text-accent'
                   : `text-text hover:bg-abyss hover:text-accent ${it.dim ? 'opacity-60' : ''}`,
               ].join(' ')}
             >
