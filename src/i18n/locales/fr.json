@@ -635,5 +635,20 @@
   "pool noise level": "niveau de bruit",
   "glide quality": "qualité de glisse",
   "early-turn outcome": "issue du demi-tour",
-  "early-turn reason": "raison du demi-tour"
+  "early-turn reason": "raison du demi-tour",
+  "Previous month": "Mois précédent",
+  "Next month": "Mois suivant",
+  "Month": "Mois",
+  "This month": "Ce mois-ci",
+  "All months": "Tous les mois",
+  "Search this month": "Rechercher ce mois-ci",
+  "Search": "Rechercher",
+  "Deeper than": "Plus profond que",
+  "Effort 7+": "Effort 7+",
+  "Show the whole month": "Afficher tout le mois",
+  "{n} matching sessions": "{n} séances correspondantes",
+  "All sessions": "Toutes les séances",
+  "{n} matching in {month}": "{n} correspondantes en {month}",
+  "Notes": "Notes",
+  "Nothing here this month. Try another month, or switch to All months.": "Rien ce mois-ci. Essaie un autre mois ou passe à Tous les mois."
 }

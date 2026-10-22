@@ -635,5 +635,20 @@
   "pool noise level": "プールの騒音レベル",
   "glide quality": "グライドの質",
   "early-turn outcome": "早めのターンの結果",
-  "early-turn reason": "早めのターンの理由"
+  "early-turn reason": "早めのターンの理由",
+  "Previous month": "前の月",
+  "Next month": "次の月",
+  "Month": "月",
+  "This month": "今月",
+  "All months": "全期間",
+  "Search this month": "今月を検索",
+  "Search": "検索",
+  "Deeper than": "より深い",
+  "Effort 7+": "強度 7+",
+  "Show the whole month": "月全体を表示",
+  "{n} matching sessions": "一致するセッション {n} 件",
+  "All sessions": "すべてのセッション",
+  "{n} matching in {month}": "{month} の一致 {n} 件",
+  "Notes": "メモ",
+  "Nothing here this month. Try another month, or switch to All months.": "今月は何もありません。別の月を見るか、全期間に切り替えてください。"
 }

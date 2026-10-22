@@ -635,5 +635,20 @@
   "pool noise level": "ระดับเสียงในสระ",
   "glide quality": "คุณภาพการไถล",
   "early-turn outcome": "ผลการกลับตัวก่อน",
-  "early-turn reason": "เหตุผลที่กลับตัวก่อน"
+  "early-turn reason": "เหตุผลที่กลับตัวก่อน",
+  "Previous month": "เดือนก่อนหน้า",
+  "Next month": "เดือนถัดไป",
+  "Month": "เดือน",
+  "This month": "เดือนนี้",
+  "All months": "ทุกเดือน",
+  "Search this month": "ค้นหาในเดือนนี้",
+  "Search": "ค้นหา",
+  "Deeper than": "ลึกกว่า",
+  "Effort 7+": "ความหนัก 7+",
+  "Show the whole month": "แสดงทั้งเดือน",
+  "{n} matching sessions": "เซสชันที่ตรงกัน {n} รายการ",
+  "All sessions": "เซสชันทั้งหมด",
+  "{n} matching in {month}": "ตรงกัน {n} รายการใน {month}",
+  "Notes": "บันทึก",
+  "Nothing here this month. Try another month, or switch to All months.": "เดือนนี้ไม่มีข้อมูล ลองเดือนอื่นหรือเปลี่ยนเป็นทุกเดือน"
 }

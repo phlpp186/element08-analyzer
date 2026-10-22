@@ -635,5 +635,20 @@
   "pool noise level": "泳池噪音水準",
   "glide quality": "滑行品質",
   "early-turn outcome": "提前折返結果",
-  "early-turn reason": "提前折返原因"
+  "early-turn reason": "提前折返原因",
+  "Previous month": "上個月",
+  "Next month": "下個月",
+  "Month": "月",
+  "This month": "本月",
+  "All months": "所有月份",
+  "Search this month": "搜尋本月",
+  "Search": "搜尋",
+  "Deeper than": "深於",
+  "Effort 7+": "強度 7+",
+  "Show the whole month": "顯示整個月",
+  "{n} matching sessions": "{n} 次符合的訓練",
+  "All sessions": "所有訓練",
+  "{n} matching in {month}": "{month} 中 {n} 次符合",
+  "Notes": "備註",
+  "Nothing here this month. Try another month, or switch to All months.": "本月沒有內容。試試其他月份，或切換到所有月份。"
 }

@@ -635,5 +635,20 @@
   "pool noise level": "Lärmpegel im Bad",
   "glide quality": "Gleitqualität",
   "early-turn outcome": "Ergebnis frühe Wende",
-  "early-turn reason": "Grund der frühen Wende"
+  "early-turn reason": "Grund der frühen Wende",
+  "Previous month": "Vorheriger Monat",
+  "Next month": "Nächster Monat",
+  "Month": "Monat",
+  "This month": "Dieser Monat",
+  "All months": "Alle Monate",
+  "Search this month": "Diesen Monat durchsuchen",
+  "Search": "Suche",
+  "Deeper than": "Tiefer als",
+  "Effort 7+": "Anstrengung 7+",
+  "Show the whole month": "Ganzen Monat zeigen",
+  "{n} matching sessions": "{n} passende Sessions",
+  "All sessions": "Alle Sessions",
+  "{n} matching in {month}": "{n} passend im {month}",
+  "Notes": "Notizen",
+  "Nothing here this month. Try another month, or switch to All months.": "Diesen Monat ist nichts da. Probier einen anderen Monat oder wechsle zu Alle Monate."
 }

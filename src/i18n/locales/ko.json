@@ -635,5 +635,20 @@
   "pool noise level": "풀 소음 수준",
   "glide quality": "글라이드 품질",
   "early-turn outcome": "조기 턴 결과",
-  "early-turn reason": "조기 턴 이유"
+  "early-turn reason": "조기 턴 이유",
+  "Previous month": "이전 달",
+  "Next month": "다음 달",
+  "Month": "월",
+  "This month": "이번 달",
+  "All months": "모든 달",
+  "Search this month": "이번 달 검색",
+  "Search": "검색",
+  "Deeper than": "보다 깊은",
+  "Effort 7+": "강도 7+",
+  "Show the whole month": "한 달 전체 보기",
+  "{n} matching sessions": "일치하는 세션 {n}개",
+  "All sessions": "모든 세션",
+  "{n} matching in {month}": "{month} 일치 {n}개",
+  "Notes": "메모",
+  "Nothing here this month. Try another month, or switch to All months.": "이번 달에는 없습니다. 다른 달을 보거나 모든 달로 바꿔 보세요."
 }

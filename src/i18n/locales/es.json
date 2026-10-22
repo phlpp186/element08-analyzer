@@ -635,5 +635,20 @@
   "pool noise level": "nivel de ruido",
   "glide quality": "calidad del deslizamiento",
   "early-turn outcome": "resultado del giro anticipado",
-  "early-turn reason": "motivo del giro anticipado"
+  "early-turn reason": "motivo del giro anticipado",
+  "Previous month": "Mes anterior",
+  "Next month": "Mes siguiente",
+  "Month": "Mes",
+  "This month": "Este mes",
+  "All months": "Todos los meses",
+  "Search this month": "Buscar en este mes",
+  "Search": "Buscar",
+  "Deeper than": "Más profundo que",
+  "Effort 7+": "Esfuerzo 7+",
+  "Show the whole month": "Mostrar todo el mes",
+  "{n} matching sessions": "{n} sesiones coincidentes",
+  "All sessions": "Todas las sesiones",
+  "{n} matching in {month}": "{n} coincidentes en {month}",
+  "Notes": "Notas",
+  "Nothing here this month. Try another month, or switch to All months.": "No hay nada este mes. Prueba otro mes o cambia a Todos los meses."
 }
