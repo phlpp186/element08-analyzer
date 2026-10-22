@@ -15,9 +15,10 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import ReactECharts from '../components/charts/EChart';
-import { useT } from '../i18n';
+import { useLangValue, useT } from '../i18n';
 import { useChartTheme, type ChartTheme } from '../lib/chartTheme';
 import { useBackupStore } from '../stores/useBackupStore';
+import type { ParsedSession } from '../schema/backup';
 import {
   applyFilters,
   type Filters,
@@ -93,15 +94,6 @@ interface QuestionPreset {
 
 const CATEGORY_ORDER = ['Mouthfill', 'Speed', 'Depth', 'Early turns', 'Time'];
 
-const RENDER_SHORT: Record<RenderMode, string> = {
-  bar: 'bars',
-  box: 'box',
-  scatter: 'scatter',
-  hist: 'histogram',
-  xy: 'X✕Y',
-  heatmap: 'heatmap',
-};
-
 const QUESTIONS: QuestionPreset[] = [
   // ── Mouthfill ──
   { q: 'Does my mouthfill change with suit thickness?', category: 'Mouthfill', mode: 'depth', metric: 'depth.mfFactor', dim: 'num.suitMm', stat: 'avg', render: 'bar' },
@@ -130,6 +122,8 @@ const QUESTIONS: QuestionPreset[] = [
 
 type RenderMode = 'bar' | 'box' | 'scatter' | 'hist' | 'xy' | 'heatmap';
 
+const NO_SESSIONS: ParsedSession[] = [];
+
 function todayIso(): string { return isoDate(new Date()); }
 function isoDate(d: Date): string {
   const y = d.getFullYear();
@@ -145,6 +139,7 @@ function isoDaysAgo(days: number): string {
 
 export function Playground() {
   const t = useT();
+  const lang = useLangValue();
   const cm = commonOf(useChartTheme());
   const backup = useBackupStore((s) => s.backup);
 
@@ -168,8 +163,6 @@ export function Playground() {
   const [dim2Id, setDim2Id] = useState<string>(availableDims[1]?.id ?? availableDims[0]?.id ?? '');
   const [stat, setStat] = useState<Stat>('avg');
   const [render, setRender] = useState<RenderMode>('bar');
-  // Which starter-question topic is expanded (null = none, just the pills).
-  const [questionCat, setQuestionCat] = useState<string | null>(CATEGORY_ORDER[0]);
 
   // Reset selections when mode changes to something that doesn't support them.
   const metric: PivotMetric = availableMetrics.find((m) => m.id === metricId) ?? availableMetrics[0];
@@ -184,8 +177,7 @@ export function Playground() {
   if (xMetric && xMetric.id !== xMetricId) setXMetricId(xMetric.id);
   if (dim2 && dim2.id !== dim2Id) setDim2Id(dim2.id);
 
-  if (!backup) return <Navigate to="/" replace />;
-  const sessions = backup.data.sessions;
+  const sessions = backup?.data.sessions ?? NO_SESSIONS;
 
   const filters: Filters = useMemo(() => {
     const preset = PRESETS.find((p) => p.id === presetId);
@@ -210,11 +202,6 @@ export function Playground() {
 
   // Group dimensions for the picker.
   const dimGroups = useMemo(() => groupDims(availableDims), [availableDims]);
-  const dimOptions = dimGroups.flatMap((g) => [
-    { value: `__group__${g.label}`, label: `── ${g.label} ──`, disabled: true },
-    ...g.dims.map((d) => ({ value: d.id, label: d.label })),
-  ]);
-  const metricOptions = availableMetrics.map((m) => ({ value: m.id, label: `${m.label} (${m.unit})` }));
 
   // Scatter only makes sense against a numeric X (weight, suit, etc.); fall
   // back to bars if the user had scatter on and switched to a categorical dim.
@@ -261,13 +248,157 @@ export function Playground() {
     setRender(p.render);
   }
 
+  if (!backup) return <Navigate to="/" replace />;
+
+  // ── The sentence ──────────────────────────────────────────────────────────
+  // One template per chart type, each word that can change a chip. The
+  // template is translated whole, so every language keeps its own word order.
+  const statWord: Record<Stat, string> = {
+    avg: t('average'),
+    median: t('median'),
+    max: t('highest'),
+    min: t('lowest'),
+    count: t('number'),
+  };
+  const modeWord: Record<SessionMode, string> = {
+    depth: t('depth dives'),
+    pool: t('pool dives'),
+    dry: t('dry sessions'),
+  };
+  const periodWord: Record<string, string> = {
+    all: t('all time'),
+    '30': t('the last 30 days'),
+    '90': t('the last 90 days'),
+    '365': t('the last year'),
+    custom: t('a custom range'),
+  };
+  const chartWord: Record<RenderMode, string> = {
+    bar: t('bars'),
+    box: t('a box plot'),
+    scatter: t('a scatter'),
+    hist: t('a histogram'),
+    xy: t('an X×Y plot'),
+    heatmap: t('a heatmap'),
+  };
+  const counting = stat === 'count' && (effRender === 'bar' || effRender === 'heatmap');
+  // A label as a word inside the sentence: translated, and lowercased only
+  // in English (German capitalises its nouns).
+  const word = (label: string) => (lang === 'en' ? softLower(t(label)) : t(label));
+  const template =
+    effRender === 'box'
+      ? t('Show the spread of {metric} in my {mode} by {dim} over {period} as {chart}.')
+      : effRender === 'hist'
+        ? t('Show how {metric} is spread across my {mode} over {period} as {chart}.')
+        : effRender === 'xy'
+          ? t('Show {metric} against {xMetric} for my {mode} over {period} as {chart}.')
+          : effRender === 'scatter'
+            ? t('Show {metric} against {dim} for my {mode} over {period} as {chart}.')
+            : effRender === 'heatmap'
+              ? counting
+                ? t('Show the {stat} of my {mode} by {dim} and {dim2} over {period} as {chart}.')
+                : t('Show the {stat} {metric} of my {mode} by {dim} and {dim2} over {period} as {chart}.')
+              : counting
+                ? t('Show the {stat} of my {mode} by {dim} over {period} as {chart}.')
+                : t('Show the {stat} {metric} of my {mode} by {dim} over {period} as {chart}.');
+
+  const dimSelectOptions = dimGroups.flatMap((g) =>
+    g.dims.map((d) => ({ value: d.id, label: t(d.label), group: t(g.label) })),
+  );
+  const metricSelectOptions = availableMetrics.map((m) => ({ value: m.id, label: `${t(m.label)} (${m.unit})` }));
+  const chips: Record<string, React.ReactNode> = {
+    stat: (
+      <ChipSelect
+        label={statWord[stat]}
+        value={stat}
+        ariaLabel={t('Stat')}
+        onChange={(v) => setStat(v as Stat)}
+        options={STATS.map((s) => ({ value: s.id, label: statWord[s.id] }))}
+      />
+    ),
+    metric: (
+      <ChipSelect
+        label={metric ? word(metric.label) : '–'}
+        value={metric?.id ?? ''}
+        ariaLabel={effRender === 'xy' ? t('Y (metric)') : t('What (metric)')}
+        onChange={setMetricId}
+        options={metricSelectOptions}
+      />
+    ),
+    xMetric: (
+      <ChipSelect
+        label={xMetric ? word(xMetric.label) : '–'}
+        value={xMetric?.id ?? ''}
+        ariaLabel={t('X (metric)')}
+        onChange={setXMetricId}
+        options={metricSelectOptions}
+      />
+    ),
+    mode: (
+      <ChipSelect
+        label={modeWord[mode]}
+        value={mode}
+        ariaLabel={t('Mode')}
+        onChange={(v) => setMode(v as SessionMode)}
+        options={MODES.map((m) => ({ value: m.id, label: modeWord[m.id as SessionMode] }))}
+      />
+    ),
+    dim: (
+      <ChipSelect
+        label={dim ? word(DIM_GROUP_NOUN[dim.id] ?? dim.label) : '–'}
+        value={dim?.id ?? ''}
+        ariaLabel={t('By (dimension)')}
+        onChange={setDimId}
+        options={dimSelectOptions}
+      />
+    ),
+    dim2: (
+      <ChipSelect
+        label={dim2 ? word(DIM_GROUP_NOUN[dim2.id] ?? dim2.label) : '–'}
+        value={dim2?.id ?? ''}
+        ariaLabel={t('By (two dimensions)')}
+        onChange={setDim2Id}
+        options={dimSelectOptions}
+      />
+    ),
+    period: (
+      <ChipSelect
+        label={periodWord[presetId] ?? periodWord.all}
+        value={presetId}
+        ariaLabel={t('Date range')}
+        onChange={setPresetId}
+        options={[...PRESETS.map((p) => p.id), 'custom'].map((id) => ({ value: id, label: periodWord[id] }))}
+      />
+    ),
+    chart: (
+      <ChipSelect
+        label={chartWord[effRender]}
+        value={effRender}
+        ariaLabel={t('Chart')}
+        onChange={(v) => setRender(v as RenderMode)}
+        options={(['bar', 'box', 'scatter', 'hist', 'xy', 'heatmap'] as RenderMode[])
+          // A scatter needs a numeric dimension to put on its x axis.
+          .filter((r) => r !== 'scatter' || dimIsNumeric)
+          .map((r) => ({ value: r, label: chartWord[r] }))}
+      />
+    ),
+  };
+  const sentence = template.split(/(\{[a-zA-Z0-9]+\})/).map((part, i) => {
+    const key = /^\{([a-zA-Z0-9]+)\}$/.exec(part)?.[1];
+    return key && chips[key] ? <span key={i}>{chips[key]}</span> : <span key={i}>{part}</span>;
+  });
+
+  // The first question of each topic as a one-tap pill; the rest in "More".
+  const featured = CATEGORY_ORDER.map((c) => QUESTIONS.find((q) => q.category === c)).filter(
+    (q): q is QuestionPreset => q != null,
+  );
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-light tracking-widest text-text">{t('Playground')}</h1>
           <p className="mt-1 max-w-xl text-sm text-textDim">
-            {t('Cross-cut any subset of your training: pick a metric, a dimension to pivot on, and a statistic. Toggle bars or box plot to see distributions.')}
+            {t('Pick a question, or change any coloured word to build your own chart.')}
           </p>
         </div>
         <Link
@@ -278,188 +409,80 @@ export function Playground() {
         </Link>
       </header>
 
-      {/* Starter questions — one tap fills the pivot below. */}
-      <section className="mb-5 board p-5">
-        <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-textDim">
-          {t('Starter questions')}
-        </div>
-        <p className="mb-3 text-sm text-textDim">
-          {t('Pick a topic, then tap a question to fill in the pivot below with the chart that best answers it.')}
-        </p>
-        <div className="mb-3 flex flex-wrap gap-2">
-          {CATEGORY_ORDER.map((cat) => (
-            <Pill
-              key={cat}
-              active={questionCat === cat}
-              onClick={() => setQuestionCat(questionCat === cat ? null : cat)}
-            >
-              {t(cat)}
-            </Pill>
-          ))}
-        </div>
-        {questionCat && (
-          <div className="flex flex-wrap gap-2">
-            {QUESTIONS.filter((q) => q.category === questionCat).map((qp) => (
-              <button
-                key={qp.q}
-                onClick={() => applyPreset(qp)}
-                className="pill px-3 py-1.5 text-sm"
-              >
-                {t(qp.q)}
-                <span className="ml-1.5 font-mono text-[10px] opacity-50">
-                  {t(RENDER_SHORT[qp.render])}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
+      <section className="mb-5 space-y-4 board p-5">
+        <p className="font-heading text-base leading-[2.2] text-text sm:text-xl sm:leading-[2.4]">{sentence}</p>
 
-      {/* Filters */}
-      <section className="space-y-5 board p-5">
-        <FieldRow label={t('Date range')}>
+        {presetId === 'custom' && (
           <div className="flex flex-wrap items-center gap-2">
-            {PRESETS.map((p) => (
-              <Pill key={p.id} active={presetId === p.id} onClick={() => setPresetId(p.id)}>
-                {t(p.label)}
+            <input
+              type="date"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              aria-label={t('From')}
+              className="rounded-md border border-border bg-abyss px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
+            />
+            <span className="font-mono text-xs text-textDim">→</span>
+            <input
+              type="date"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              aria-label={t('To')}
+              className="rounded-md border border-border bg-abyss px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
+            />
+          </div>
+        )}
+
+        {mode === 'dry' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">{t('Only')}</span>
+            {TAGS.map((tag) => (
+              <Pill key={tag.id} active={tags.includes(tag.id)} onClick={() => setTags(toggle(tags, tag.id))}>
+                {t(tag.label)}
               </Pill>
             ))}
-            <Pill active={presetId === 'custom'} onClick={() => setPresetId('custom')}>{t('Custom')}</Pill>
-            {presetId === 'custom' && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={customFrom}
-                  onChange={(e) => setCustomFrom(e.target.value)}
-                  className="rounded-md border border-border bg-deep px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
-                />
-                <span className="font-mono text-xs text-textDim">→</span>
-                <input
-                  type="date"
-                  value={customTo}
-                  onChange={(e) => setCustomTo(e.target.value)}
-                  className="rounded-md border border-border bg-deep px-2 py-1 font-mono text-sm text-text focus:border-accent focus:outline-none"
-                />
-              </div>
+            <span className="mx-1 text-textDim opacity-40">·</span>
+            {LUNG_VOLS.map((lv) => (
+              <Pill key={lv} active={lungVols.includes(lv)} onClick={() => setLungVols(toggle(lungVols, lv))}>
+                {lv}
+              </Pill>
+            ))}
+            {(tags.length > 0 || lungVols.length > 0) && (
+              <button
+                onClick={() => {
+                  setTags([]);
+                  setLungVols([]);
+                }}
+                className="font-mono text-[10px] uppercase tracking-widest text-textDim hover:text-accent"
+              >
+                {t('clear')}
+              </button>
             )}
           </div>
-        </FieldRow>
-
-        <FieldRow label={t('Mode')}>
-          <div className="flex flex-wrap gap-2">
-            {MODES.map((m) => (
-              <Pill key={m.id} active={mode === m.id} onClick={() => setMode(m.id as SessionMode)}>
-                {t(m.label)}
-              </Pill>
-            ))}
-          </div>
-        </FieldRow>
-
-        {mode === 'dry' && (
-          <FieldRow label={t('Session tag')}>
-            <div className="flex flex-wrap gap-2">
-              {TAGS.map((tag) => (
-                <Pill key={tag.id} active={tags.includes(tag.id)} onClick={() => setTags(toggle(tags, tag.id))}>
-                  {t(tag.label)}
-                </Pill>
-              ))}
-              {tags.length > 0 && (
-                <button
-                  onClick={() => setTags([])}
-                  className="font-mono text-[10px] uppercase tracking-widest text-textDim hover:text-accent"
-                >
-                  {t('clear')}
-                </button>
-              )}
-            </div>
-          </FieldRow>
         )}
 
-        {mode === 'dry' && (
-          <FieldRow label={t('Lung volume')}>
-            <div className="flex flex-wrap gap-2">
-              {LUNG_VOLS.map((lv) => (
-                <Pill key={lv} active={lungVols.includes(lv)} onClick={() => setLungVols(toggle(lungVols, lv))}>
-                  {lv}
-                </Pill>
-              ))}
-              {lungVols.length > 0 && (
-                <button
-                  onClick={() => setLungVols([])}
-                  className="font-mono text-[10px] uppercase tracking-widest text-textDim hover:text-accent"
-                >
-                  {t('clear')}
-                </button>
-              )}
-            </div>
-          </FieldRow>
-        )}
+        <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">{t('Try')}</span>
+          {/* On a phone the long pills would fill the screen; "More" has them all. */}
+          {featured.map((qp) => (
+            <button key={qp.q} onClick={() => applyPreset(qp)} className="pill px-3 py-1 text-sm max-sm:hidden">
+              {t(qp.q)}
+            </button>
+          ))}
+          <ChipSelect
+            label={`${t('More questions')}`}
+            value=""
+            ariaLabel={t('More questions')}
+            onChange={(v) => {
+              const qp = QUESTIONS[Number(v)];
+              if (qp) applyPreset(qp);
+            }}
+            options={QUESTIONS.map((q, i) => ({ value: String(i), label: t(q.q), group: t(q.category) }))}
+            small
+          />
+        </div>
       </section>
 
-      {/* Pivot knobs + chart */}
-      <section className="mt-5 space-y-4 board p-5">
-        <div className="grid gap-4 lg:grid-cols-3">
-          <PickerColumn label={effRender === 'xy' ? t('Y (metric)') : t('What (metric)')}>
-            <Dropdown value={metric?.id ?? ''} onChange={setMetricId} options={metricOptions} />
-          </PickerColumn>
-          {effRender === 'xy' ? (
-            <PickerColumn label={t('X (metric)')}>
-              <Dropdown value={xMetric?.id ?? ''} onChange={setXMetricId} options={metricOptions} />
-            </PickerColumn>
-          ) : effRender === 'heatmap' ? (
-            <PickerColumn label={t('By (two dimensions)')}>
-              <Dropdown value={dim?.id ?? ''} onChange={setDimId} options={dimOptions} />
-              <div className="mt-2">
-                <Dropdown value={dim2?.id ?? ''} onChange={setDim2Id} options={dimOptions} />
-              </div>
-            </PickerColumn>
-          ) : (
-            <PickerColumn label={t('By (dimension)')}>
-              <Dropdown value={dim?.id ?? ''} onChange={setDimId} options={dimOptions} />
-            </PickerColumn>
-          )}
-          <PickerColumn label={t('Stat')}>
-            <div className="flex flex-wrap gap-2">
-              {STATS.map((s) => (
-                <Pill key={s.id} active={stat === s.id} onClick={() => setStat(s.id)}>
-                  {t(s.label)}
-                </Pill>
-              ))}
-            </div>
-          </PickerColumn>
-        </div>
-
-        {/* Live explanation of what the current pivot actually shows. */}
-        <PivotHelp
-          metricLabel={metric?.label ?? t('the metric')}
-          dimLabel={dim ? (DIM_GROUP_NOUN[dim.id] ?? dim.label) : t('group')}
-          rawDimLabel={dim?.label ?? t('group')}
-          xMetricLabel={xMetric?.label ?? t('another metric')}
-          dim2Label={dim2 ? (DIM_GROUP_NOUN[dim2.id] ?? dim2.label) : t('group')}
-          stat={stat}
-          render={effRender}
-          mode={mode}
-        />
-
-        <div className="flex items-center justify-between">
-          <p className="font-mono text-[11px] text-textDim">
-            {filtered.length} {t(filtered.length === 1 ? 'session' : 'sessions')} · {items.length} {t(items.length === 1 ? 'item' : 'items')}
-            {buckets.length > 0 && ` · ${buckets.length} ${t(buckets.length === 1 ? 'bucket' : 'buckets')}`}
-          </p>
-          <div className="flex gap-2">
-            <Pill active={effRender === 'bar'} onClick={() => setRender('bar')}>{t('Bars')}</Pill>
-            <Pill active={effRender === 'box'} onClick={() => setRender('box')}>{t('Box plot')}</Pill>
-            {dimIsNumeric && (
-              <Pill active={effRender === 'scatter'} onClick={() => setRender('scatter')}>
-                {t('Scatter')}
-              </Pill>
-            )}
-            <Pill active={effRender === 'hist'} onClick={() => setRender('hist')}>{t('Histogram')}</Pill>
-            <Pill active={effRender === 'xy'} onClick={() => setRender('xy')}>X &#10005; Y</Pill>
-            <Pill active={effRender === 'heatmap'} onClick={() => setRender('heatmap')}>{t('Heatmap')}</Pill>
-          </div>
-        </div>
-
+      <section className="space-y-3 board p-5">
         {(() => {
           const hasData =
             effRender === 'xy'
@@ -489,7 +512,7 @@ export function Playground() {
           const fit = effRender === 'scatter' ? scatterFit : effRender === 'xy' ? xyFit : null;
           return (
             <>
-              <ReactECharts option={option} style={{ height: effRender === 'heatmap' ? 420 : 360 }} notMerge />
+              <ReactECharts option={option} style={{ height: effRender === 'heatmap' ? 440 : 400 }} notMerge />
               {fit && (
                 <p className="mt-1 text-center font-mono text-[11px] text-textDim">
                   {describeCorrelation(fit.r, t)} · r = {fit.r.toFixed(2)}
@@ -498,6 +521,22 @@ export function Playground() {
             </>
           );
         })()}
+
+        {/* What the chart shows, in plain words, under it. */}
+        <PivotHelp
+          metricLabel={metric?.label ?? t('the metric')}
+          dimLabel={dim ? (DIM_GROUP_NOUN[dim.id] ?? dim.label) : t('group')}
+          rawDimLabel={dim?.label ?? t('group')}
+          xMetricLabel={xMetric?.label ?? t('another metric')}
+          dim2Label={dim2 ? (DIM_GROUP_NOUN[dim2.id] ?? dim2.label) : t('group')}
+          stat={stat}
+          render={effRender}
+          mode={mode}
+        />
+        <p className="font-mono text-[11px] text-textDim">
+          {filtered.length} {t(filtered.length === 1 ? 'session' : 'sessions')} · {items.length} {t(items.length === 1 ? 'item' : 'items')}
+          {buckets.length > 0 && ` · ${buckets.length} ${t(buckets.length === 1 ? 'bucket' : 'buckets')}`}
+        </p>
       </section>
     </div>
   );
@@ -505,38 +544,65 @@ export function Playground() {
 
 // ── Picker helpers ──────────────────────────────────────────────────────────
 
-function PickerColumn({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-textDim">
-        {label}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function Dropdown({
+/** A word in the sentence that is also a choice: it reads as a chip and a
+ *  transparent native select on top does the picking, so it works with the
+ *  keyboard, screen readers and phone pickers, and keeps option groups. */
+function ChipSelect({
+  label,
   value,
-  onChange,
   options,
+  onChange,
+  ariaLabel,
+  small = false,
 }: {
+  label: string;
   value: string;
+  options: { value: string; label: string; group?: string }[];
   onChange: (v: string) => void;
-  options: { value: string; label: string; disabled?: boolean }[];
+  ariaLabel: string;
+  small?: boolean;
 }) {
+  const groups: { group: string | undefined; items: typeof options }[] = [];
+  for (const o of options) {
+    const last = groups[groups.length - 1];
+    if (last && last.group === o.group) last.items.push(o);
+    else groups.push({ group: o.group, items: [o] });
+  }
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-md border border-border bg-deep px-3 py-2 font-mono text-sm text-text focus:border-accent focus:outline-none"
+    <span
+      className={`relative inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-border bg-abyss align-baseline font-num font-semibold text-accent transition-colors hover:border-accent ${
+        small ? 'px-2.5 py-0.5 text-sm' : 'px-2 py-0.5'
+      }`}
+      style={{ borderBottom: '3px solid rgb(var(--c-bevelBot))' }}
     >
-      {options.map((o) => (
-        <option key={o.value} value={o.value} disabled={o.disabled}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+      {label}
+      <span aria-hidden className="text-[0.7em] opacity-70">▾</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+      >
+        {value === '' && <option value="">{label}</option>}
+        {groups.map((g, i) =>
+          g.group ? (
+            <optgroup key={i} label={g.group}>
+              {g.items.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </optgroup>
+          ) : (
+            g.items.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))
+          ),
+        )}
+      </select>
+    </span>
   );
 }
 
@@ -548,21 +614,6 @@ function groupDims(dims: PivotDimension[]) {
     if (gs.length > 0) grouped.push({ label: g, dims: gs });
   }
   return grouped;
-}
-
-function FieldRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-textDim">{label}</div>
-      {children}
-    </div>
-  );
 }
 
 function Pill({
@@ -737,9 +788,40 @@ function commonOf(ct: ChartTheme) {
     accent: ct.accent,
     highlight: ct.highlight,
     heatRamp: ct.heatRamp,
-    mono: 'Nunito, system-ui',
-    inter: 'Nunito, system-ui',
+    mono: ct.fontFamily,
+    inter: ct.fontFamily,
+    /** Colours for categories that have none of their own. */
+    palette: [...new Set([ct.accent, ct.highlight, ct.amber, ct.profile, ct.red, ct.green])],
   };
+}
+
+/** Disciplines keep the colours they have everywhere else in the analyzer
+ *  (progression chart, pace chart); other categories take the palette. */
+const DISCIPLINE_COLORS: Record<string, string> = {
+  CWT: '#1bafe0',
+  CWTB: '#8a5fd6',
+  FIM: '#1fb894',
+  CNF: '#f0a500',
+  VWT: '#e84393',
+  NLT: '#e24b3c',
+  STA: '#e8c04a',
+  DYN: '#1fb894',
+  DYNB: '#8a5fd6',
+  DNF: '#e84393',
+};
+
+function categoryColor(label: string, i: number, cm: PlaygroundTheme): string {
+  return DISCIPLINE_COLORS[label.toUpperCase()] ?? cm.palette[i % cm.palette.length];
+}
+
+/** '#rrggbb' a little toward white, for the lit top of a bar. */
+function lighten(hex: string, f: number): string {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return hex;
+  const ch = (k: number) => {
+    const v = parseInt(hex.slice(k, k + 2), 16);
+    return Math.round(v + (255 - v) * f).toString(16).padStart(2, '0');
+  };
+  return `#${ch(1)}${ch(3)}${ch(5)}`;
 }
 type PlaygroundTheme = ReturnType<typeof commonOf>;
 
@@ -750,7 +832,9 @@ function fmt(v: number, unit: string): string {
     return m > 0 ? `${m}:${String(sec).padStart(2, '0')}` : `${sec}s`;
   }
   if (unit === '×') return v.toFixed(2);
-  if (unit === 'm/s' || unit === 'bpm' || unit === 'm') return v.toFixed(1).replace(/\.0$/, '');
+  // Speeds differ in the second decimal (0.97 vs 1.02 m/s); one would hide that.
+  if (unit === 'm/s') return v.toFixed(2);
+  if (unit === 'bpm' || unit === 'm') return v.toFixed(1).replace(/\.0$/, '');
   return String(Math.round(v));
 }
 
@@ -786,10 +870,17 @@ function buildBarOption(
         fontSize: 10,
         interval: 0,
         rotate: buckets.length > 6 ? 30 : 0,
+        // The category, and under it how many items make up its bar.
+        formatter: (v: string, i: number) =>
+          buckets.length > 6 ? v : `{cat|${v}}\n{n|n = ${buckets[i]?.n ?? 0}}`,
+        rich: {
+          cat: { color: cm.text, fontFamily: cm.mono, fontSize: 11, fontWeight: 700 },
+          n: { color: cm.textDim, fontFamily: cm.mono, fontSize: 9, padding: [3, 0, 0, 0] },
+        },
       },
       name: dim.label,
       nameLocation: 'middle',
-      nameGap: 44,
+      nameGap: 48,
       nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     yAxis: {
@@ -804,16 +895,35 @@ function buildBarOption(
     series: [
       {
         type: 'bar',
-        data: buckets.map((b) => b.value),
-        itemStyle: { color: cm.accent, borderRadius: [3, 3, 0, 0] },
-        barWidth: '70%',
+        data: buckets.map((b, i) => {
+          const c = categoryColor(b.label, i, cm);
+          return {
+            value: b.value,
+            itemStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [
+                  { offset: 0, color: lighten(c, 0.28) },
+                  { offset: 1, color: c },
+                ],
+              },
+              borderRadius: [6, 6, 0, 0],
+            },
+          };
+        }),
+        barWidth: '62%',
         label: {
           show: true,
           position: 'top',
-          color: cm.textDim,
+          color: cm.text,
           fontFamily: cm.mono,
-          fontSize: 9,
-          formatter: (p: any) => `n=${buckets[p.dataIndex].n}`,
+          fontSize: 12,
+          fontWeight: 700,
+          formatter: (p: any) => fmt(buckets[p.dataIndex].value, metric.unit),
         },
       },
     ],
@@ -898,10 +1008,17 @@ function buildBoxOption(
         fontSize: 10,
         interval: 0,
         rotate: buckets.length > 6 ? 30 : 0,
+        // The category, and under it how many items make up its bar.
+        formatter: (v: string, i: number) =>
+          buckets.length > 6 ? v : `{cat|${v}}\n{n|n = ${buckets[i]?.n ?? 0}}`,
+        rich: {
+          cat: { color: cm.text, fontFamily: cm.mono, fontSize: 11, fontWeight: 700 },
+          n: { color: cm.textDim, fontFamily: cm.mono, fontSize: 9, padding: [3, 0, 0, 0] },
+        },
       },
       name: dim.label,
       nameLocation: 'middle',
-      nameGap: 44,
+      nameGap: 48,
       nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     yAxis: {
@@ -1009,6 +1126,8 @@ function buildScatterOption(
     },
     xAxis: {
       type: 'value',
+      // Fit the data, not zero: speeds and depths sit far from 0.
+      scale: true,
       name: dim.label,
       nameLocation: 'middle',
       nameGap: 32,
@@ -1020,6 +1139,7 @@ function buildScatterOption(
     },
     yAxis: {
       type: 'value',
+      scale: true,
       name: metric.unit,
       nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
       axisLine: { show: false },
@@ -1134,6 +1254,8 @@ function buildXyOption(
     },
     xAxis: {
       type: 'value',
+      // Fit the data, not zero: speeds and depths sit far from 0.
+      scale: true,
       name: `${xMetric.label} (${xMetric.unit})`,
       nameLocation: 'middle',
       nameGap: 32,
@@ -1145,6 +1267,7 @@ function buildXyOption(
     },
     yAxis: {
       type: 'value',
+      scale: true,
       name: `${yMetric.label} (${yMetric.unit})`,
       nameTextStyle: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
       axisLine: { show: false },
