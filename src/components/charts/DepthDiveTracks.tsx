@@ -963,6 +963,23 @@ function buildSpeedByDepthOption(
   const toPlot = (s: [number, number][], sign: 1 | -1) =>
     s.map(([d, v]) => [sign * v, d] as [number, number]);
 
+  // What the bold lines draw, kept for the tooltip.
+  const shown = (byDepth: [number, number][]) =>
+    smoothWindow > 1 ? smoothSeries(byDepth, smoothWindow) : byDepth;
+  const descShown = shown(desc);
+  const ascShown = shown(asc);
+  // A branch's speed at a depth: the sample nearest to it. The tooltip reads
+  // both branches here because ECharts snaps an axis tooltip to only one of
+  // two lines that share no x values.
+  const speedAt = (branchData: [number, number][], d: number): number | null => {
+    let best: [number, number] | null = null;
+    for (const p of branchData) {
+      if (!best || Math.abs(p[0] - d) < Math.abs(best[0] - d)) best = p;
+    }
+    // Further than 1.5 m away the branch never passed this depth.
+    return best && Math.abs(best[0] - d) <= 1.5 ? best[1] : null;
+  };
+
   const branch = (
     name: string,
     byDepth: [number, number][],
@@ -1024,20 +1041,18 @@ function buildSpeedByDepthOption(
       axisPointer: { type: "line" as const, axis: "y" as const },
       formatter: (params: any) => {
         const arr = Array.isArray(params) ? params : [params];
-        // With smoothing on, raw underlays duplicate the names — keep the
-        // last (bold/smoothed) entry per series name. Speed shown as
-        // magnitude regardless of which side it's mirrored to.
-        const byName = new Map<string, [number, number]>();
-        for (const p of arr) {
-          if (p.seriesName === "__zero__") continue;
-          byName.set(p.seriesName, p.value as [number, number]);
-        }
-        const d = arr[0]?.value?.[1];
-        const lines = [...byName.entries()].map(
-          ([name, [v]]) =>
-            `${name}: ${typeof v === "number" ? Math.abs(v).toFixed(2) : v} m/s`,
-        );
-        return `${typeof d === "number" ? d.toFixed(1) : d} m<br/>${lines.join("<br/>")}`;
+        // The hovered depth: the pointer's own value on the depth axis.
+        const first = arr[0];
+        const d =
+          typeof first?.axisValue === "number" ? first.axisValue : first?.value?.[1];
+        if (typeof d !== "number") return "";
+        const row = (name: string, color: string, v: number | null) =>
+          `<span style="color:${color}">●</span> ${name}: ${v == null ? "–" : `${v.toFixed(2)} m/s`}`;
+        return [
+          `${d.toFixed(1)} m`,
+          row(descName, ct.profile, speedAt(descShown, d)),
+          row(ascName, ct.amber, speedAt(ascShown, d)),
+        ].join("<br/>");
       },
     },
     xAxis: {
