@@ -650,5 +650,21 @@
   "All sessions": "Toutes les séances",
   "{n} matching in {month}": "{n} correspondantes en {month}",
   "Notes": "Notes",
-  "Nothing here this month. Try another month, or switch to All months.": "Rien ce mois-ci. Essaie un autre mois ou passe à Tous les mois."
+  "Nothing here this month. Try another month, or switch to All months.": "Rien ce mois-ci. Essaie un autre mois ou passe à Tous les mois.",
+  "Session": "Séance",
+  "Avg SI": "IS moy.",
+  "Longest": "La plus longue",
+  "Avg pace": "Allure moy.",
+  "Avg hold": "Apnée moy.",
+  "No notes for this session.": "Pas de notes pour cette séance.",
+  "All dives": "Toutes les plongées",
+  "No dive profiles in this session.": "Aucun profil de plongée dans cette séance.",
+  "Compare dives {list}": "Comparer les plongées {list}",
+  "Hold time per dive": "Durée par plongée",
+  "Distance per dive": "Distance par plongée",
+  "Hold time per hold": "Durée par apnée",
+  "No holds in this session.": "Aucune apnée dans cette séance.",
+  "Box breathing": "Respiration carrée",
+  "Long exhale": "Expiration longue",
+  "Relaxed": "Détendue"
 }

@@ -650,5 +650,21 @@
   "All sessions": "Alle Sessions",
   "{n} matching in {month}": "{n} passend im {month}",
   "Notes": "Notizen",
-  "Nothing here this month. Try another month, or switch to All months.": "Diesen Monat ist nichts da. Probier einen anderen Monat oder wechsle zu Alle Monate."
+  "Nothing here this month. Try another month, or switch to All months.": "Diesen Monat ist nichts da. Probier einen anderen Monat oder wechsle zu Alle Monate.",
+  "Session": "Session",
+  "Avg SI": "Ø Pause",
+  "Longest": "Längster",
+  "Avg pace": "Ø Tempo",
+  "Avg hold": "Ø Atemanhalt",
+  "No notes for this session.": "Keine Notizen zu dieser Session.",
+  "All dives": "Alle Tauchgänge",
+  "No dive profiles in this session.": "Keine Tauchprofile in dieser Session.",
+  "Compare dives {list}": "Tauchgänge {list} vergleichen",
+  "Hold time per dive": "Haltezeit pro Tauchgang",
+  "Distance per dive": "Strecke pro Tauchgang",
+  "Hold time per hold": "Zeit pro Atemanhalt",
+  "No holds in this session.": "Keine Atemanhalte in dieser Session.",
+  "Box breathing": "Box-Atmung",
+  "Long exhale": "Lange Ausatmung",
+  "Relaxed": "Entspannt"
 }

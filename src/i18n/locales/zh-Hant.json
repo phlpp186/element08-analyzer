@@ -650,5 +650,21 @@
   "All sessions": "所有訓練",
   "{n} matching in {month}": "{month} 中 {n} 次符合",
   "Notes": "備註",
-  "Nothing here this month. Try another month, or switch to All months.": "本月沒有內容。試試其他月份，或切換到所有月份。"
+  "Nothing here this month. Try another month, or switch to All months.": "本月沒有內容。試試其他月份，或切換到所有月份。",
+  "Session": "訓練",
+  "Avg SI": "平均水面間隔",
+  "Longest": "最長",
+  "Avg pace": "平均配速",
+  "Avg hold": "平均閉氣",
+  "No notes for this session.": "本次訓練沒有備註。",
+  "All dives": "所有潛水",
+  "No dive profiles in this session.": "本次訓練沒有潛水曲線。",
+  "Compare dives {list}": "比較潛水 {list}",
+  "Hold time per dive": "每次潛水的閉氣時間",
+  "Distance per dive": "每次潛水的距離",
+  "Hold time per hold": "每次閉氣時間",
+  "No holds in this session.": "本次訓練沒有閉氣。",
+  "Box breathing": "箱式呼吸",
+  "Long exhale": "長呼氣",
+  "Relaxed": "放鬆"
 }

@@ -650,5 +650,21 @@
   "All sessions": "모든 세션",
   "{n} matching in {month}": "{month} 일치 {n}개",
   "Notes": "메모",
-  "Nothing here this month. Try another month, or switch to All months.": "이번 달에는 없습니다. 다른 달을 보거나 모든 달로 바꿔 보세요."
+  "Nothing here this month. Try another month, or switch to All months.": "이번 달에는 없습니다. 다른 달을 보거나 모든 달로 바꿔 보세요.",
+  "Session": "세션",
+  "Avg SI": "평균 수면 휴식",
+  "Longest": "최장",
+  "Avg pace": "평균 페이스",
+  "Avg hold": "평균 숨참기",
+  "No notes for this session.": "이 세션에는 메모가 없습니다.",
+  "All dives": "모든 다이브",
+  "No dive profiles in this session.": "이 세션에는 다이브 프로필이 없습니다.",
+  "Compare dives {list}": "다이브 {list} 비교",
+  "Hold time per dive": "다이브별 숨참기 시간",
+  "Distance per dive": "다이브별 거리",
+  "Hold time per hold": "숨참기별 시간",
+  "No holds in this session.": "이 세션에는 숨참기가 없습니다.",
+  "Box breathing": "박스 호흡",
+  "Long exhale": "긴 날숨",
+  "Relaxed": "편안하게"
 }

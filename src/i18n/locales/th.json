@@ -650,5 +650,21 @@
   "All sessions": "เซสชันทั้งหมด",
   "{n} matching in {month}": "ตรงกัน {n} รายการใน {month}",
   "Notes": "บันทึก",
-  "Nothing here this month. Try another month, or switch to All months.": "เดือนนี้ไม่มีข้อมูล ลองเดือนอื่นหรือเปลี่ยนเป็นทุกเดือน"
+  "Nothing here this month. Try another month, or switch to All months.": "เดือนนี้ไม่มีข้อมูล ลองเดือนอื่นหรือเปลี่ยนเป็นทุกเดือน",
+  "Session": "เซสชัน",
+  "Avg SI": "พักผิวน้ำเฉลี่ย",
+  "Longest": "ยาวที่สุด",
+  "Avg pace": "เพซเฉลี่ย",
+  "Avg hold": "กลั้นหายใจเฉลี่ย",
+  "No notes for this session.": "ไม่มีบันทึกสำหรับเซสชันนี้",
+  "All dives": "ไดฟ์ทั้งหมด",
+  "No dive profiles in this session.": "ไม่มีโปรไฟล์ไดฟ์ในเซสชันนี้",
+  "Compare dives {list}": "เปรียบเทียบไดฟ์ {list}",
+  "Hold time per dive": "เวลากลั้นหายใจต่อไดฟ์",
+  "Distance per dive": "ระยะทางต่อไดฟ์",
+  "Hold time per hold": "เวลาต่อการกลั้นหายใจ",
+  "No holds in this session.": "ไม่มีการกลั้นหายใจในเซสชันนี้",
+  "Box breathing": "หายใจแบบกล่อง",
+  "Long exhale": "หายใจออกยาว",
+  "Relaxed": "ผ่อนคลาย"
 }

@@ -650,5 +650,21 @@
   "All sessions": "すべてのセッション",
   "{n} matching in {month}": "{month} の一致 {n} 件",
   "Notes": "メモ",
-  "Nothing here this month. Try another month, or switch to All months.": "今月は何もありません。別の月を見るか、全期間に切り替えてください。"
+  "Nothing here this month. Try another month, or switch to All months.": "今月は何もありません。別の月を見るか、全期間に切り替えてください。",
+  "Session": "セッション",
+  "Avg SI": "平均水面休息",
+  "Longest": "最長",
+  "Avg pace": "平均ペース",
+  "Avg hold": "平均息止め",
+  "No notes for this session.": "このセッションにメモはありません。",
+  "All dives": "すべてのダイブ",
+  "No dive profiles in this session.": "このセッションにダイブプロファイルはありません。",
+  "Compare dives {list}": "ダイブ {list} を比較",
+  "Hold time per dive": "ダイブごとの息止め時間",
+  "Distance per dive": "ダイブごとの距離",
+  "Hold time per hold": "息止めごとの時間",
+  "No holds in this session.": "このセッションに息止めはありません。",
+  "Box breathing": "ボックス呼吸",
+  "Long exhale": "長い呼気",
+  "Relaxed": "リラックス"
 }

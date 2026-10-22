@@ -14,7 +14,7 @@
  * column (chart + stat table), 320px right panel (picker).
  */
 import { useMemo, useRef, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { useT } from '../i18n';
 import type { ParsedSession } from '../schema/backup';
 import { useBackupStore } from '../stores/useBackupStore';
@@ -100,7 +100,12 @@ export function CompareDives() {
   const setPicks = useDiveCompareStore((s) => s.setPicks);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const [mode, setMode] = useState<CompareMode>('depth');
+  // ?mode=pool / holds: a session page's "Compare dives" opens the right mode.
+  const [params] = useSearchParams();
+  const [mode, setMode] = useState<CompareMode>(() => {
+    const m = params.get('mode');
+    return m === 'pool' || m === 'holds' ? m : 'depth';
+  });
   const [query, setQuery] = useState('');
   const [depthAlign, setDepthAlign] = useState<OverlayAlign>('start');
   // Which optional secondary panel to stack under the depth profile in
