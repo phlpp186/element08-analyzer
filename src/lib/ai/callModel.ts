@@ -35,8 +35,25 @@ function proxyUrl(): string {
   return override && override.trim() ? override.trim() : DEFAULT_ASK_URL;
 }
 
-/** Build the callModel used in production (web). */
-export function createProxyCallModel(getAccessToken: () => Promise<string | null>): CallModel {
+/** The month's question count, as the proxy reports it on a metered call. */
+export interface AskUsage {
+  used: number;
+  limit: number;
+}
+
+function readUsage(json: unknown): AskUsage | null {
+  const u = (json as { usage?: Partial<AskUsage> } | null)?.usage;
+  return u && typeof u.used === 'number' && typeof u.limit === 'number'
+    ? { used: u.used, limit: u.limit }
+    : null;
+}
+
+/** Build the callModel used in production (web). `onUsage` hears the month's
+ *  question count whenever the proxy reports it (metered calls and the 429). */
+export function createProxyCallModel(
+  getAccessToken: () => Promise<string | null>,
+  onUsage?: (usage: AskUsage) => void,
+): CallModel {
   return async (req: CallModelRequest): Promise<ModelResponse> => {
     const url = proxyUrl();
 
@@ -60,13 +77,19 @@ export function createProxyCallModel(getAccessToken: () => Promise<string | null
     }
 
     if (res.status === 402) throw new AskError('not_pro');
-    if (res.status === 429) throw new AskError('quota');
+    if (res.status === 429) {
+      const usage = readUsage(await res.json().catch(() => null));
+      if (usage) onUsage?.(usage);
+      throw new AskError('quota');
+    }
     // The function returns 404 if it is not deployed.
     if (res.status === 404) throw new AskError('unavailable');
     if (!res.ok) throw new AskError('proxy', `Assistant error (${res.status}).`);
 
     const json = (await res.json()) as ModelResponse;
     if (!json || !Array.isArray(json.content)) throw new AskError('proxy', 'Malformed response.');
+    const usage = readUsage(json);
+    if (usage) onUsage?.(usage);
     return json;
   };
 }

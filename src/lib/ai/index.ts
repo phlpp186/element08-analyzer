@@ -42,7 +42,7 @@ export type {
 } from './agent';
 
 // Individual tools (schemas + executors), for narrowing the offered tool set.
-export { runQuery, QUERY_DIVES_TOOL } from './queryTools';
+export { runQuery, QUERY_DIVES_TOOL, buildRows, getField } from './queryTools';
 export type { QuerySpec, QueryResult, QueryFilter, QueryMetric, Dataset } from './queryTools';
 export { listDives, LIST_DIVES_TOOL, MAX_ROWS } from './listDives';
 export type { ListDivesSpec, ListDivesResult } from './listDives';
@@ -55,7 +55,7 @@ export { summarizeFields, renderAvailability } from './fieldCatalog';
 
 // ─── Model transport ─────────────────────────────────────────────────────────
 export { createProxyCallModel, AskError } from './callModel';
-export type { AskErrorKind } from './callModel';
+export type { AskErrorKind, AskUsage } from './callModel';
 
 // ─── Types boundary ──────────────────────────────────────────────────────────
 export type { Session } from './appTypes';
