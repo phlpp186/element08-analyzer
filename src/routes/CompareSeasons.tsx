@@ -20,14 +20,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useT } from '../i18n';
 import { useBackupStore } from '../stores/useBackupStore';
+import type { ParsedSession } from '../schema/backup';
 import { CompareModeHeader } from '../components/CompareModeHeader';
 import { useCompareStore } from '../stores/useCompareStore';
 import {
   aggregatePeriods,
-  defaultPeriod,
   METRICS,
   type Metric,
 } from '../lib/analytics/periodCompare';
+import { seasonPreset, type SeasonPreset } from '../lib/analytics/quickPicks';
 import { buildPeriodMatrix } from '../lib/analytics/periodMatrix';
 import { summarizePeriods } from '../lib/analytics/periodSummary';
 import {
@@ -38,6 +39,7 @@ import { PeriodEditor } from '../components/PeriodEditor';
 import { PeriodComparisonChart } from '../components/charts/PeriodComparisonChart';
 import { PeriodHeatmap } from '../components/charts/PeriodHeatmap';
 import { PeriodsSummary } from '../components/PeriodsSummary';
+import { PeriodScoreboard } from '../components/PeriodScoreboard';
 import { ExerciseScatter } from '../components/charts/ExerciseScatter';
 
 type Tab = 'overlay' | 'heatmap' | 'summary' | 'exercises';
@@ -65,6 +67,14 @@ const TABS: { id: Tab; label: string; description: string }[] = [
   },
 ];
 
+const SEASON_PRESETS: { id: SeasonPreset; prefix: string; label: string }[] = [
+  { id: 'last12', prefix: 'l12', label: 'Last 12 weeks vs the 12 before' },
+  { id: 'year', prefix: 'year', label: 'This year vs last year' },
+  { id: 'months3', prefix: 'm3', label: 'Last 3 months vs same months last year' },
+];
+
+const NO_SESSIONS: ParsedSession[] = [];
+
 const EXERCISE_MODES: { id: ExerciseMode; label: string }[] = [
   { id: 'breathhold', label: 'Breath hold' }, // dry holds + pool STA
   { id: 'depth',      label: 'Depth' },
@@ -77,7 +87,7 @@ export function CompareSeasons() {
   const periods = useCompareStore((s) => s.periods);
   const metric = useCompareStore((s) => s.metric);
   const setMetric = useCompareStore((s) => s.setMetric);
-  const addPeriod = useCompareStore((s) => s.addPeriod);
+  const setPeriods = useCompareStore((s) => s.setPeriods);
 
   const [tab, setTab] = useState<Tab>('overlay');
   // Periodization + Exercises are both "pick one period" views — they
@@ -85,14 +95,14 @@ export function CompareSeasons() {
   const [singlePeriodId, setSinglePeriodId] = useState<string | null>(null);
   const [exerciseMode, setExerciseMode] = useState<ExerciseMode>('breathhold');
 
-  if (!backup) return <Navigate to="/" replace />;
+  const sessions = backup?.data.sessions ?? NO_SESSIONS;
 
-  const sessions = backup.data.sessions;
-
+  // First visit: the last 12 weeks against the 12 before. Setting (not
+  // adding) keeps React's double-run effects in development from stacking
+  // two identical periods.
   useEffect(() => {
-    if (periods.length === 0) {
-      const suggested = defaultPeriod(sessions);
-      if (suggested) addPeriod(suggested);
+    if (periods.length === 0 && sessions.length > 0) {
+      setPeriods(seasonPreset(sessions, 'last12', t));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -129,12 +139,33 @@ export function CompareSeasons() {
     [sessions, singlePeriod, exerciseMode],
   );
 
+  if (!backup) return <Navigate to="/" replace />;
+  // A preset is "on" while its periods are the ones shown.
+  const activePreset = SEASON_PRESETS.find(
+    (p) => periods.length === 2 && periods[0].id.startsWith(`${p.prefix}-`) && periods[1].id.startsWith(`${p.prefix}-`),
+  )?.id;
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
       <CompareModeHeader
         mode="seasons"
         description={t("Define one period per training cycle. The Overlay tab compares shapes across multiple periods; the Periodization tab zooms in on one period's week-by-week intensity profile.")}
       />
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-textDim">
+          {t('Quick picks')}
+        </span>
+        {SEASON_PRESETS.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => setPeriods(seasonPreset(sessions, p.id, t))}
+            className={`pill px-3.5 py-1 text-sm ${activePreset === p.id ? 'pill-on' : ''}`}
+          >
+            {t(p.label)}
+          </button>
+        ))}
+      </div>
 
       <nav className="board mb-6 flex w-fit max-w-full flex-wrap gap-1.5 p-1.5">
         {TABS.map((tab_) => {
@@ -153,7 +184,7 @@ export function CompareSeasons() {
       </nav>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {tab === 'overlay' && (
             <>
               <MetricSelector value={metric} onChange={setMetric} />
@@ -183,7 +214,17 @@ export function CompareSeasons() {
             </>
           )}
 
-          {tab === 'summary' && <PeriodsSummary summaries={summaries} />}
+          {tab === 'summary' && (
+            <>
+              <PeriodScoreboard summaries={summaries} />
+              {summaries.length > 1 && (
+                <h3 className="pt-2 font-mono text-[10px] uppercase tracking-[0.3em] text-textDim">
+                  {t('All periods')}
+                </h3>
+              )}
+              <PeriodsSummary summaries={summaries} />
+            </>
+          )}
 
           {tab === 'exercises' && (
             <>

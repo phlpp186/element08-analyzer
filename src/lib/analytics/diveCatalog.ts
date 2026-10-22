@@ -30,6 +30,14 @@ export interface CatalogEntry {
   search: string;
   /** True only when the entry can't be drawn (depth dive with no profile). */
   disabled: boolean;
+  /** The entry's figure for ranking: depth (m), distance (m, null for a
+   *  static) or hold time (s). */
+  value: number | null;
+  /** Discipline code, or 'HOLD' for breath holds. */
+  discipline: string;
+  sessionName: string;
+  /** What is missing ("no profile", "no HR", "no oximeter"), or ''. */
+  note: string;
 }
 
 export function buildCatalog(
@@ -69,6 +77,10 @@ function buildDepth(sessions: ParsedSession[]): CatalogEntry[] {
         line2: `${formatDate(session.date)}${hasProfile ? '' : ' · no profile'}`,
         search: `${formatDate(session.date)} ${discipline} ${depth}m ${session.name}`.toLowerCase(),
         disabled: !hasProfile,
+        value: depth > 0 ? depth : null,
+        discipline,
+        sessionName: session.name,
+        note: hasProfile ? '' : 'no profile',
       });
     });
   }
@@ -96,6 +108,10 @@ function buildPool(sessions: ParsedSession[]): CatalogEntry[] {
         line2: `${formatDate(session.date)}${hasHr ? '' : ' · no HR'}`,
         search: `${formatDate(session.date)} ${discipline} ${distLabel} ${session.name}`.toLowerCase(),
         disabled: false,
+        value: distance,
+        discipline,
+        sessionName: session.name,
+        note: hasHr ? '' : 'no HR',
       });
     });
   }
@@ -123,6 +139,10 @@ function buildHolds(sessions: ParsedSession[]): CatalogEntry[] {
         line2: `${formatDate(session.date)} · ${session.name}${hasOxy ? '' : ' · no oximeter'}`,
         search: `${formatDate(session.date)} hold ${fmtDur(seconds)} ${session.name}`.toLowerCase(),
         disabled: false,
+        value: seconds > 0 ? seconds : null,
+        discipline: 'HOLD',
+        sessionName: session.name,
+        note: hasOxy ? '' : 'no oximeter',
       });
       holdIdx++;
     }

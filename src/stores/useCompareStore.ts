@@ -11,6 +11,8 @@ interface CompareState {
   periods: Period[];
   metric: Metric;
   addPeriod: (p: Period) => void;
+  /** Replace all periods (a quick pick, or the first visit's default). */
+  setPeriods: (periods: Period[]) => void;
   updatePeriod: (id: string, patch: Partial<Period>) => void;
   removePeriod: (id: string) => void;
   setMetric: (m: Metric) => void;
@@ -21,6 +23,7 @@ export const useCompareStore = create<CompareState>((set) => ({
   periods: [],
   metric: 'sessions',
   addPeriod: (p) => set((s) => ({ periods: [...s.periods, p] })),
+  setPeriods: (periods) => set({ periods }),
   updatePeriod: (id, patch) =>
     set((s) => ({
       periods: s.periods.map((p) => (p.id === id ? { ...p, ...patch } : p)),

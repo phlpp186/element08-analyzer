@@ -47,6 +47,8 @@ interface DiveCompareState {
   toggle: (mode: CompareMode, sessionId: number, idx: number) => void;
   remove: (mode: CompareMode, sessionId: number, idx: number) => void;
   clear: (mode: CompareMode) => void;
+  /** Replace the mode's selection (a quick pick), colours assigned afresh. */
+  setPicks: (mode: CompareMode, picks: { sessionId: number; idx: number }[]) => void;
 }
 
 const same = (s: CompareSlot, sessionId: number, idx: number) =>
@@ -84,4 +86,14 @@ export const useDiveCompareStore = create<DiveCompareState>((set) => ({
     })),
   clear: (mode) =>
     set((st) => ({ selections: { ...st.selections, [mode]: [] } })),
+  setPicks: (mode, picks) =>
+    set((st) => ({
+      selections: {
+        ...st.selections,
+        [mode]: picks.slice(0, MAX_BY_MODE[mode]).map((p, i) => ({
+          ...p,
+          color: COMPARE_COLORS[i % COMPARE_COLORS.length],
+        })),
+      },
+    })),
 }));

@@ -122,7 +122,7 @@ function Td({ children }: { children: React.ReactNode }) {
 
 type ModeKey = 'dry' | 'depth' | 'pool';
 
-function ModeMixBar({ mix }: { mix: { dry: number; depth: number; pool: number } }) {
+export function ModeMixBar({ mix }: { mix: { dry: number; depth: number; pool: number } }) {
   const t = useT();
   const MODE_COLORS = modeColors(useChartTheme());
   const total = mix.dry + mix.depth + mix.pool;

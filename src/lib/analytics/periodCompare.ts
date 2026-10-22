@@ -281,23 +281,3 @@ function parseDurationMinutes(s: string | undefined): number {
   if (sec) total += parseInt(sec[1], 10) / 60;
   return total;
 }
-
-/** Suggest one default period covering the user's most recent 12 weeks
- *  ending today. Used as a sensible "give me something to look at" when
- *  the user lands on the compare page with no periods defined. */
-export function defaultPeriod(sessions: ParsedSession[]): Period | null {
-  if (sessions.length === 0) return null;
-  // Anchor on the most recent session (or today, whichever is earlier).
-  const latest = sessions
-    .map((s) => new Date(s.date))
-    .filter((d) => !Number.isNaN(d.getTime()))
-    .sort((a, b) => b.getTime() - a.getTime())[0];
-  if (!latest) return null;
-  return {
-    id: 'default',
-    label: 'Last 12 weeks',
-    color: '#1bafe0',
-    anchorDate: isoDate(latest),
-    weeksBefore: 12,
-  };
-}
