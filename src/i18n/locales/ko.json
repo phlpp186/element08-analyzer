@@ -686,5 +686,9 @@
   "Min HR": "최저 심박",
   "SpO₂ + HR": "SpO₂ + 심박",
   "1st C": "첫 수축",
-  "Whole session": "전체 세션"
+  "Whole session": "전체 세션",
+  "PB timeline": "PB 타임라인",
+  "PBs": "PB",
+  "No new PBs in the last 12 months.": "최근 12개월 동안 새 PB가 없습니다.",
+  "Last 12 months": "최근 12개월"
 }

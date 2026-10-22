@@ -238,6 +238,11 @@ const DISCIPLINE_COLORS: Record<string, string> = {
   CNF:  '#f0a500', // amber
   VWT:  '#e84393', // pink (rare, just in case)
   NLT:  '#e24b3c', // red (rare)
+  // Pool and statics, as in the pool pace chart.
+  STA:  '#e8c04a',
+  DYN:  '#1fb894',
+  DYNB: '#8a5fd6',
+  DNF:  '#e84393',
 };
 
 export function disciplineColor(discipline: string): string {

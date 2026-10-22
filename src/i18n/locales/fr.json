@@ -686,5 +686,9 @@
   "Min HR": "FC min",
   "SpO₂ + HR": "SpO₂ + FC",
   "1st C": "1re C",
-  "Whole session": "Toute la séance"
+  "Whole session": "Toute la séance",
+  "PB timeline": "Chronologie des records",
+  "PBs": "records",
+  "No new PBs in the last 12 months.": "Aucun nouveau record ces 12 derniers mois.",
+  "Last 12 months": "12 derniers mois"
 }

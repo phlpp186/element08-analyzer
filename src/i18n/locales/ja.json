@@ -686,5 +686,9 @@
   "Min HR": "最低心拍",
   "SpO₂ + HR": "SpO₂ + 心拍",
   "1st C": "初収縮",
-  "Whole session": "セッション全体"
+  "Whole session": "セッション全体",
+  "PB timeline": "PBタイムライン",
+  "PBs": "PB",
+  "No new PBs in the last 12 months.": "直近12か月に新しいPBはありません。",
+  "Last 12 months": "直近12か月"
 }

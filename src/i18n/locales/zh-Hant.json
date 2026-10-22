@@ -686,5 +686,9 @@
   "Min HR": "最低心率",
   "SpO₂ + HR": "SpO₂ + 心率",
   "1st C": "首次收縮",
-  "Whole session": "整個訓練"
+  "Whole session": "整個訓練",
+  "PB timeline": "PB 時間線",
+  "PBs": "次 PB",
+  "No new PBs in the last 12 months.": "最近 12 個月沒有新的 PB。",
+  "Last 12 months": "最近 12 個月"
 }

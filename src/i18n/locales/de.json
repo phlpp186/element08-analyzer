@@ -686,5 +686,9 @@
   "Min HR": "Min. HF",
   "SpO₂ + HR": "SpO₂ + HF",
   "1st C": "1. K",
-  "Whole session": "Ganze Session"
+  "Whole session": "Ganze Session",
+  "PB timeline": "PB-Zeitleiste",
+  "PBs": "PBs",
+  "No new PBs in the last 12 months.": "Keine neuen PBs in den letzten 12 Monaten.",
+  "Last 12 months": "Letzte 12 Monate"
 }

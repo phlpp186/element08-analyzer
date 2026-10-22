@@ -26,6 +26,7 @@ import {
 import { disciplineProgression } from '../lib/analytics/depthInsights';
 import { DisciplineProgressionChart } from '../components/charts/DisciplineProgressionChart';
 import { ChartCard } from '../components/charts/ChartCard';
+import { SeasonStory } from '../components/SeasonStory';
 import { useChartTheme } from '../lib/chartTheme';
 import { useT } from '../i18n';
 import type { ParsedSession } from '../schema/backup';
@@ -420,6 +421,9 @@ export function Progress() {
           tone="rgb(var(--c-accent))"
         />
       </div>
+
+      {/* The last 12 months in a line, and their PBs on one timeline */}
+      {backup && <SeasonStory sessions={backup.data.sessions} />}
 
       {/* Goals (signed-in, with targets) */}
       {goals.length > 0 && (
