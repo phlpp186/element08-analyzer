@@ -678,5 +678,10 @@
   "▲ {s} longer": "▲ {s} länger",
   "▼ {s} shorter": "▼ {s} kürzer",
   "{metric}: {value} against your usual {usual}.": "{metric}: {value} gegenüber üblichen {usual}.",
-  "A usual dive for this depth.": "Ein üblicher Tauchgang für diese Tiefe."
+  "A usual dive for this depth.": "Ein üblicher Tauchgang für diese Tiefe.",
+  "Lap": "Bahn",
+  "▲ {n} bpm higher": "▲ {n} bpm höher",
+  "▼ {n} bpm lower": "▼ {n} bpm niedriger",
+  "Pace /100m": "Tempo /100m",
+  "Min HR": "Min. HF"
 }

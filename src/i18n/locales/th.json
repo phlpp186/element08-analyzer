@@ -678,5 +678,10 @@
   "▲ {s} longer": "▲ นานขึ้น {s}",
   "▼ {s} shorter": "▼ สั้นลง {s}",
   "{metric}: {value} against your usual {usual}.": "{metric}: {value} เทียบกับปกติ {usual}",
-  "A usual dive for this depth.": "เป็นไดฟ์ตามปกติสำหรับความลึกนี้"
+  "A usual dive for this depth.": "เป็นไดฟ์ตามปกติสำหรับความลึกนี้",
+  "Lap": "รอบ",
+  "▲ {n} bpm higher": "▲ สูงขึ้น {n} bpm",
+  "▼ {n} bpm lower": "▼ ต่ำลง {n} bpm",
+  "Pace /100m": "เพซ /100ม.",
+  "Min HR": "ชีพจรต่ำสุด"
 }

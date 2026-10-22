@@ -678,5 +678,10 @@
   "▲ {s} longer": "▲ 長 {s}",
   "▼ {s} shorter": "▼ 短 {s}",
   "{metric}: {value} against your usual {usual}.": "{metric}：{value}，平時為 {usual}。",
-  "A usual dive for this depth.": "這個深度的一次常規潛水。"
+  "A usual dive for this depth.": "這個深度的一次常規潛水。",
+  "Lap": "趟",
+  "▲ {n} bpm higher": "▲ 高 {n} bpm",
+  "▼ {n} bpm lower": "▼ 低 {n} bpm",
+  "Pace /100m": "配速 /100公尺",
+  "Min HR": "最低心率"
 }

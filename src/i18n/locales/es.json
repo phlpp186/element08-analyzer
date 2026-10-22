@@ -678,5 +678,10 @@
   "▲ {s} longer": "▲ {s} más",
   "▼ {s} shorter": "▼ {s} menos",
   "{metric}: {value} against your usual {usual}.": "{metric}: {value} frente a tu habitual {usual}.",
-  "A usual dive for this depth.": "Una inmersión habitual para esta profundidad."
+  "A usual dive for this depth.": "Una inmersión habitual para esta profundidad.",
+  "Lap": "Largo",
+  "▲ {n} bpm higher": "▲ {n} lpm más",
+  "▼ {n} bpm lower": "▼ {n} lpm menos",
+  "Pace /100m": "Ritmo /100m",
+  "Min HR": "FC mín"
 }

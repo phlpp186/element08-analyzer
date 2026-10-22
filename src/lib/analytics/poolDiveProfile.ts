@@ -39,6 +39,8 @@ export interface PoolDiveData {
   /** Cumulative lap-end times. Rescaled to fit `diveTime` exactly, matching
    *  the mobile app's chart logic (lap totals don't always equal diveTime). */
   lapEndTimes: number[];
+  /** The stored lap splits (s), for labels. */
+  lapSeconds: number[];
   contractionTimes: number[];
   startT: number;
   endT: number;
@@ -82,6 +84,10 @@ export function extractPoolDiveData(dive: PoolDiveLike): PoolDiveData {
     }
   }
 
+  // The splits as stored: the labels quote these. Positions use the scaled
+  // lapEndTimes above, which can differ by the rounding of manual entries.
+  const lapSeconds = lapTimes.filter((n) => typeof n === 'number' && Number.isFinite(n) && n > 0);
+
   const contractionTimes = (dive.contractions ?? []).filter((t) => t > 0);
 
   // Determine time axis bounds. If we have any profile series, use its
@@ -101,6 +107,7 @@ export function extractPoolDiveData(dive: PoolDiveLike): PoolDiveData {
     hasDepth: depthSeries.length >= 2,
     hasSpeed: speedSeries.length >= 2,
     lapEndTimes,
+    lapSeconds,
     contractionTimes,
     startT,
     endT,

@@ -678,5 +678,10 @@
   "▲ {s} longer": "▲ {s} 長い",
   "▼ {s} shorter": "▼ {s} 短い",
   "{metric}: {value} against your usual {usual}.": "{metric}：{value}（いつもは {usual}）。",
-  "A usual dive for this depth.": "この深度ではいつも通りのダイブです。"
+  "A usual dive for this depth.": "この深度ではいつも通りのダイブです。",
+  "Lap": "ラップ",
+  "▲ {n} bpm higher": "▲ {n} bpm 高い",
+  "▼ {n} bpm lower": "▼ {n} bpm 低い",
+  "Pace /100m": "ペース /100m",
+  "Min HR": "最低心拍"
 }

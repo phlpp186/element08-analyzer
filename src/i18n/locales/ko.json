@@ -678,5 +678,10 @@
   "▲ {s} longer": "▲ {s} 더 김",
   "▼ {s} shorter": "▼ {s} 더 짧음",
   "{metric}: {value} against your usual {usual}.": "{metric}: {value}, 평소 {usual}.",
-  "A usual dive for this depth.": "이 수심에서의 평소 같은 다이브입니다."
+  "A usual dive for this depth.": "이 수심에서의 평소 같은 다이브입니다.",
+  "Lap": "랩",
+  "▲ {n} bpm higher": "▲ {n} bpm 높음",
+  "▼ {n} bpm lower": "▼ {n} bpm 낮음",
+  "Pace /100m": "페이스 /100m",
+  "Min HR": "최저 심박"
 }

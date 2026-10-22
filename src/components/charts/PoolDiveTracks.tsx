@@ -16,7 +16,8 @@ import { useCallback, useMemo } from "react";
 import * as echarts from "echarts/core";
 import ReactECharts from "./EChart";
 import type { PoolDiveData } from "../../lib/analytics/poolDiveProfile";
-import { useChartTheme, type ChartTheme } from "../../lib/chartTheme";
+import { mixHex, useChartTheme, withAlpha, type ChartTheme } from "../../lib/chartTheme";
+import { lapBounds, lapColors, lapSplitSeconds } from "../../lib/analytics/lapColors";
 import { useT } from "../../i18n";
 
 interface Props {
@@ -43,36 +44,56 @@ export function PoolDiveTracks({
 }: Props) {
   const ct = useChartTheme();
   const t = useT();
+  // Turns: a dashed line where each lap ends. The laps themselves are the
+  // shaded bands, labelled with their split.
   const lapLines = useMemo(
     () =>
-      data.lapEndTimes.map((t, i) => ({
+      data.lapEndTimes.map((t) => ({
         xAxis: t,
-        label: {
-          formatter: `L${i + 1}`,
-          color: ct.green,
-          fontSize: 10,
-          position: "insideEndTop" as const,
-        },
+        label: { show: false },
         lineStyle: {
-          color: ct.green,
-          type: "solid" as const,
+          color: ct.text,
+          type: "dashed" as const,
           width: 1,
-          opacity: 0.5,
+          opacity: 0.45,
         },
       })),
-    [data.lapEndTimes],
+    [data.lapEndTimes, ct],
   );
 
-  const contractionMarks = useMemo(
-    () =>
-      data.contractionTimes.map((t) => ({
-        coord: pickValueAt(data.hrSeries, t) ?? [t, 0],
-        symbol: "pin",
-        symbolSize: 14,
-        itemStyle: { color: ct.red },
-      })),
-    [data.contractionTimes, data.hrSeries],
-  );
+  // Lap bands, coloured by pace (fastest green, slowest amber), when the
+  // dive has more than one lap.
+  const lapAreas = useMemo(() => {
+    if (data.lapEndTimes.length === 0) return [];
+    const bounds = lapBounds(data.lapEndTimes, data.startT, data.endT);
+    const secs = lapSplitSeconds(bounds, data.lapSeconds);
+    const colors = lapColors(secs, ct);
+    return bounds.map(([a, b], i) => [
+      {
+        xAxis: a,
+        name: `${t("Lap")} ${i + 1} · ${secs[i].toFixed(1)}s`,
+        itemStyle: { color: withAlpha(colors[i], 0.1) },
+        label: { color: colors[i], fontWeight: 700 },
+      },
+      { xAxis: b },
+    ]);
+  }, [data.lapEndTimes, data.lapSeconds, data.startT, data.endT, ct, t]);
+
+  // Pills on the heart-rate line: the lowest point, and each contraction
+  // where the line is at that moment.
+  const hrMarks = useMemo(() => {
+    const marks: unknown[] = [];
+    if (data.hrSeries.length > 1) {
+      let lo = data.hrSeries[0];
+      for (const p of data.hrSeries) if (p[1] < lo[1]) lo = p;
+      marks.push(pill(lo, `${t("min")} ${Math.round(lo[1])} bpm`, ct.highlight, "bottom"));
+    }
+    for (const c of data.contractionTimes) {
+      const at = valueAt(data.hrSeries, c);
+      if (at) marks.push(pill(at, `${t("contraction")} ${fmtSec(c)}`, ct.red, "top", "diamond"));
+    }
+    return marks;
+  }, [data.hrSeries, data.contractionTimes, ct, t]);
 
   const hrOption = useMemo(
     () =>
@@ -84,11 +105,13 @@ export function PoolDiveTracks({
           startT: data.startT,
           endT: data.endT,
           markLines: lapLines,
-          markPoints: contractionMarks,
+          markPoints: hrMarks,
+          markAreas: lapAreas,
+          fitY: true,
         },
         ct,
       ),
-    [data, lapLines, contractionMarks, ct],
+    [data, lapLines, hrMarks, lapAreas, ct],
   );
 
   const depthOption = useMemo(
@@ -102,10 +125,11 @@ export function PoolDiveTracks({
           endT: data.endT,
           inverseY: true,
           markLines: lapLines,
+          markAreas: lapAreas,
         },
         ct,
       ),
-    [data, lapLines, ct],
+    [data, lapLines, lapAreas, ct],
   );
 
   const speedOption = useMemo(
@@ -118,10 +142,12 @@ export function PoolDiveTracks({
           startT: data.startT,
           endT: data.endT,
           markLines: lapLines,
+          markAreas: lapAreas,
+          fitY: true,
         },
         ct,
       ),
-    [data, lapLines, ct],
+    [data, lapLines, lapAreas, ct],
   );
 
   const handleReady = useCallback(
@@ -227,7 +253,11 @@ interface LineOptionParams {
   endT: number;
   inverseY?: boolean;
   markLines?: any[];
-  markPoints?: any[];
+  markPoints?: unknown[];
+  /** Lap bands: [{xAxis, name, itemStyle, label}, {xAxis}] pairs. */
+  markAreas?: unknown[];
+  /** Fit the y axis to the data instead of starting at 0 (heart rate). */
+  fitY?: boolean;
 }
 
 function buildLineOption(p: LineOptionParams, ct: ChartTheme) {
@@ -270,6 +300,7 @@ function buildLineOption(p: LineOptionParams, ct: ChartTheme) {
     yAxis: {
       type: "value",
       inverse: p.inverseY,
+      scale: !!p.fitY,
       axisLabel: { color: ct.textDim, fontSize: 10 },
       axisLine: { show: false },
       splitLine: { lineStyle: { color: ct.splitLine } },
@@ -286,26 +317,59 @@ function buildLineOption(p: LineOptionParams, ct: ChartTheme) {
             ? { silent: true, symbol: "none", data: p.markLines }
             : undefined,
         markPoint:
-          p.markPoints && p.markPoints.length > 0
-            ? { data: p.markPoints, label: { show: false } }
+          p.markPoints && p.markPoints.length > 0 ? { data: p.markPoints } : undefined,
+        markArea:
+          p.markAreas && p.markAreas.length > 0
+            ? {
+                silent: true,
+                label: { show: true, position: "insideTop", fontSize: 10 },
+                data: p.markAreas,
+              }
             : undefined,
       },
     ],
   };
 }
 
-/** Find the series y-value at or just past the given x — used to anchor
- *  a marker (e.g. contraction) onto the rendered line. Returns null when
- *  the series is empty or doesn't cover that x yet. */
-function pickValueAt(
-  series: [number, number][],
-  x: number,
-): [number, number] | null {
+/** The series' value at x, interpolated between the samples around it, so
+ *  a marker sits on the drawn line; null when the series is empty. */
+function valueAt(series: [number, number][], x: number): [number, number] | null {
   if (series.length === 0) return null;
-  for (let i = 0; i < series.length; i++) {
-    if (series[i][0] >= x) return [x, series[i][1]];
+  if (x <= series[0][0]) return [x, series[0][1]];
+  for (let i = 1; i < series.length; i++) {
+    const [t0, v0] = series[i - 1];
+    const [t1, v1] = series[i];
+    if (t1 >= x) return [x, t1 === t0 ? v1 : v0 + ((x - t0) / (t1 - t0)) * (v1 - v0)];
   }
   return [x, series[series.length - 1][1]];
+}
+
+/** A labelled pill on a line: a dot and its name in a chip of its colour. */
+function pill(
+  at: [number, number],
+  text: string,
+  color: string,
+  position: "top" | "bottom",
+  symbol = "circle",
+) {
+  return {
+    coord: at,
+    symbol,
+    symbolSize: symbol === "circle" ? 9 : 12,
+    itemStyle: { color, borderColor: "#ffffff", borderWidth: 1.5 },
+    label: {
+      show: true,
+      formatter: text,
+      position,
+      distance: 8,
+      color: mixHex(color, "#000000", 0.78),
+      backgroundColor: color,
+      borderRadius: 8,
+      padding: [3, 7],
+      fontSize: 10,
+      fontWeight: 700,
+    },
+  };
 }
 
 function fmtSec(s: number): string {

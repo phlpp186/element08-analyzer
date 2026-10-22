@@ -12,6 +12,9 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 import { useBackupStore } from '../stores/useBackupStore';
 import { extractPoolDiveData, type PoolDiveData } from '../lib/analytics/poolDiveProfile';
 import { PoolDiveTracks } from '../components/charts/PoolDiveTracks';
+import { LaneStrip } from '../components/LaneStrip';
+import { UsualCard } from '../components/UsualCard';
+import { poolUsualCompare } from '../lib/analytics/usualCompare';
 import { PoolSignalTracks } from '../components/charts/PoolSignalTracks';
 import {
   extractPoolTraceData,
@@ -128,6 +131,11 @@ function PoolDiveView({
   const [fsTab, setFsTab] = useState<'hr' | 'depth' | 'speed'>('hr');
 
   const data = useMemo(() => extractPoolDiveData(dive), [dive]);
+  const allSessions = useBackupStore((st) => st.backup?.data.sessions);
+  const usual = useMemo(
+    () => (allSessions ? poolUsualCompare(allSessions, session.id, idx) : null),
+    [allSessions, session.id, idx],
+  );
   const traceData = useMemo(() => extractPoolTraceData(dive), [dive]);
   const hasTracks = data.hasHR || data.hasDepth || data.hasSpeed;
 
@@ -229,14 +237,26 @@ function PoolDiveView({
       ) : (
         <ChartBody>
           {(h) => (
-            <PoolDiveTracks
-              key={tab}
-              bare
-              data={data}
-              groupId={`pool-${session.id}-${idx}`}
-              solo={tab === 'motion' ? 'hr' : tab}
-              chartHeight={Math.max(200, h - 4)}
-            />
+            <div className="space-y-2">
+              {/* The lengths above the chart, when the dive has turns. */}
+              {data.lapEndTimes.length > 0 && (
+                <LaneStrip
+                  lapEndTimes={data.lapEndTimes}
+                  lapSeconds={data.lapSeconds}
+                  startT={data.startT}
+                  endT={data.endT}
+                  distance={dive.distance}
+                />
+              )}
+              <PoolDiveTracks
+                key={tab}
+                bare
+                data={data}
+                groupId={`pool-${session.id}-${idx}`}
+                solo={tab === 'motion' ? 'hr' : tab}
+                chartHeight={Math.max(200, h - (data.lapEndTimes.length > 0 ? 48 : 4))}
+              />
+            </div>
           )}
         </ChartBody>
       )}
@@ -246,6 +266,7 @@ function PoolDiveView({
   const side = (
     <>
       <StatsCard title={statsTitle} tiles={tiles} empty={t('No data for this view.')} />
+      {usual && <UsualCard usual={usual} />}
       <RemarksCard
         title={t('Remarks')}
         remarks={dive.remarks}
@@ -355,12 +376,14 @@ function statTiles(
     ['Peak speed', 'amber'],
     ['Fastest lap', 'recover'],
     ['Slowest lap', 'amber'],
-    ['Start', 'red'],
-    ['Minimum', 'red'],
-    ['Drop', 'red'],
-    ['At surface', 'red'],
+    // The heart-rate tiles each in their own colour, the lowest point in the
+    // colour of its pill on the chart.
+    ['Start', 'amber'],
+    ['Minimum', 'highlight'],
+    ['Drop', 'recover'],
+    ['At surface', 'profile'],
     ['HR high', 'red'],
-    ['HR low', 'red'],
+    ['HR low', 'highlight'],
   ];
   const toneOf = (label: string): Tone => tones.find(([k]) => t(k) === label)?.[1] ?? 'accent';
   const add = (label: string, value: string | null, sub?: string) => {
