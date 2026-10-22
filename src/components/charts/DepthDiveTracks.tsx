@@ -43,6 +43,7 @@ import type {
   ProfilePoint,
 } from "../../lib/analytics/diveProfile";
 import {
+  mixHex,
   useChartTheme,
   withAlpha,
   type ChartTheme,
@@ -66,6 +67,10 @@ export interface AlarmLite {
 interface Props {
   data: DepthDiveData;
   contractionOnset?: ContractionOnset | null;
+  /** Mouthfill charge depth (m): marked on the descent. */
+  mouthfillDepth?: number | null;
+  /** Colour the profile line by vertical speed (slow green, fast amber). */
+  colorBySpeed?: boolean;
   alarms?: AlarmLite[];
   /** Show depth-alarm threshold segments on the depth track. */
   showAlarms: boolean;
@@ -105,6 +110,8 @@ const AXIS_POINTER_LINK = [{ xAxisIndex: "all" as const }];
 export function DepthDiveTracks({
   data,
   contractionOnset,
+  mouthfillDepth = null,
+  colorBySpeed = false,
   alarms,
   showAlarms,
   speedStep,
@@ -134,8 +141,11 @@ export function DepthDiveTracks({
         ct,
         hangsClickable,
         t,
+        { mouthfillDepth, colorBySpeed },
       ),
     [
+      mouthfillDepth,
+      colorBySpeed,
       data,
       contractionOnset,
       alarms,
@@ -508,25 +518,68 @@ function buildAlarmMarkers(
     const showAscent = both || !!a.triggerOnAscent;
 
     if (showDescent) {
-      for (let i = 1; i < series.length; i++) {
-        if (series[i][0] > splitT) break;
-        if (series[i - 1][1] < d && series[i][1] >= d) {
-          markers.push(alarmDot(series[i][0], d, ct.amber, "top", ct));
-          break;
-        }
-      }
+      const tc = crossTime(series, d, "down", splitT);
+      if (tc != null) markers.push(alarmDot(tc, d, ct.amber, "top", ct));
     }
     if (showAscent) {
-      for (let i = 1; i < series.length; i++) {
-        if (series[i][0] < splitT) continue;
-        if (series[i - 1][1] > d && series[i][1] <= d) {
-          markers.push(alarmDot(series[i][0], d, ct.red, "bottom", ct));
-          break;
-        }
-      }
+      const tc = crossTime(series, d, "up", splitT);
+      if (tc != null) markers.push(alarmDot(tc, d, ct.red, "bottom", ct));
     }
   }
   return markers;
+}
+
+/** When the profile first crosses depth `d` going down (before the deepest
+ *  point) or up (after it), interpolated between the two samples around
+ *  the crossing. Placing a marker at the later sample's time instead put
+ *  it off the line wherever samples are sparse, as on a stepped FIM ascent. */
+function crossTime(
+  series: [number, number][],
+  d: number,
+  dir: "down" | "up",
+  splitT: number,
+): number | null {
+  for (let i = 1; i < series.length; i++) {
+    const [t0, d0] = series[i - 1];
+    const [t1, d1] = series[i];
+    if (dir === "down" ? t1 > splitT : t1 < splitT) {
+      if (dir === "down") break;
+      continue;
+    }
+    const crosses = dir === "down" ? d0 < d && d1 >= d : d0 > d && d1 <= d;
+    if (crosses) return d1 === d0 ? t1 : t0 + ((d - d0) / (d1 - d0)) * (t1 - t0);
+  }
+  return null;
+}
+
+/** A labelled pill on the profile: a dot on the line and its name beside it
+ *  in a chip of the marker's colour. */
+function pillMarker(
+  t: number,
+  d: number,
+  text: string,
+  color: string,
+  position: "top" | "bottom" | "right" | "left",
+  symbol = "circle",
+) {
+  return {
+    coord: [t, d],
+    symbol,
+    symbolSize: symbol === "circle" ? 9 : 12,
+    itemStyle: { color, borderColor: "#ffffff", borderWidth: 1.5 },
+    label: {
+      show: true,
+      formatter: text,
+      position,
+      distance: 8,
+      color: mixHex(color, "#000000", 0.78),
+      backgroundColor: color,
+      borderRadius: 8,
+      padding: [3, 7],
+      fontSize: 10,
+      fontWeight: 700,
+    },
+  };
 }
 
 function alarmDot(
@@ -614,6 +667,7 @@ function buildDepthOption(
   ct: ChartTheme,
   hangsClickable: boolean,
   t: TFn,
+  extras: { mouthfillDepth: number | null; colorBySpeed: boolean },
 ) {
   const hangBands = (data.hangs as HangSegment[]).map((h) => ({
     startT: h.startT,
@@ -633,36 +687,102 @@ function buildDepthOption(
 
   const speedMarkers = buildSpeedMarkers(data.points, speedStep, splitT, ct);
 
-  // Contraction marker — we have only the depth, not the timestamp.
-  let contractionMarker: any = null;
+  // Contraction marker: we have only the depth, so it sits where the line
+  // crosses that depth in the given direction.
+  let contractionMarker: ReturnType<typeof pillMarker> | null = null;
   if (contractionOnset && data.depthSeries.length > 1) {
-    const target = contractionOnset.depth;
-    const isAscent = contractionOnset.direction === "up";
-    for (let i = 1; i < data.depthSeries.length; i++) {
-      const [, d] = data.depthSeries[i];
-      const [, dPrev] = data.depthSeries[i - 1];
-      const downCross = dPrev < target && d >= target;
-      const upCross = dPrev > target && d <= target;
-      if ((!isAscent && downCross) || (isAscent && upCross)) {
-        contractionMarker = {
-          coord: [data.depthSeries[i][0], data.depthSeries[i][1]],
-          symbol: "diamond",
-          symbolSize: 12,
-          itemStyle: { color: ct.red },
-          label: {
-            formatter: t("First contraction"),
-            position: "top",
-            color: ct.red,
-            fontSize: 10,
-          },
-        };
-        break;
-      }
+    const dir = contractionOnset.direction === "up" ? "up" : "down";
+    const tc = crossTime(data.depthSeries, contractionOnset.depth, dir, splitT);
+    if (tc != null) {
+      contractionMarker = pillMarker(
+        tc,
+        contractionOnset.depth,
+        `${t("First contraction")} ${contractionOnset.depth}m`,
+        ct.red,
+        dir === "up" ? "right" : "left",
+        "diamond",
+      );
     }
   }
 
+  // Mouthfill charge on the descent.
+  let mouthfillMarker: ReturnType<typeof pillMarker> | null = null;
+  if (extras.mouthfillDepth != null && extras.mouthfillDepth > 0) {
+    const tm = crossTime(data.depthSeries, extras.mouthfillDepth, "down", splitT);
+    if (tm != null) {
+      mouthfillMarker = pillMarker(
+        tm,
+        extras.mouthfillDepth,
+        `${t("Mouthfill")} ${extras.mouthfillDepth}m`,
+        ct.highlight,
+        "left",
+      );
+    }
+  }
+
+  // The bottom: the deepest point, with the bottom hang if there was one.
+  const bottomHang = (data.hangs as HangSegment[])
+    .filter((h) => h.type === "bottom")
+    .reduce((sum, h) => sum + (h.endT - h.startT), 0);
+  const bottomMarker =
+    data.depthSeries.length > 1
+      ? pillMarker(
+          splitT,
+          data.maxDepth,
+          bottomHang >= 1
+            ? `${Math.round(data.maxDepth * 10) / 10}m · ${t("hang")} ${Math.round(bottomHang)}s`
+            : `${Math.round(data.maxDepth * 10) / 10}m`,
+          ct.profile,
+          "bottom",
+        )
+      : null;
+
+  // Phases: descent until the bottom hang starts (or the deepest point),
+  // ascent from where it ends; each labelled with its time and speed.
+  const bottoms = (data.hangs as HangSegment[]).filter((h) => h.type === "bottom");
+  const descEnd = bottoms.length > 0 ? Math.min(...bottoms.map((h) => h.startT)) : splitT;
+  const ascStart = bottoms.length > 0 ? Math.max(...bottoms.map((h) => h.endT)) : splitT;
+  const descDur = descEnd - data.startT;
+  const ascDur = data.endT - ascStart;
+  const phase = (from: number, to: number, label: string, color: string) => [
+    {
+      xAxis: from,
+      name: label,
+      itemStyle: { color: withAlpha(color, 0.07) },
+      label: { color, fontWeight: 700 },
+    },
+    { xAxis: to },
+  ];
+  const phaseAreas =
+    data.depthSeries.length > 1 && descDur > 0 && ascDur > 0
+      ? [
+          phase(
+            data.startT,
+            descEnd,
+            `${t("Descent")} ${fmtSec(descDur)} · ${(data.maxDepth / descDur).toFixed(2)} m/s`,
+            ct.profile,
+          ),
+          phase(
+            ascStart,
+            data.endT,
+            `${t("Ascent")} ${fmtSec(ascDur)} · ${(data.maxDepth / ascDur).toFixed(2)} m/s`,
+            ct.amber,
+          ),
+        ]
+      : [];
+
+  // Speed per sample, for the speed-coloured line.
+  const speedOn = extras.colorBySpeed && data.speedSeries.length > 1;
+  const withSpeed = speedOn ? attachSpeed(data.depthSeries, data.speedSeries) : null;
+  // The colour scale spans this dive's own 20th to 95th percentile speeds,
+  // so a steady dive still shows where it sped up or braked.
+  const speeds = withSpeed ? withSpeed.map((p) => p[2]) : [];
+  const speedRange: [number, number] = [percentile(speeds, 0.2), percentile(speeds, 0.95)];
+
   // Merge contraction + alarm + speed markers into one markPoint array.
   const markPointData = [
+    ...(bottomMarker ? [bottomMarker] : []),
+    ...(mouthfillMarker ? [mouthfillMarker] : []),
     ...(contractionMarker ? [contractionMarker] : []),
     ...alarmMarkers,
     ...speedMarkers,
@@ -741,7 +861,9 @@ function buildDepthOption(
         data: data.depthSeries,
         showSymbol: false,
         smooth: 0.2,
-        lineStyle: { color: ct.profile, width: 2 },
+        lineStyle: withSpeed
+          ? { width: 3, color: speedGradient(withSpeed, speedRange, data.startT, data.endT, ct) }
+          : { color: ct.profile, width: 2 },
         areaStyle: {
           color: {
             type: "linear",
@@ -783,8 +905,73 @@ function buildDepthOption(
         markPoint:
           markPointData.length > 0 ? { data: markPointData } : undefined,
       },
+      // The descent and ascent shading on a silent layer of its own, so the
+      // hang bands above keep their own click indices for the hang editor.
+      ...(phaseAreas.length > 0
+        ? [
+            {
+              name: "__phases__",
+              type: "line",
+              data: [],
+              silent: true,
+              tooltip: { show: false },
+              markArea: {
+                silent: true,
+                label: { show: true, position: "insideTop", fontSize: 10 },
+                data: phaseAreas,
+              },
+            },
+          ]
+        : []),
     ],
   };
+}
+
+/** The line's colour along time: green where the dive was slow, amber where
+ *  it was fast. ECharts colours a line only from a value on one of its axes,
+ *  so speed (a third value) becomes a left-to-right gradient instead, one
+ *  stop per sampled moment. */
+function speedGradient(
+  samples: [number, number, number][],
+  [lo, hi]: [number, number],
+  startT: number,
+  endT: number,
+  ct: ChartTheme,
+) {
+  const span = Math.max(1e-6, endT - startT);
+  const step = Math.max(1, Math.floor(samples.length / 80));
+  const stops: { offset: number; color: string }[] = [];
+  for (let i = 0; i < samples.length; i += step) {
+    const [t, , v] = samples[i];
+    stops.push({
+      offset: Math.min(1, Math.max(0, (t - startT) / span)),
+      color: mixHex(ct.green, ct.amber, (v - lo) / Math.max(0.1, hi - lo)),
+    });
+  }
+  return { type: "linear", x: 0, y: 0, x2: 1, y2: 0, colorStops: stops };
+}
+
+/** [t, depth] samples with |speed| at each as a third value, read from the
+ *  speed series by walking both in time order. */
+function attachSpeed(
+  depth: [number, number][],
+  speed: [number, number][],
+): [number, number, number][] {
+  const out: [number, number, number][] = [];
+  let j = 0;
+  for (const [t, d] of depth) {
+    while (j < speed.length - 1 && Math.abs(speed[j + 1][0] - t) <= Math.abs(speed[j][0] - t)) j++;
+    out.push([t, d, Math.abs(speed[j]?.[1] ?? 0)]);
+  }
+  return out;
+}
+
+/** The value below which a share `q` of `xs` lies. The colour scale's ends
+ *  use these, so one spike does not wash every other speed out. */
+function percentile(xs: number[], q: number): number {
+  if (xs.length === 0) return 0;
+  const sorted = [...xs].sort((a, b) => a - b);
+  return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * q))];
 }
 
 /** Centred N-sample moving average. Returns the series unchanged when the

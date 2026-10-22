@@ -666,5 +666,17 @@
   "No holds in this session.": "ไม่มีการกลั้นหายใจในเซสชันนี้",
   "Box breathing": "หายใจแบบกล่อง",
   "Long exhale": "หายใจออกยาว",
-  "Relaxed": "ผ่อนคลาย"
+  "Relaxed": "ผ่อนคลาย",
+  "Speed colour": "สีตามความเร็ว",
+  "slow": "ช้า",
+  "fast": "เร็ว",
+  "Against your usual": "เทียบกับปกติของคุณ",
+  "{disc} at {from}–{to} m · {n} dives": "{disc} ที่ {from}–{to} ม. · {n} ไดฟ์",
+  "as usual": "เหมือนปกติ",
+  "▲ {p}% faster": "▲ เร็วขึ้น {p}%",
+  "▼ {p}% slower": "▼ ช้าลง {p}%",
+  "▲ {s} longer": "▲ นานขึ้น {s}",
+  "▼ {s} shorter": "▼ สั้นลง {s}",
+  "{metric}: {value} against your usual {usual}.": "{metric}: {value} เทียบกับปกติ {usual}",
+  "A usual dive for this depth.": "เป็นไดฟ์ตามปกติสำหรับความลึกนี้"
 }

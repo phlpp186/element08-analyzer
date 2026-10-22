@@ -666,5 +666,17 @@
   "No holds in this session.": "このセッションに息止めはありません。",
   "Box breathing": "ボックス呼吸",
   "Long exhale": "長い呼気",
-  "Relaxed": "リラックス"
+  "Relaxed": "リラックス",
+  "Speed colour": "速度で色分け",
+  "slow": "遅い",
+  "fast": "速い",
+  "Against your usual": "いつもと比べて",
+  "{disc} at {from}–{to} m · {n} dives": "{from}–{to} m の {disc} · {n} 本",
+  "as usual": "いつも通り",
+  "▲ {p}% faster": "▲ {p}% 速い",
+  "▼ {p}% slower": "▼ {p}% 遅い",
+  "▲ {s} longer": "▲ {s} 長い",
+  "▼ {s} shorter": "▼ {s} 短い",
+  "{metric}: {value} against your usual {usual}.": "{metric}：{value}（いつもは {usual}）。",
+  "A usual dive for this depth.": "この深度ではいつも通りのダイブです。"
 }

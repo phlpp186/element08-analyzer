@@ -12,6 +12,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useBackupStore } from '../stores/useBackupStore';
+import {
+  usualCompare,
+  type UsualCompare,
+  type UsualMetric,
+  type UsualRow,
+} from '../lib/analytics/usualCompare';
+import { TONE_VAR } from '../lib/tones';
 import { useHangOverridesStore } from '../stores/useHangOverridesStore';
 import {
   extractDiveData,
@@ -40,6 +47,7 @@ import {
   DivePage,
   PrevNext,
   RemarksCard,
+  SideCard,
   StatsCard,
   type ChartTab,
   type StatTile,
@@ -68,6 +76,7 @@ interface DepthDiveRow {
   hr?: number | null;
   tempDepth?: number | null;
   contractionOnset?: ContractionOnset | null;
+  mfChargeDepth?: number | null;
   remarks?: string | null;
   rating?: number | null;
   profile?: ProfilePoint[];
@@ -138,6 +147,9 @@ function DepthDiveView({
   // safety config, worth seeing); speed markers default OFF (opt-in
   // detail). speedStep: 0 = off, else 5 or 10 metres.
   const [showAlarms, setShowAlarms] = useState(true);
+  // The profile line coloured by speed: on, it shows where the dive sped up
+  // or braked without opening the Speed tab.
+  const [colorBySpeed, setColorBySpeed] = useState(true);
   const [speedStep, setSpeedStep] = useState<0 | 5 | 10>(0);
   // Vertical-speed smoothing window in samples, driven by a continuous
   // slider: 0/1 = raw, up to 31 = heavy moving average (FIM dives
@@ -275,6 +287,11 @@ function DepthDiveView({
   }, [fullscreen, hasPrev, hasNext, idx, session.id, navigate, search]);
 
   const tiles = statTiles(tab, { dive, data: dataWithHangs, times, bands, hasProfile }, t);
+  const allSessions = useBackupStore((st) => st.backup?.data.sessions);
+  const usual = useMemo(
+    () => (allSessions ? usualCompare(allSessions, session.id, idx) : null),
+    [allSessions, session.id, idx],
+  );
 
   const caption: Record<Tab, string> = {
     profile: `${t('Depth')} · m`,
@@ -294,6 +311,9 @@ function DepthDiveView({
       onAlarms={setShowAlarms}
       speedStep={speedStep}
       onStep={setSpeedStep}
+      colorBySpeed={colorBySpeed}
+      onColorBySpeed={setColorBySpeed}
+      hasSpeed={data.hasSpeed}
     />
   );
   const speedControls = (
@@ -417,6 +437,8 @@ function DepthDiveView({
               bare
               data={dataWithHangs}
               contractionOnset={dive.contractionOnset ?? null}
+              mouthfillDepth={dive.mfChargeDepth ?? null}
+              colorBySpeed={colorBySpeed}
               alarms={alarms}
               showAlarms={showAlarms}
               speedStep={speedStep}
@@ -441,6 +463,7 @@ function DepthDiveView({
   const side = (
     <>
       <StatsCard title={tabLabel} tiles={tiles} empty={t('No data for this view.')} />
+      {(tab === 'profile' || tab == null) && usual && <UsualCard usual={usual} />}
       <RemarksCard
         title={t('Remarks')}
         remarks={dive.remarks}
@@ -530,6 +553,8 @@ function DepthDiveView({
             <DepthDiveTracks
               data={dataWithHangs}
               contractionOnset={dive.contractionOnset ?? null}
+              mouthfillDepth={dive.mfChargeDepth ?? null}
+              colorBySpeed={colorBySpeed}
               alarms={alarms}
               showAlarms={showAlarms}
               speedStep={speedStep}
@@ -677,6 +702,60 @@ function statTiles(
   return tiles;
 }
 
+/** This dive against the diver's usual at its depth: a tile per figure with
+ *  the difference, and one line on what stands out most. */
+function UsualCard({ usual }: { usual: UsualCompare }) {
+  const t = useT();
+  const META: Record<UsualMetric, { label: string; tone: Tone; speed: boolean }> = {
+    descentSpeed: { label: t('Descent speed'), tone: 'profile', speed: true },
+    ascentSpeed: { label: t('Ascent speed'), tone: 'amber', speed: true },
+    hangTime: { label: t('Hang'), tone: 'recover', speed: false },
+    diveTime: { label: t('Dive time'), tone: 'highlight', speed: false },
+  };
+  const fmt = (m: UsualMetric, v: number) => (META[m].speed ? `${v.toFixed(2)} m/s` : fmtSec(v));
+  const diff = (r: UsualRow) => {
+    if (META[r.metric].speed) {
+      if (Math.abs(r.delta) < 0.5) return t('as usual');
+      return (r.delta > 0 ? t('▲ {p}% faster') : t('▼ {p}% slower')).replace('{p}', String(Math.round(Math.abs(r.delta))));
+    }
+    if (Math.abs(r.delta) < 1) return t('as usual');
+    return (r.delta > 0 ? t('▲ {s} longer') : t('▼ {s} shorter')).replace('{s}', fmtSec(Math.abs(r.delta)));
+  };
+  const standout = usual.standout
+    ? t('{metric}: {value} against your usual {usual}.')
+        .replace('{metric}', META[usual.standout.metric].label)
+        .replace('{value}', fmt(usual.standout.metric, usual.standout.value))
+        .replace('{usual}', fmt(usual.standout.metric, usual.standout.usual))
+    : t('A usual dive for this depth.');
+  return (
+    <SideCard title={t('Against your usual')} className="shrink-0">
+      <p className="-mt-1 mb-2 font-mono text-[10px] text-textDim">
+        {t('{disc} at {from}–{to} m · {n} dives')
+          .replace('{disc}', usual.discipline)
+          .replace('{from}', String(usual.from))
+          .replace('{to}', String(usual.to))
+          .replace('{n}', String(usual.count))}
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        {usual.rows.map((r) => (
+          <div
+            key={r.metric}
+            className="tile min-w-0 break-words px-3 py-2"
+            style={{ '--tone': TONE_VAR[META[r.metric].tone] } as React.CSSProperties}
+          >
+            <div className="tile-value font-num text-lg font-bold tabular-nums">{fmt(r.metric, r.value)}</div>
+            <div className="tile-label font-mono text-[10px] font-extrabold uppercase tracking-widest">
+              {META[r.metric].label}
+            </div>
+            <div className="tile-label font-mono text-[10px] opacity-90">{diff(r)}</div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-textDim">{standout}</p>
+    </SideCard>
+  );
+}
+
 /** Depth-track marker controls: the alarms toggle + speed-marker interval.
  *  Shared by the Profile tab and the fullscreen Dive profile tab. */
 function MarkerControls({
@@ -685,12 +764,18 @@ function MarkerControls({
   onAlarms,
   speedStep,
   onStep,
+  colorBySpeed,
+  onColorBySpeed,
+  hasSpeed,
 }: {
   hasAlarms: boolean;
   showAlarms: boolean;
   onAlarms: (v: boolean) => void;
   speedStep: 0 | 5 | 10;
   onStep: (v: 0 | 5 | 10) => void;
+  colorBySpeed: boolean;
+  onColorBySpeed: (v: boolean) => void;
+  hasSpeed: boolean;
 }) {
   const t = useT();
   return (
@@ -714,6 +799,23 @@ function MarkerControls({
           </button>
         ))}
       </div>
+      {hasSpeed && (
+        <div className="flex items-center gap-2">
+          <button onClick={() => onColorBySpeed(!colorBySpeed)} className={pillCls(colorBySpeed)}>
+            {t('Speed colour')}
+          </button>
+          {colorBySpeed && (
+            <span className="flex items-center gap-1.5 font-mono text-[10px] text-textDim">
+              {t('slow')}
+              <span
+                className="h-1.5 w-12 rounded-full"
+                style={{ background: 'linear-gradient(90deg, rgb(var(--c-recover)), rgb(var(--c-amber)))' }}
+              />
+              {t('fast')}
+            </span>
+          )}
+        </div>
+      )}
     </>
   );
 }

@@ -666,5 +666,17 @@
   "No holds in this session.": "이 세션에는 숨참기가 없습니다.",
   "Box breathing": "박스 호흡",
   "Long exhale": "긴 날숨",
-  "Relaxed": "편안하게"
+  "Relaxed": "편안하게",
+  "Speed colour": "속도 색상",
+  "slow": "느림",
+  "fast": "빠름",
+  "Against your usual": "평소와 비교",
+  "{disc} at {from}–{to} m · {n} dives": "{from}–{to} m의 {disc} · 다이브 {n}개",
+  "as usual": "평소와 같음",
+  "▲ {p}% faster": "▲ {p}% 빠름",
+  "▼ {p}% slower": "▼ {p}% 느림",
+  "▲ {s} longer": "▲ {s} 더 김",
+  "▼ {s} shorter": "▼ {s} 더 짧음",
+  "{metric}: {value} against your usual {usual}.": "{metric}: {value}, 평소 {usual}.",
+  "A usual dive for this depth.": "이 수심에서의 평소 같은 다이브입니다."
 }

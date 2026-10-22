@@ -666,5 +666,17 @@
   "No holds in this session.": "Aucune apnée dans cette séance.",
   "Box breathing": "Respiration carrée",
   "Long exhale": "Expiration longue",
-  "Relaxed": "Détendue"
+  "Relaxed": "Détendue",
+  "Speed colour": "Couleur de vitesse",
+  "slow": "lent",
+  "fast": "rapide",
+  "Against your usual": "Par rapport à ton habitude",
+  "{disc} at {from}–{to} m · {n} dives": "{disc} à {from}–{to} m · {n} plongées",
+  "as usual": "comme d’habitude",
+  "▲ {p}% faster": "▲ {p} % plus rapide",
+  "▼ {p}% slower": "▼ {p} % plus lent",
+  "▲ {s} longer": "▲ {s} de plus",
+  "▼ {s} shorter": "▼ {s} de moins",
+  "{metric}: {value} against your usual {usual}.": "{metric} : {value} contre {usual} d’habitude.",
+  "A usual dive for this depth.": "Une plongée habituelle pour cette profondeur."
 }

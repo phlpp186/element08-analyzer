@@ -666,5 +666,17 @@
   "No holds in this session.": "本次训练没有闭气。",
   "Box breathing": "箱式呼吸",
   "Long exhale": "长呼气",
-  "Relaxed": "放松"
+  "Relaxed": "放松",
+  "Speed colour": "速度着色",
+  "slow": "慢",
+  "fast": "快",
+  "Against your usual": "与你的平时相比",
+  "{disc} at {from}–{to} m · {n} dives": "{disc} 在 {from}–{to} 米 · {n} 次潜水",
+  "as usual": "与平时相同",
+  "▲ {p}% faster": "▲ 快 {p}%",
+  "▼ {p}% slower": "▼ 慢 {p}%",
+  "▲ {s} longer": "▲ 长 {s}",
+  "▼ {s} shorter": "▼ 短 {s}",
+  "{metric}: {value} against your usual {usual}.": "{metric}：{value}，平时为 {usual}。",
+  "A usual dive for this depth.": "这个深度的一次常规潜水。"
 }
