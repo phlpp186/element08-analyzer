@@ -34,6 +34,7 @@ import {
   type HoldAlign,
 } from '../components/charts/HoldOverlayChart';
 import { PoolOverlayChart } from '../components/charts/PoolOverlayChart';
+import { DepthSplits } from '../components/DepthSplits';
 import { buildCatalog, type CatalogEntry } from '../lib/analytics/diveCatalog';
 import { extractDiveData, type DepthDiveData } from '../lib/analytics/diveProfile';
 import { extractPoolDiveData } from '../lib/analytics/poolDiveProfile';
@@ -304,6 +305,7 @@ export function CompareDives() {
                   );
                 })()}
               </div>
+              <DepthSplits dives={depthEntries.map((e) => ({ color: e.color, title: e.title, dive: e.dive }))} />
               <StatBars columns={depthEntries} rows={depthRows(depthEntries, t)} />
             </>
           ) : mode === 'holds' ? (
