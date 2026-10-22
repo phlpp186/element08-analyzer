@@ -523,5 +523,6 @@
   "your cloud backup": "あなたのクラウドバックアップ",
   "{m} of the {noun}, grouped by {d}.": "{d} でグループ化した {noun} の {m}。",
   "← back to sessions": "← セッション一覧に戻る",
-  "Theme": "テーマ"
+  "Theme": "テーマ",
+  "+{gain}m in {year}": "{year}年 +{gain}m"
 }

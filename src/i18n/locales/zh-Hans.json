@@ -523,5 +523,6 @@
   "your cloud backup": "您的云备份",
   "{m} of the {noun}, grouped by {d}.": "{noun} 的 {m}，按 {d} 分组。",
   "← back to sessions": "← 返回训练列表",
-  "Theme": "主题"
+  "Theme": "主题",
+  "+{gain}m in {year}": "{year}年 +{gain}m"
 }

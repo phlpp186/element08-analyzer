@@ -523,5 +523,6 @@
   "your cloud backup": "ข้อมูลสำรองบนคลาวด์ของคุณ",
   "{m} of the {noun}, grouped by {d}.": "{m} ของ {noun} จัดกลุ่มตาม {d}",
   "← back to sessions": "← กลับไปที่เซสชัน",
-  "Theme": "ธีม"
+  "Theme": "ธีม",
+  "+{gain}m in {year}": "+{gain}m ในปี {year}"
 }
