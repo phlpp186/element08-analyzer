@@ -15,8 +15,9 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import ReactECharts from '../components/charts/EChart';
+import { BucketDives } from '../components/BucketDives';
 import { useLangValue, useT } from '../i18n';
-import { useChartTheme, type ChartTheme } from '../lib/chartTheme';
+import { useChartTheme, withAlpha, type ChartTheme } from '../lib/chartTheme';
 import { useBackupStore } from '../stores/useBackupStore';
 import type { ParsedSession } from '../schema/backup';
 import {
@@ -39,6 +40,15 @@ import {
   type SessionMode,
   type Stat,
 } from '../lib/analytics/playgroundPivot';
+import {
+  bucketTakeaway,
+  changeTakeaway,
+  compareRange,
+  quantile,
+  spreadTakeaway,
+  type CompareWith,
+  type Takeaway,
+} from '../lib/analytics/playgroundInsight';
 
 const PRESETS: { id: string; label: string; days: number | null }[] = [
   { id: 'all',   label: 'All time',     days: null },
@@ -163,6 +173,10 @@ export function Playground() {
   const [dim2Id, setDim2Id] = useState<string>(availableDims[1]?.id ?? availableDims[0]?.id ?? '');
   const [stat, setStat] = useState<Stat>('avg');
   const [render, setRender] = useState<RenderMode>('bar');
+  // The bar whose dives are listed under the chart, and the earlier period
+  // the bars are compared with.
+  const [drillKey, setDrillKey] = useState<string | null>(null);
+  const [compareWith, setCompareWith] = useState<CompareWith>('none');
 
   // Reset selections when mode changes to something that doesn't support them.
   const metric: PivotMetric = availableMetrics.find((m) => m.id === metricId) ?? availableMetrics[0];
@@ -234,6 +248,21 @@ export function Playground() {
         ? pivot2d(items, dim, dim2, metric, stat)
         : null,
     [effRender, items, metric, dim, dim2, stat],
+  );
+
+  // The same chart over an earlier period, as ghost bars. Only for bars, and
+  // not when the groups are dates (two periods share none of them).
+  const canCompare = effRender === 'bar' && dim?.group !== 'Time' && !!filters.from && !!filters.to;
+  const cmpRange = useMemo(
+    () => (canCompare ? compareRange(filters.from, filters.to, compareWith) : null),
+    [canCompare, filters, compareWith],
+  );
+  const cmpBuckets = useMemo(
+    () =>
+      cmpRange && metric && dim
+        ? pivot(flatten(applyFilters(sessions, { ...filters, ...cmpRange })), dim, metric, stat)
+        : null,
+    [cmpRange, sessions, filters, metric, dim, stat],
   );
 
   // One-tap question: set every knob at once. React batches these in the
@@ -387,6 +416,64 @@ export function Playground() {
     return key && chips[key] ? <span key={i}>{chips[key]}</span> : <span key={i}>{part}</span>;
   });
 
+  // The second sentence: an earlier period to compare the bars with.
+  const compareWord: Record<CompareWith, string> = {
+    none: t('nothing'),
+    prev: t('the period before'),
+    year: t('the same dates a year earlier'),
+  };
+  const compareLine =
+    effRender !== 'bar' || dim?.group === 'Time' ? null : canCompare ? (
+      t('Compared with {compare}.')
+        .split(/(\{compare\})/)
+        .map((part, i) =>
+          part === '{compare}' ? (
+            <ChipSelect
+              key={i}
+              label={compareWord[compareWith]}
+              value={compareWith}
+              ariaLabel={t('Compared with')}
+              onChange={(v) => setCompareWith(v as CompareWith)}
+              options={(['none', 'prev', 'year'] as CompareWith[]).map((c) => ({ value: c, label: compareWord[c] }))}
+            />
+          ) : (
+            <span key={i}>{part}</span>
+          ),
+        )
+    ) : (
+      <span className="text-sm">{t('Pick a time range to compare it with an earlier one.')}</span>
+    );
+
+  // The answer line over the chart.
+  const unitOf = counting ? '' : (metric?.unit ?? '');
+  const ordered = dim?.group === 'Time' || dim?.group === 'Numeric' || dim?.sortBy === 'numeric';
+  const showsBars = effRender === 'bar' || effRender === 'box';
+  const drill = showsBars && drillKey != null ? (buckets.find((b) => b.key === drillKey) ?? null) : null;
+  let takeaway: Takeaway | null = null;
+  if (effRender === 'bar') {
+    takeaway = cmpBuckets
+      ? changeTakeaway(buckets, cmpBuckets)
+      : bucketTakeaway(buckets, { ordered, counting: stat === 'count' });
+  } else if (effRender === 'box') {
+    takeaway = bucketTakeaway(buckets, {
+      ordered,
+      counting: false,
+      value: (b) => quantile([...b.points].sort((x, y) => x - y), 0.5),
+    });
+  } else if (effRender === 'hist') {
+    takeaway = spreadTakeaway(buckets);
+  } else if (effRender === 'heatmap' && heat && heat.cells.length > 0) {
+    let top = heat.cells[0];
+    for (const c of heat.cells) if (c.value > top.value) top = c;
+    takeaway = { kind: 'cell', x: heat.xKeys[top.x], y: heat.yKeys[top.y], value: top.value };
+  }
+  const fitNow = effRender === 'scatter' ? scatterFit : effRender === 'xy' ? xyFit : null;
+  const headline: React.ReactNode = fitNow
+    ? `${describeCorrelation(fitNow.r, t)} · r = ${fitNow.r.toFixed(2)}`
+    : takeaway
+      ? takeawayLine(takeaway, unitOf, effRender === 'box', mode === 'dry' ? t('sessions') : t('dives'), t, cm)
+      : null;
+
   // The first question of each topic as a one-tap pill; the rest in "More".
   const featured = CATEGORY_ORDER.map((c) => QUESTIONS.find((q) => q.category === c)).filter(
     (q): q is QuestionPreset => q != null,
@@ -411,6 +498,9 @@ export function Playground() {
 
       <section className="mb-5 space-y-4 board p-5">
         <p className="font-heading text-base leading-[2.2] text-text sm:text-xl sm:leading-[2.4]">{sentence}</p>
+        {compareLine && (
+          <p className="-mt-3 font-heading text-base leading-[2.2] text-textDim sm:text-lg">{compareLine}</p>
+        )}
 
         {presetId === 'custom' && (
           <div className="flex flex-wrap items-center gap-2">
@@ -499,7 +589,7 @@ export function Playground() {
           }
           const option =
             effRender === 'box'
-              ? buildBoxOption(buckets, metric, dim, t, cm)
+              ? buildBoxOption(buckets, metric, dim, t, cm, drill?.key ?? null)
               : effRender === 'scatter'
                 ? buildScatterOption(buckets, metric, dim, scatterFit, cm)
                 : effRender === 'hist'
@@ -508,15 +598,67 @@ export function Playground() {
                     ? buildXyOption(xyPts, xMetric, metric, xyFit, cm)
                     : effRender === 'heatmap'
                       ? buildHeatmapOption(heat, metric, dim, dim2, stat, t, cm)
-                      : buildBarOption(buckets, metric, dim, stat, cm);
-          const fit = effRender === 'scatter' ? scatterFit : effRender === 'xy' ? xyFit : null;
+                      : buildBarOption(buckets, metric, dim, stat, cm, {
+                          selected: drill?.key ?? null,
+                          compare: cmpBuckets,
+                          whiskers: (stat === 'avg' || stat === 'median') && !cmpBuckets,
+                        });
           return (
             <>
-              <ReactECharts option={option} style={{ height: effRender === 'heatmap' ? 440 : 400 }} notMerge />
-              {fit && (
-                <p className="mt-1 text-center font-mono text-[11px] text-textDim">
-                  {describeCorrelation(fit.r, t)} · r = {fit.r.toFixed(2)}
+              {headline && <p className="font-heading text-lg font-bold leading-snug text-text sm:text-xl">{headline}</p>}
+              <ReactECharts
+                option={option}
+                style={{ height: effRender === 'heatmap' ? 440 : 400 }}
+                notMerge
+                onEvents={
+                  showsBars
+                    ? {
+                        click: (p: { componentType?: string; seriesType?: string; dataIndex: number }) => {
+                          if (p.seriesType !== 'bar' && p.seriesType !== 'boxplot') return;
+                          const key = buckets[p.dataIndex]?.key ?? null;
+                          setDrillKey((cur) => (cur === key ? null : key));
+                        },
+                      }
+                    : undefined
+                }
+              />
+              {cmpBuckets && cmpRange && (
+                <p className="flex flex-wrap justify-center gap-x-4 font-mono text-[11px] text-textDim">
+                  <span>
+                    <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={{ background: withAlpha(cm.textDim, 0.45) }} />
+                    {rangeLabel(cmpRange.from, cmpRange.to)}
+                  </span>
+                  <span>
+                    {/* The current bars wear their own colours: a strip of them. */}
+                    <span
+                      className="mr-1 inline-block h-2.5 w-4 rounded-sm align-middle"
+                      style={{
+                        background:
+                          buckets.length > 1
+                            ? `linear-gradient(90deg, ${buckets
+                                .slice(0, 4)
+                                .map((b, i) => categoryColor(b.label, i, cm))
+                                .join(', ')})`
+                            : categoryColor(buckets[0]?.label ?? '', 0, cm),
+                      }}
+                    />
+                    {rangeLabel(filters.from!, filters.to!)}
+                  </span>
                 </p>
+              )}
+              {drill ? (
+                <BucketDives
+                  bucket={drill}
+                  color={effRender === 'box' ? cm.accent : categoryColor(drill.label, buckets.indexOf(drill), cm)}
+                  format={(v) => withUnit(v, metric.unit)}
+                  onClose={() => setDrillKey(null)}
+                />
+              ) : (
+                showsBars && (
+                  <p className="text-center font-mono text-[11px] text-textDim">
+                    {t(effRender === 'box' ? 'Click a box to see what is in it.' : 'Click a bar to see what is in it.')}
+                  </p>
+                )
               )}
             </>
           );
@@ -532,6 +674,7 @@ export function Playground() {
           stat={stat}
           render={effRender}
           mode={mode}
+          whiskers={effRender === 'bar' && (stat === 'avg' || stat === 'median') && !cmpBuckets}
         />
         <p className="font-mono text-[11px] text-textDim">
           {filtered.length} {t(filtered.length === 1 ? 'session' : 'sessions')} · {items.length} {t(items.length === 1 ? 'item' : 'items')}
@@ -663,6 +806,7 @@ function PivotHelp({
   stat,
   render,
   mode,
+  whiskers,
 }: {
   metricLabel: string;
   dimLabel: string;
@@ -672,6 +816,7 @@ function PivotHelp({
   stat: Stat;
   render: RenderMode;
   mode: SessionMode;
+  whiskers: boolean;
 }) {
   const t = useT();
   const noun = mode === 'dry' ? t('sessions') : t('dives');
@@ -762,6 +907,7 @@ function PivotHelp({
         {stat === 'median'
           ? ' ' + t('Half are higher and half lower, so it is less swayed by outliers than the average.')
           : ''}{' '}
+        {whiskers ? t('The thin line on each bar marks where the middle half of them fall.') + ' ' : ''}
         <span className="opacity-70">{t('n = number of {noun} per bar.').replace('{noun}', noun)}</span>
       </>
     );
@@ -790,6 +936,9 @@ function commonOf(ct: ChartTheme) {
     heatRamp: ct.heatRamp,
     mono: ct.fontFamily,
     inter: ct.fontFamily,
+    /** A bar that went up / down against the compared period. */
+    up: ct.green,
+    down: ct.red,
     /** Colours for categories that have none of their own. */
     palette: [...new Set([ct.accent, ct.highlight, ct.amber, ct.profile, ct.red, ct.green])],
   };
@@ -838,15 +987,98 @@ function fmt(v: number, unit: string): string {
   return String(Math.round(v));
 }
 
+/** A value with its unit, as the answer line and the dot strip print it. */
+function withUnit(v: number, unit: string): string {
+  if (!unit) return String(Math.round(v));
+  if (unit === 's') return fmt(v, unit);
+  if (unit === 's/100m') return `${fmt(v, unit)} /100 m`;
+  if (unit === '×') return `${fmt(v, unit)}×`;
+  return `${fmt(v, unit)} ${unit}`;
+}
+
+function signed(d: number, unit: string): string {
+  return `${d >= 0 ? '+' : '−'}${withUnit(Math.abs(d), unit)}`;
+}
+
+function rangeLabel(from: string, to: string): string {
+  const f = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return `${f(from)} – ${f(to)}`;
+}
+
+/** The answer line: a template with its numbers filled in, the change
+ *  coloured up or down. */
+function takeawayLine(
+  tk: Takeaway,
+  unit: string,
+  median: boolean,
+  noun: string,
+  t: (s: string) => string,
+  cm: PlaygroundTheme,
+): React.ReactNode {
+  const u = (v: number) => withUnit(v, unit);
+  let template = '';
+  const vars: Record<string, React.ReactNode> = {};
+  const delta = (d: number) => (
+    <span style={{ color: d >= 0 ? cm.up : cm.down }}>{signed(d, unit)}</span>
+  );
+  switch (tk.kind) {
+    case 'lead':
+      template = median
+        ? t('{top} has the highest median, {value}, {diff} above {second}.')
+        : t('{top} is highest at {value}, {diff} above {second}.');
+      Object.assign(vars, { top: tk.top, value: u(tk.value), diff: u(tk.diff), second: tk.second });
+      break;
+    case 'trend':
+      template = t('From {first} to {last}: {from} → {to} ({delta}).');
+      Object.assign(vars, { first: tk.first, last: tk.last, from: u(tk.from), to: u(tk.to), delta: delta(tk.to - tk.from) });
+      break;
+    case 'most':
+      template = t('{top} has the most: {n} {noun}.');
+      Object.assign(vars, { top: tk.top, n: String(tk.n), noun });
+      break;
+    case 'change':
+      template = t('Biggest change: {bucket}, {then} → {now} ({delta}).');
+      Object.assign(vars, { bucket: tk.bucket, then: u(tk.then), now: u(tk.now), delta: delta(tk.now - tk.then) });
+      break;
+    case 'spread':
+      template = t('Half of them fall between {q1} and {q3}.');
+      Object.assign(vars, { q1: u(tk.q1), q3: u(tk.q3) });
+      break;
+    case 'cell':
+      template = t('Highest: {x} × {y} at {value}.');
+      Object.assign(vars, { x: tk.x, y: tk.y, value: u(tk.value) });
+      break;
+  }
+  return template.split(/(\{[a-z0-9]+\})/i).map((part, i) => {
+    const key = /^\{([a-z0-9]+)\}$/i.exec(part)?.[1];
+    return <span key={i}>{key && key in vars ? vars[key] : part}</span>;
+  });
+}
+
 function buildBarOption(
   buckets: PivotBucket[],
   metric: PivotMetric,
   dim: PivotDimension,
   stat: Stat,
   cm: PlaygroundTheme,
+  extra: {
+    /** The bar whose dives are listed: outlined, the others dimmed. */
+    selected: string | null;
+    /** The compared period's buckets, drawn as ghost bars. */
+    compare: PivotBucket[] | null;
+    /** Mark the middle half (Q1 to Q3) of each bar's items. */
+    whiskers: boolean;
+  },
 ) {
+  const before = extra.compare ? new Map(extra.compare.map((b) => [b.key, b.value] as const)) : null;
+  // [index, q1, q3, value]; no spread on a bar of fewer than 3.
+  const spread = buckets.map((b, i) => {
+    if (!extra.whiskers || b.n < 3) return [i, NaN, NaN, b.value];
+    const sorted = [...b.points].sort((x, y) => x - y);
+    return [i, quantile(sorted, 0.25), quantile(sorted, 0.75), b.value];
+  });
   return {
-    grid: { left: 56, right: 16, top: 16, bottom: 64, containLabel: false },
+    grid: { left: 56, right: 16, top: 30, bottom: 64, containLabel: false },
     animation: false,
     tooltip: {
       trigger: 'axis',
@@ -856,7 +1088,14 @@ function buildBarOption(
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const b = buckets[p.dataIndex];
-        return `${b.label}<br/><b>${fmt(b.value, metric.unit)}</b> ${metric.unit}<br/><span style="opacity:0.7">${stat} · n = ${b.n}</span>`;
+        const then = before?.get(b.key);
+        const [, q1, q3] = spread[p.dataIndex];
+        return (
+          `${b.label}<br/><b>${fmt(b.value, metric.unit)}</b> ${metric.unit}` +
+          (then != null ? ` <span style="opacity:0.7">(${fmt(then, metric.unit)})</span>` : '') +
+          (Number.isFinite(q1) ? `<br/><span style="opacity:0.7">${fmt(q1, metric.unit)} – ${fmt(q3, metric.unit)}</span>` : '') +
+          `<br/><span style="opacity:0.7">${stat} · n = ${b.n}</span>`
+        );
       },
     },
     xAxis: {
@@ -893,10 +1132,22 @@ function buildBarOption(
       axisLabel: { color: cm.textDim, fontFamily: cm.mono, fontSize: 10 },
     },
     series: [
+      ...(before
+        ? [
+            {
+              type: 'bar',
+              data: buckets.map((b) => before.get(b.key) ?? '-'),
+              itemStyle: { color: withAlpha(cm.textDim, 0.4), borderRadius: [6, 6, 0, 0] },
+              barWidth: '30%',
+              barGap: '10%',
+            },
+          ]
+        : []),
       {
         type: 'bar',
         data: buckets.map((b, i) => {
           const c = categoryColor(b.label, i, cm);
+          const on = extra.selected === b.key;
           return {
             value: b.value,
             itemStyle: {
@@ -912,20 +1163,79 @@ function buildBarOption(
                 ],
               },
               borderRadius: [6, 6, 0, 0],
+              opacity: extra.selected && !on ? 0.45 : 1,
+              ...(on ? { borderColor: cm.text, borderWidth: 3 } : {}),
             },
           };
         }),
-        barWidth: '62%',
+        barWidth: before ? '30%' : '62%',
+        cursor: 'pointer',
         label: {
-          show: true,
+          // With the spread marked, the whisker series prints the value
+          // above its top cap instead.
+          show: !extra.whiskers,
           position: 'top',
           color: cm.text,
           fontFamily: cm.mono,
           fontSize: 12,
           fontWeight: 700,
-          formatter: (p: any) => fmt(buckets[p.dataIndex].value, metric.unit),
+          formatter: (p: any) => {
+            const b = buckets[p.dataIndex];
+            const then = before?.get(b.key);
+            if (then == null) return fmt(b.value, metric.unit);
+            const d = b.value - then;
+            return `{${d >= 0 ? 'up' : 'down'}|${d >= 0 ? '+' : '−'}${fmt(Math.abs(d), metric.unit)}}\n${fmt(b.value, metric.unit)}`;
+          },
+          rich: {
+            up: { color: cm.up, fontFamily: cm.mono, fontSize: 11, fontWeight: 700, padding: [0, 0, 2, 0] },
+            down: { color: cm.down, fontFamily: cm.mono, fontSize: 11, fontWeight: 700, padding: [0, 0, 2, 0] },
+          },
         },
       },
+      ...(extra.whiskers
+        ? [
+            {
+              type: 'custom',
+              silent: true,
+              z: 5,
+              encode: { x: 0, y: [1, 2, 3] },
+              data: spread,
+              renderItem: (_: unknown, api: { value: (dim: number) => number; coord: (v: number[]) => number[] }) => {
+                const lo = api.coord([api.value(0), api.value(1)]);
+                const hi = api.coord([api.value(0), api.value(2)]);
+                const top = api.coord([api.value(0), api.value(3)]);
+                const has = Number.isFinite(lo[1]) && Number.isFinite(hi[1]);
+                const style = { stroke: cm.text, lineWidth: 2, opacity: 0.8 };
+                const cap = 7;
+                const labelY = (has ? Math.min(hi[1], top[1]) : top[1]) - 5;
+                return {
+                  type: 'group',
+                  children: [
+                    ...(has
+                      ? [
+                          { type: 'line', shape: { x1: lo[0], y1: lo[1], x2: hi[0], y2: hi[1] }, style },
+                          { type: 'line', shape: { x1: lo[0] - cap, y1: lo[1], x2: lo[0] + cap, y2: lo[1] }, style },
+                          { type: 'line', shape: { x1: hi[0] - cap, y1: hi[1], x2: hi[0] + cap, y2: hi[1] }, style },
+                        ]
+                      : []),
+                    {
+                      type: 'text',
+                      x: top[0],
+                      y: labelY,
+                      style: {
+                        text: fmt(api.value(3), metric.unit),
+                        align: 'center',
+                        verticalAlign: 'bottom',
+                        fill: cm.text,
+                        font: `700 12px ${cm.mono}`,
+                      },
+                    },
+                  ],
+                };
+              },
+            },
+          ]
+        : []),
     ],
   };
 }
@@ -946,6 +1256,7 @@ function buildBoxOption(
   dim: PivotDimension,
   t: (s: string) => string,
   cm: PlaygroundTheme,
+  selected: string | null,
 ) {
   // ECharts boxplot data is [min, q1, median, q3, max] per bucket.
   const boxData = buckets.map((b) => {
@@ -986,7 +1297,9 @@ function buildBoxOption(
       formatter: (p: any) => {
         if (p.seriesType === 'boxplot') {
           const b = buckets[p.dataIndex];
-          const [min, q1, med, q3, max] = p.data.slice(1) as number[];
+          // ECharts may hand the box back with its category index in front.
+          const v = (Array.isArray(p.value) ? p.value : []) as number[];
+          const [min, q1, med, q3, max] = v.length === 6 ? v.slice(1) : v;
           return `${b.label}<br/>${t('median')} <b>${fmt(med, metric.unit)}</b><br/>` +
             `${t('q1')} ${fmt(q1, metric.unit)} · ${t('q3')} ${fmt(q3, metric.unit)}<br/>` +
             `${t('min')} ${fmt(min, metric.unit)} · ${t('max')} ${fmt(max, metric.unit)}<br/>` +
@@ -1033,8 +1346,14 @@ function buildBoxOption(
     series: [
       {
         type: 'boxplot',
-        data: boxData,
-        itemStyle: { color: cm.accent, borderColor: cm.accent },
+        data: boxData.map((value, i) => ({
+          value,
+          // The box whose items are listed stands out; the rest step back.
+          itemStyle: selected && buckets[i].key !== selected ? { opacity: 0.4 } : undefined,
+        })),
+        // A see-through fill keeps the median line visible.
+        itemStyle: { color: withAlpha(cm.accent, 0.3), borderColor: cm.accent, borderWidth: 2 },
+        cursor: 'pointer',
       },
       {
         type: 'scatter',

@@ -60,6 +60,9 @@ export interface PivotBucket {
   /** All metric values that landed in this bucket — kept so box plots
    *  can derive median / IQR / whiskers without re-iterating. */
   points: number[];
+  /** The dive (or dry session) behind each point, same order, so a bar can
+   *  list what it is made of. */
+  items: PivotItem[];
   /** Pre-computed summary statistic per the requested `stat`. */
   value: number;
 }
@@ -89,7 +92,7 @@ export function pivot(
   metric: PivotMetric,
   stat: Stat,
 ): PivotBucket[] {
-  const buckets = new Map<string, number[]>();
+  const buckets = new Map<string, { points: number[]; items: PivotItem[] }>();
   for (const it of items) {
     if (metric.modes.length > 0 && !metric.modes.includes(it.mode)) continue;
     if (dim.modes.length > 0 && !dim.modes.includes(it.mode)) continue;
@@ -97,18 +100,20 @@ export function pivot(
     if (key == null) continue;
     const v = metric.extract(it);
     if (v == null) continue;
-    const arr = buckets.get(key) ?? [];
-    arr.push(v);
-    buckets.set(key, arr);
+    const b = buckets.get(key) ?? { points: [], items: [] };
+    b.points.push(v);
+    b.items.push(it);
+    buckets.set(key, b);
   }
 
   const out: PivotBucket[] = [];
-  for (const [key, points] of buckets.entries()) {
+  for (const [key, { points, items: its }] of buckets.entries()) {
     out.push({
       key,
       label: key,
       n: points.length,
       points,
+      items: its,
       value: computeStat(points, stat),
     });
   }
