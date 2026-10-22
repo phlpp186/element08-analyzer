@@ -7,16 +7,15 @@
     <script>
       // FOUC prevention — resolve the theme before first paint. An explicit
       // stored choice ('light' = Caribbean / 'mid' = Titanium / 'dark' = Chalk
-      // Dark / 'arcade' = Block Arcade) wins; anything else (no preference, or a retired value like
-      // 'neon'/'sky') falls back to the OS prefers-color-scheme (light/dark).
+      // Dark / 'arcade' = Block Arcade) wins; anything else (no choice yet, or
+      // a retired value like 'neon'/'sky') gets Block Arcade, the default
+      // Philipp picked on 2026-10-22.
       (function () {
         var t = null;
         try { t = localStorage.getItem('element08.theme'); } catch (e) { /* localStorage blocked */ }
-        if (t === 'mid' || t === 'arcade') { document.documentElement.classList.add(t); return; }
-        var light = (t === 'light' || t === 'dark')
-          ? t === 'light'
-          : !(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        if (light) document.documentElement.classList.add('light');
+        if (t === 'dark') return;
+        var known = t === 'light' || t === 'mid' || t === 'arcade';
+        document.documentElement.classList.add(known ? t : 'arcade');
       })();
     </script>
     <meta
