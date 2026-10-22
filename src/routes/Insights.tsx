@@ -66,8 +66,40 @@ import { DiveReflexFirstMinuteChart } from '../components/charts/DiveReflexFirst
 import { HrAroundContractionsChart } from '../components/charts/HrAroundContractionsChart';
 import { EarlyTurnCard } from '../components/charts/EarlyTurnCard';
 import { MouthfillCard } from '../components/charts/MouthfillCard';
+import { TONE_VAR } from '../lib/tones';
+import {
+  balanceHeadline,
+  breathHoldHeadline,
+  depthHeadline,
+  periodStart,
+  poolHeadline,
+  sessionsInPeriod,
+  type Period,
+  type TabHeadline,
+} from '../lib/analytics/insightHeadlines';
+import type { ParsedSession } from '../schema/backup';
 
 type Tab = 'breathhold' | 'depth' | 'pool' | 'balance';
+
+const PERIODS: { id: Period; label: string }[] = [
+  { id: '3m', label: '3 months' },
+  { id: '12m', label: '12 months' },
+  { id: 'all', label: 'All time' },
+];
+
+const PERIOD_KEY = 'element08.insightsPeriod';
+
+function readPeriod(): Period {
+  try {
+    const v = localStorage.getItem(PERIOD_KEY);
+    if (v === '3m' || v === '12m' || v === 'all') return v;
+  } catch {
+    /* storage blocked: fall through */
+  }
+  return 'all';
+}
+
+const NO_SESSIONS: ParsedSession[] = [];
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'breathhold', label: 'Breath Hold' },
@@ -83,12 +115,20 @@ export function Insights() {
   const [bandStep, setBandStep] = useState<BandStep>(10);
   /** Tab-wide lung-volume filter for the Breath Hold tab. Null = all. */
   const [lungVol, setLungVol] = useState<LungVol | null>(null);
+  const [period, setPeriodState] = useState<Period>(readPeriod);
+  const setPeriod = (p: Period) => {
+    setPeriodState(p);
+    try {
+      localStorage.setItem(PERIOD_KEY, p);
+    } catch {
+      /* storage blocked: the choice lasts this visit */
+    }
+  };
 
-  if (!backup) return <Navigate to="/" replace />;
-
-  // All calculations are memoized against the backup. They're cheap but
-  // we recompute on tab switches otherwise.
-  const sessions = backup.data.sessions;
+  // Every chart and headline sees only the chosen period. All calculations
+  // are memoized: cheap, but they would rerun on every tab switch.
+  const allSessions = backup?.data.sessions ?? NO_SESSIONS;
+  const sessions = useMemo(() => sessionsInPeriod(allSessions, period), [allSessions, period]);
   const spo2Trend = useMemo(() => spo2LowestPerSession(sessions, lungVol), [sessions, lungVol]);
   const bests = useMemo(() => disciplineBests(sessions), [sessions]);
   const distBins = useMemo(() => distanceDistribution(sessions), [sessions]);
@@ -115,6 +155,25 @@ export function Insights() {
   const hrAroundC = useMemo(() => hrAroundContractions(sessions, lungVol), [sessions, lungVol]);
   const minSpo2Holds = useMemo(() => minSpo2VsDuration(sessions, lungVol), [sessions, lungVol]);
 
+  const headline: TabHeadline = useMemo(() => {
+    if (tab === 'depth') {
+      return depthHeadline(t, { bins: depthBins, bands: speedBands, hang: hangStats, progression });
+    }
+    if (tab === 'pool') return poolHeadline(t, { sessions, bests, bins: distBins });
+    if (tab === 'balance') {
+      return balanceHeadline(t, {
+        sessions,
+        tags: tagDist,
+        effort: effortDist,
+        start: periodStart(period),
+      });
+    }
+    return breathHoldHeadline(t, { sessions, holds: holdDur, spo2: spo2Trend, recovery: recoveryTimes });
+  }, [tab, t, depthBins, speedBands, hangStats, progression, sessions, bests, distBins, tagDist, effortDist, period, holdDur, spo2Trend, recoveryTimes]);
+
+  if (!backup) return <Navigate to="/" replace />;
+  const periodEmpty = sessions.length === 0 && allSessions.length > 0;
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
@@ -134,22 +193,50 @@ export function Insights() {
         </Link>
       </header>
 
-      <nav className="board mb-6 flex w-fit max-w-full flex-wrap gap-1.5 p-1.5">
-        {TABS.map((tabItem) => {
-          const active = tab === tabItem.id;
-          return (
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <nav className="board flex w-fit max-w-full flex-wrap gap-1.5 p-1.5">
+          {TABS.map((tabItem) => {
+            const active = tab === tabItem.id;
+            return (
+              <button
+                key={tabItem.id}
+                onClick={() => setTab(tabItem.id)}
+                className={`pill px-5 py-2 font-mono text-xs uppercase tracking-widest ${active ? 'pill-on' : ''}`}
+              >
+                {t(tabItem.label)}
+              </button>
+            );
+          })}
+        </nav>
+        <div role="radiogroup" aria-label={t('Period')} className="flex flex-wrap gap-1.5">
+          {PERIODS.map((p) => (
             <button
-              key={tabItem.id}
-              onClick={() => setTab(tabItem.id)}
-              className={`pill px-5 py-2 font-mono text-xs uppercase tracking-widest ${active ? 'pill-on' : ''}`}
+              key={p.id}
+              role="radio"
+              aria-checked={period === p.id}
+              onClick={() => setPeriod(p.id)}
+              className={`pill px-3 py-1 font-mono text-[11px] uppercase tracking-widest ${period === p.id ? 'pill-on' : ''}`}
             >
-              {t(tabItem.label)}
+              {t(p.label)}
             </button>
-          );
-        })}
-      </nav>
+          ))}
+        </div>
+      </div>
 
-      <main className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {periodEmpty ? (
+        // The charts' own empty states say "in this backup", which is wrong
+        // when only the period is empty.
+        <p className="board mb-6 flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-text">
+          {t('No sessions in this period.')}
+          <button onClick={() => setPeriod('all')} className="pill pill-on px-3 py-1 font-mono text-[11px] uppercase tracking-widest">
+            {t('All time')}
+          </button>
+        </p>
+      ) : (
+        <HeadlineStrip headline={headline} />
+      )}
+
+      <main className={`grid grid-cols-1 gap-6 lg:grid-cols-2 ${periodEmpty ? 'hidden' : ''}`}>
         {tab === 'breathhold' && (
           <>
             <div className="lg:col-span-2">
@@ -173,6 +260,9 @@ export function Insights() {
 
         {tab === 'depth' && (
           <>
+            <div className="lg:col-span-2">
+              <DisciplineProgressionChart series={progression} />
+            </div>
             <DepthDistributionChart bins={depthBins} />
             <SpeedPerDepthBandChart
               bands={speedBands}
@@ -180,7 +270,6 @@ export function Insights() {
               onStepChange={setBandStep}
             />
             <HangTimeDistributionChart stats={hangStats} />
-            <DisciplineProgressionChart series={progression} />
             <EarlyTurnCard stats={earlyTurn} />
             <MouthfillCard stats={mouthfill} />
           </>
@@ -188,11 +277,11 @@ export function Insights() {
 
         {tab === 'pool' && (
           <>
-            <DisciplineBestsCard bests={bests} />
-            <DistanceDistributionChart bins={distBins} />
             <div className="lg:col-span-2">
               <PoolPaceChart series={poolPace} />
             </div>
+            <DisciplineBestsCard bests={bests} />
+            <DistanceDistributionChart bins={distBins} />
             <div className="lg:col-span-2">
               <PoolHrChart points={poolHr} />
             </div>
@@ -219,6 +308,31 @@ export function Insights() {
         )}
       </main>
     </div>
+  );
+}
+
+/** The tab's four headline blocks and its one-line takeaway. */
+function HeadlineStrip({ headline }: { headline: TabHeadline }) {
+  return (
+    <section className="mb-6 space-y-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {headline.blocks.map((b) => (
+          <div
+            key={b.label}
+            className="tile min-w-0 break-words px-4 py-3"
+            style={{ '--tone': TONE_VAR[b.tone] } as React.CSSProperties}
+          >
+            <div className="tile-value font-num text-2xl font-bold tabular-nums">{b.value}</div>
+            <div className="tile-label mt-0.5 font-mono text-[10px] font-extrabold uppercase tracking-widest">
+              {b.label}
+            </div>
+          </div>
+        ))}
+      </div>
+      {headline.takeaway && (
+        <p className="board px-4 py-3 font-heading text-base text-text">{headline.takeaway}</p>
+      )}
+    </section>
   );
 }
 

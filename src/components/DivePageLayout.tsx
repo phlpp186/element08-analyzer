@@ -11,6 +11,9 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, type To } from 'react-router-dom';
 import { useElementHeight } from '../lib/divePage';
+import { TONE_VAR, type Tone } from '../lib/tones';
+
+export type { Tone };
 
 export function DivePage({
   header,
@@ -201,10 +204,6 @@ export function SideCard({
   );
 }
 
-/** A stat tile's colour, by what it measures: the profile colour for
- *  descent, amber for ascent, the hero colour for the headline figure. */
-export type Tone = 'hero' | 'profile' | 'amber' | 'accent' | 'highlight' | 'recover' | 'red';
-
 export interface StatTile {
   label: string;
   value: string;
@@ -212,15 +211,6 @@ export interface StatTile {
   tone?: Tone;
 }
 
-const TONE_VAR: Record<Tone, string> = {
-  hero: 'rgb(var(--c-hero))',
-  profile: 'rgb(var(--c-profile))',
-  amber: 'rgb(var(--c-amber))',
-  accent: 'rgb(var(--c-accent))',
-  highlight: 'rgb(var(--c-highlight))',
-  recover: 'rgb(var(--c-recover))',
-  red: 'rgb(var(--c-red))',
-};
 
 export function StatsCard({ title, tiles, empty }: { title: string; tiles: StatTile[]; empty: string }) {
   return (

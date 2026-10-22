@@ -112,7 +112,7 @@ function isoLocal(d: Date): string {
 }
 
 /** "1h 12m" → 72, "19m 25s" → 19.42. Returns 0 on unparseable input. */
-function parseDurationMinutes(s: string | undefined): number {
+export function parseDurationMinutes(s: string | undefined): number {
   if (!s) return 0;
   let total = 0;
   const hour = /(\d+)\s*h/.exec(s);
