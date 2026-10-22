@@ -690,5 +690,13 @@
   "PB timeline": "Cronología de récords",
   "PBs": "récords",
   "No new PBs in the last 12 months.": "Ningún récord nuevo en los últimos 12 meses.",
-  "Last 12 months": "Últimos 12 meses"
+  "Last 12 months": "Últimos 12 meses",
+  "My account": "Mi cuenta",
+  "Load the logbook you back up from the app": "Carga el diario que respaldas desde la app",
+  "A backup file": "Un archivo de copia",
+  "Drop an .e08backup.json from the app": "Suelta un .e08backup.json de la app",
+  "Choose file": "Elegir archivo",
+  "The demo": "La demo",
+  "A year of a made-up freediver, no file needed": "Un año de un apneísta inventado, sin archivo",
+  "Try it": "Probar"
 }

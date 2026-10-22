@@ -690,5 +690,13 @@
   "PB timeline": "ไทม์ไลน์สถิติ",
   "PBs": "สถิติ",
   "No new PBs in the last 12 months.": "ไม่มีสถิติใหม่ใน 12 เดือนที่ผ่านมา",
-  "Last 12 months": "12 เดือนล่าสุด"
+  "Last 12 months": "12 เดือนล่าสุด",
+  "My account": "บัญชีของฉัน",
+  "Load the logbook you back up from the app": "โหลดสมุดบันทึกที่คุณสำรองจากแอป",
+  "A backup file": "ไฟล์สำรองข้อมูล",
+  "Drop an .e08backup.json from the app": "วางไฟล์ .e08backup.json จากแอป",
+  "Choose file": "เลือกไฟล์",
+  "The demo": "เดโม",
+  "A year of a made-up freediver, no file needed": "หนึ่งปีของนักฟรีไดฟ์สมมติ ไม่ต้องใช้ไฟล์",
+  "Try it": "ลองเลย"
 }

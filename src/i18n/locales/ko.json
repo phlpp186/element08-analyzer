@@ -690,5 +690,13 @@
   "PB timeline": "PB 타임라인",
   "PBs": "PB",
   "No new PBs in the last 12 months.": "최근 12개월 동안 새 PB가 없습니다.",
-  "Last 12 months": "최근 12개월"
+  "Last 12 months": "최근 12개월",
+  "My account": "내 계정",
+  "Load the logbook you back up from the app": "앱에서 백업한 로그북 불러오기",
+  "A backup file": "백업 파일",
+  "Drop an .e08backup.json from the app": "앱의 .e08backup.json을 끌어다 놓기",
+  "Choose file": "파일 선택",
+  "The demo": "데모",
+  "A year of a made-up freediver, no file needed": "가상의 프리다이버의 1년, 파일 필요 없음",
+  "Try it": "체험하기"
 }

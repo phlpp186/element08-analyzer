@@ -79,7 +79,7 @@ export function DropZone({ onLoaded }: Props) {
         tabIndex={0}
         aria-busy={busy}
         className={[
-          'flex h-64 flex-col items-center justify-center rounded-lg border-2 border-dashed bg-panel text-center transition-colors',
+          'flex h-44 flex-col items-center justify-center rounded-lg border-2 border-dashed bg-panel text-center transition-colors',
           'cursor-pointer select-none',
           dragOver ? 'border-accent bg-abyss' : 'border-border hover:border-accent',
           busy ? 'pointer-events-none opacity-60' : '',

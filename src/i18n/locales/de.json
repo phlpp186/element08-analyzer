@@ -690,5 +690,13 @@
   "PB timeline": "PB-Zeitleiste",
   "PBs": "PBs",
   "No new PBs in the last 12 months.": "Keine neuen PBs in den letzten 12 Monaten.",
-  "Last 12 months": "Letzte 12 Monate"
+  "Last 12 months": "Letzte 12 Monate",
+  "My account": "Mein Konto",
+  "Load the logbook you back up from the app": "Lade das Logbuch, das du aus der App sicherst",
+  "A backup file": "Eine Backup-Datei",
+  "Drop an .e08backup.json from the app": "Zieh eine .e08backup.json aus der App hierher",
+  "Choose file": "Datei wählen",
+  "The demo": "Die Demo",
+  "A year of a made-up freediver, no file needed": "Ein Jahr eines erfundenen Freedivers, ohne Datei",
+  "Try it": "Ausprobieren"
 }

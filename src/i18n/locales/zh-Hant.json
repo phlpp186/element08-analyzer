@@ -690,5 +690,13 @@
   "PB timeline": "PB 時間線",
   "PBs": "次 PB",
   "No new PBs in the last 12 months.": "最近 12 個月沒有新的 PB。",
-  "Last 12 months": "最近 12 個月"
+  "Last 12 months": "最近 12 個月",
+  "My account": "我的帳戶",
+  "Load the logbook you back up from the app": "載入你從應用程式備份的日誌",
+  "A backup file": "備份檔案",
+  "Drop an .e08backup.json from the app": "拖入應用程式匯出的 .e08backup.json",
+  "Choose file": "選擇檔案",
+  "The demo": "示範",
+  "A year of a made-up freediver, no file needed": "一位虛構自由潛水員的一年，無需檔案",
+  "Try it": "試試看"
 }
