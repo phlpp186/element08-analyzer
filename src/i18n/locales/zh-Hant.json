@@ -524,5 +524,8 @@
   "{m} of the {noun}, grouped by {d}.": "{noun} 的 {m}，依 {d} 分組。",
   "← back to sessions": "← 返回訓練列表",
   "Theme": "主題",
-  "+{gain}m in {year}": "{year}年 +{gain}m"
+  "+{gain}m in {year}": "{year}年 +{gain}m",
+  "This week": "本週",
+  "Best week": "最佳一週",
+  "avg {n}/week": "平均 {n}/週"
 }

@@ -65,6 +65,7 @@ export function DisciplineProgressionChart({ series }: Props) {
       axisLabel: {
         color: ct.textDim,
         fontSize: 10,
+        hideOverlap: true,
       },
       splitLine: { show: false },
     },

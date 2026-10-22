@@ -28,6 +28,8 @@ import { DisciplineProgressionChart } from '../components/charts/DisciplineProgr
 import { ChartCard } from '../components/charts/ChartCard';
 import { useChartTheme } from '../lib/chartTheme';
 import { useT } from '../i18n';
+import type { ParsedSession } from '../schema/backup';
+import { modeLabel } from '../lib/format';
 
 // ─── KPI tile ────────────────────────────────────────────────────────────────
 
@@ -125,37 +127,124 @@ function TrajectoryChart({ mode }: { mode: Exclude<TrajectoryMode, 'depth'> }) {
 
 // ─── consistency strip ───────────────────────────────────────────────────────
 
+const MODE_TONE: Record<ParsedSession['mode'], string> = {
+  depth: 'rgb(var(--c-modeDepth))',
+  pool: 'rgb(var(--c-modePool))',
+  dry: 'rgb(var(--c-modeDry))',
+};
+
+/** Most height the block area takes, px; it shrinks to the busiest week. */
+const STACK_H = 140;
+const BLOCK_GAP = 3;
+
+/** One block per session, stacked per week and coloured by mode, with the
+ *  average of the completed weeks as a dashed line (Philipp's option A,
+ *  2026-10-22). */
 function ConsistencyStrip() {
   const backup = useBackupStore((s) => s.backup);
-  const ct = useChartTheme();
   const t = useT();
   const bars = useMemo(() => (backup ? weeklyConsistency(backup.data.sessions) : []), [backup]);
-  const max = Math.max(1, ...bars.map((b) => b.count));
+  if (bars.length === 0) return null;
+
+  let best = 0;
+  for (const b of bars) if (b.count > best) best = b.count;
+  const max = Math.max(1, best);
+  // Blocks shrink when a busy week would not fit, never below a sliver.
+  const blockH = Math.max(4, Math.min(26, (STACK_H - (max - 1) * BLOCK_GAP) / max));
+  const step = blockH + BLOCK_GAP;
+  const areaH = max * step + 8;
+  // The current week is still running, so the average leaves it out.
+  const done = bars.slice(0, -1);
+  const avg = done.reduce((sum, b) => sum + b.count, 0) / Math.max(1, done.length);
+  const thisWeek = bars[bars.length - 1].count;
+  const present = (['depth', 'pool', 'dry'] as const).filter((m) =>
+    bars.some((b) => b.modes.includes(m)),
+  );
+
+  const chip = (label: string, tone: string) => (
+    <span
+      className="tile inline-flex items-center px-2.5 py-1"
+      style={{ '--tone': tone } as React.CSSProperties}
+    >
+      <span className="tile-value font-num text-xs font-bold">{label}</span>
+    </span>
+  );
+
   return (
     <ChartCard
       title={t('Consistency')}
       description={t('Sessions per week, last 12 weeks.')}
     >
-      <div className="flex h-24 items-end gap-1.5 px-2 pb-1">
-        {bars.map((b) => (
-          <div key={b.weekStart} className="flex flex-1 flex-col items-center gap-1">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {chip(`${t('This week')} ${thisWeek}`, 'rgb(var(--c-amber))')}
+        {chip(`${t('Best week')} ${best}`, 'rgb(var(--c-highlight))')}
+        <span className="ml-auto flex flex-wrap gap-3">
+          {present.map((m) => (
+            <span key={m} className="flex items-center gap-1.5 font-mono text-[11px] text-textDim">
+              <span className="h-2.5 w-2.5 rounded-sm" style={{ background: MODE_TONE[m] }} />
+              {t(modeLabel(m))}
+            </span>
+          ))}
+        </span>
+      </div>
+      {/* The right gutter holds the average's label clear of the blocks. */}
+      <div className="relative pl-1 pr-24">
+        <div className="relative flex items-end gap-1.5 sm:gap-2" style={{ height: areaH }}>
+          {bars.map((b) => (
             <div
-              className="w-full rounded-sm"
-              style={{
-                height: `${Math.max(4, (b.count / max) * 72)}px`,
-                backgroundColor: b.count > 0 ? ct.accent : ct.splitLine,
-                opacity: b.count > 0 ? 0.9 : 0.5,
-              }}
+              key={b.weekStart}
+              className="flex flex-1 flex-col-reverse"
+              style={{ gap: BLOCK_GAP }}
               title={`${b.count}`}
-            />
-            <span className="font-mono text-[9px] text-textDim">
+            >
+              {b.modes.length === 0 ? (
+                <div
+                  className="rounded border border-dashed border-textDim/50"
+                  style={{ height: blockH }}
+                />
+              ) : (
+                b.modes.map((m, i) => (
+                  <div
+                    key={i}
+                    className="rounded"
+                    style={{
+                      height: blockH,
+                      background: MODE_TONE[m],
+                      borderTop: `2px solid color-mix(in srgb, ${MODE_TONE[m]}, #fff 40%)`,
+                      borderBottom: `3px solid color-mix(in srgb, ${MODE_TONE[m]}, #000 35%)`,
+                    }}
+                  />
+                ))
+              )}
+            </div>
+          ))}
+          {avg > 0 && (
+            <div
+              className="pointer-events-none absolute -right-24 left-0 border-t-2 border-dashed border-amber/80"
+              style={{ bottom: avg * step }}
+            >
+              <span className="tile absolute -top-3 right-0 px-2 py-0.5" style={{ '--tone': 'rgb(var(--c-amber))' } as React.CSSProperties}>
+                <span className="tile-value font-num text-[10px] font-bold">
+                  {t('avg {n}/week').replace('{n}', avg.toFixed(1))}
+                </span>
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="mt-1.5 flex gap-1.5 sm:gap-2">
+          {bars.map((b, i) => (
+            <span
+              key={b.weekStart}
+              // On a phone every other date (and always this week's) so they fit.
+              className={`min-w-0 flex-1 whitespace-nowrap text-center font-mono text-[9px] ${i === bars.length - 1 ? 'font-bold text-amber' : `text-textDim ${(bars.length - 1 - i) % 2 === 1 ? 'max-sm:invisible' : ''}`}`}
+            >
               {new Date(b.weekStart).toLocaleDateString(undefined, {
                 month: 'numeric',
                 day: 'numeric',
               })}
             </span>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </ChartCard>
   );

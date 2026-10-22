@@ -524,5 +524,8 @@
   "{m} of the {noun}, grouped by {d}.": "{m} ของ {noun} จัดกลุ่มตาม {d}",
   "← back to sessions": "← กลับไปที่เซสชัน",
   "Theme": "ธีม",
-  "+{gain}m in {year}": "+{gain}m ในปี {year}"
+  "+{gain}m in {year}": "+{gain}m ในปี {year}",
+  "This week": "สัปดาห์นี้",
+  "Best week": "สัปดาห์ที่ดีที่สุด",
+  "avg {n}/week": "เฉลี่ย {n}/สัปดาห์"
 }

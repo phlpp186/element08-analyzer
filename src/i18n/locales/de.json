@@ -524,5 +524,8 @@
   "{m} of the {noun}, grouped by {d}.": "{m} der {noun}, gruppiert nach {d}.",
   "← back to sessions": "← zurück zu den Sessions",
   "Theme": "Design",
-  "+{gain}m in {year}": "+{gain}m in {year}"
+  "+{gain}m in {year}": "+{gain}m in {year}",
+  "This week": "Diese Woche",
+  "Best week": "Beste Woche",
+  "avg {n}/week": "Ø {n}/Woche"
 }

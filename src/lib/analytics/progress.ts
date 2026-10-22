@@ -207,6 +207,8 @@ export interface WeekBar {
   /** ms epoch of the Monday starting the week. */
   weekStart: number;
   count: number;
+  /** The week's sessions' modes, oldest first (one block each). */
+  modes: ParsedSession['mode'][];
 }
 
 export function weeklyConsistency(sessions: ParsedSession[], weeks = 12): WeekBar[] {
@@ -220,12 +222,18 @@ export function weeklyConsistency(sessions: ParsedSession[], weeks = 12): WeekBa
   const bars: WeekBar[] = Array.from({ length: weeks }, (_, i) => ({
     weekStart: start + i * 7 * DAY_MS,
     count: 0,
+    modes: [],
   }));
-  for (const s of sessions) {
-    const t = ts(s);
-    if (!Number.isFinite(t) || t < start) continue;
+  const inRange = sessions
+    .map((s) => ({ s, t: ts(s) }))
+    .filter(({ t }) => Number.isFinite(t) && t >= start)
+    .sort((a, b) => a.t - b.t);
+  for (const { s, t } of inRange) {
     const idx = Math.floor((t - start) / (7 * DAY_MS));
-    if (idx >= 0 && idx < weeks) bars[idx].count++;
+    if (idx >= 0 && idx < weeks) {
+      bars[idx].count++;
+      bars[idx].modes.push(s.mode);
+    }
   }
   return bars;
 }

@@ -524,5 +524,8 @@
   "{m} of the {noun}, grouped by {d}.": "{d}(으)로 묶은 {noun}의 {m}.",
   "← back to sessions": "← 세션 목록으로 돌아가기",
   "Theme": "테마",
-  "+{gain}m in {year}": "{year}년 +{gain}m"
+  "+{gain}m in {year}": "{year}년 +{gain}m",
+  "This week": "이번 주",
+  "Best week": "최고의 주",
+  "avg {n}/week": "평균 {n}/주"
 }

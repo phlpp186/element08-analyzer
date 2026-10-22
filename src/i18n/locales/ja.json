@@ -524,5 +524,8 @@
   "{m} of the {noun}, grouped by {d}.": "{d} でグループ化した {noun} の {m}。",
   "← back to sessions": "← セッション一覧に戻る",
   "Theme": "テーマ",
-  "+{gain}m in {year}": "{year}年 +{gain}m"
+  "+{gain}m in {year}": "{year}年 +{gain}m",
+  "This week": "今週",
+  "Best week": "最高の週",
+  "avg {n}/week": "平均 {n}/週"
 }
