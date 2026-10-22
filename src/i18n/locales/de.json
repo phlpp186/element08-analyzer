@@ -683,5 +683,8 @@
   "▲ {n} bpm higher": "▲ {n} bpm höher",
   "▼ {n} bpm lower": "▼ {n} bpm niedriger",
   "Pace /100m": "Tempo /100m",
-  "Min HR": "Min. HF"
+  "Min HR": "Min. HF",
+  "SpO₂ + HR": "SpO₂ + HF",
+  "1st C": "1. K",
+  "Whole session": "Ganze Session"
 }

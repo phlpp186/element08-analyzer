@@ -683,5 +683,8 @@
   "▲ {n} bpm higher": "▲ {n} bpm 높음",
   "▼ {n} bpm lower": "▼ {n} bpm 낮음",
   "Pace /100m": "페이스 /100m",
-  "Min HR": "최저 심박"
+  "Min HR": "최저 심박",
+  "SpO₂ + HR": "SpO₂ + 심박",
+  "1st C": "첫 수축",
+  "Whole session": "전체 세션"
 }

@@ -683,5 +683,8 @@
   "▲ {n} bpm higher": "▲ 高 {n} bpm",
   "▼ {n} bpm lower": "▼ 低 {n} bpm",
   "Pace /100m": "配速 /100米",
-  "Min HR": "最低心率"
+  "Min HR": "最低心率",
+  "SpO₂ + HR": "SpO₂ + 心率",
+  "1st C": "首次收缩",
+  "Whole session": "整个训练"
 }

@@ -683,5 +683,8 @@
   "▲ {n} bpm higher": "▲ {n} bpm 高い",
   "▼ {n} bpm lower": "▼ {n} bpm 低い",
   "Pace /100m": "ペース /100m",
-  "Min HR": "最低心拍"
+  "Min HR": "最低心拍",
+  "SpO₂ + HR": "SpO₂ + 心拍",
+  "1st C": "初収縮",
+  "Whole session": "セッション全体"
 }

@@ -683,5 +683,8 @@
   "▲ {n} bpm higher": "▲ {n} lpm más",
   "▼ {n} bpm lower": "▼ {n} lpm menos",
   "Pace /100m": "Ritmo /100m",
-  "Min HR": "FC mín"
+  "Min HR": "FC mín",
+  "SpO₂ + HR": "SpO₂ + FC",
+  "1st C": "1.ª C",
+  "Whole session": "Toda la sesión"
 }
