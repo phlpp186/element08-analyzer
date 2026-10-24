@@ -791,5 +791,14 @@
   "slow to fast": "ช้าไปเร็ว",
   "belt weight": "เข็มขัดน้ำหนัก",
   "neck weight": "น้ำหนักคอ",
-  "neck weight extension": "น้ำหนักคอแบบต่อ"
+  "neck weight extension": "น้ำหนักคอแบบต่อ",
+  "View": "มุมมอง",
+  "Depth over time": "ความลึกตามเวลา",
+  "The dives’ depth profiles over time": "โปรไฟล์ความลึกของการดำตามเวลา",
+  "Descent and ascent speed at every depth": "ความเร็วขาลงและขาขึ้นที่ทุกความลึก",
+  "1 m/s band": "แถบ 1 ม./วิ",
+  "No band": "ไม่มีแถบ",
+  "Shade speeds up to 1 m/s either way": "แรเงาความเร็วไม่เกิน 1 ม./วิ ทั้งสองทิศ",
+  "On": "เปิด",
+  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "เส้นประ: ไม่มีโปรไฟล์ความลึก วาดจากเวลาขาลงและขาขึ้น"
 }

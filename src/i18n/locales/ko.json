@@ -791,5 +791,14 @@
   "slow to fast": "느리다가 빠르게",
   "belt weight": "벨트 웨이트",
   "neck weight": "넥 웨이트",
-  "neck weight extension": "넥 웨이트 연장"
+  "neck weight extension": "넥 웨이트 연장",
+  "View": "보기",
+  "Depth over time": "시간별 수심",
+  "The dives’ depth profiles over time": "다이브별 시간에 따른 수심 프로필",
+  "Descent and ascent speed at every depth": "수심별 하강·상승 속도",
+  "1 m/s band": "1 m/s 구간",
+  "No band": "구간 없음",
+  "Shade speeds up to 1 m/s either way": "양방향 1 m/s 이하 속도 음영 표시",
+  "On": "켬",
+  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "점선: 수심 프로필이 없어 하강·상승 시간으로 그렸습니다."
 }

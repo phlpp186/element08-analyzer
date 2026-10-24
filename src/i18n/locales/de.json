@@ -791,5 +791,14 @@
   "slow to fast": "langsam bis schnell",
   "belt weight": "Gürtelgewicht",
   "neck weight": "Halsgewicht",
-  "neck weight extension": "Halsgewicht mit Verlängerung"
+  "neck weight extension": "Halsgewicht mit Verlängerung",
+  "View": "Ansicht",
+  "Depth over time": "Tiefe über Zeit",
+  "The dives’ depth profiles over time": "Die Tiefenprofile der Tauchgänge über die Zeit",
+  "Descent and ascent speed at every depth": "Ab- und Aufstiegsgeschwindigkeit in jeder Tiefe",
+  "1 m/s band": "1-m/s-Band",
+  "No band": "Kein Band",
+  "Shade speeds up to 1 m/s either way": "Geschwindigkeiten bis 1 m/s in beide Richtungen schattieren",
+  "On": "An",
+  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "Gestrichelt: kein Tiefenprofil aufgezeichnet, aus den Ab- und Aufstiegszeiten gezeichnet."
 }

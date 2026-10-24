@@ -791,5 +791,14 @@
   "slow to fast": "先慢后快",
   "belt weight": "腰带配重",
   "neck weight": "颈部配重",
-  "neck weight extension": "颈部配重加延长"
+  "neck weight extension": "颈部配重加延长",
+  "View": "视图",
+  "Depth over time": "深度随时间",
+  "The dives’ depth profiles over time": "各次潜水随时间的深度曲线",
+  "Descent and ascent speed at every depth": "每个深度的下潜和上升速度",
+  "1 m/s band": "1 m/s 区间",
+  "No band": "不显示区间",
+  "Shade speeds up to 1 m/s either way": "标出双向不超过 1 m/s 的速度",
+  "On": "开",
+  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "虚线：未记录深度曲线，按下潜和上升时间绘制。"
 }

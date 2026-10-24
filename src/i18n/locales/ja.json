@@ -791,5 +791,14 @@
   "slow to fast": "遅めから速めへ",
   "belt weight": "ベルトウェイト",
   "neck weight": "ネックウェイト",
-  "neck weight extension": "ネックウェイト延長"
+  "neck weight extension": "ネックウェイト延長",
+  "View": "表示",
+  "Depth over time": "時間ごとの深度",
+  "The dives’ depth profiles over time": "各ダイブの時間ごとの深度プロフィール",
+  "Descent and ascent speed at every depth": "各深度での潜降・浮上速度",
+  "1 m/s band": "1 m/s 帯",
+  "No band": "帯なし",
+  "Shade speeds up to 1 m/s either way": "上下とも 1 m/s までの速度を網掛け",
+  "On": "オン",
+  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "破線：深度プロフィールの記録がないため、潜降・浮上時間から描画しています。"
 }

@@ -34,6 +34,7 @@ import {
   type HoldAlign,
 } from '../components/charts/HoldOverlayChart';
 import { PoolOverlayChart } from '../components/charts/PoolOverlayChart';
+import { CompareSpeedDepthChart } from '../components/charts/CompareSpeedDepthChart';
 import { DepthSplits } from '../components/DepthSplits';
 import { buildCatalog, type CatalogEntry } from '../lib/analytics/diveCatalog';
 import { extractDiveData, type DepthDiveData } from '../lib/analytics/diveProfile';
@@ -117,6 +118,12 @@ export function CompareDives() {
   // Moving-average window applied to the secondary speed panel. 0 = raw.
   const [depthSpeedSmooth, setDepthSpeedSmooth] = useState<0 | 5 | 15>(0);
   const [holdAlign, setHoldAlign] = useState<HoldAlign>('start');
+  // Depth compare as profiles over time, or as speed against depth (the
+  // app's speed-vs-depth view; ?view=speed opens it).
+  const [depthView, setDepthView] = useState<'time' | 'speed'>(() =>
+    params.get('view') === 'speed' ? 'speed' : 'time',
+  );
+  const [speedBand, setSpeedBand] = useState(false);
 
   const sessions = backup?.data.sessions ?? [];
   const slots = selections[mode];
@@ -211,6 +218,27 @@ export function CompareDives() {
             <>
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                 <PillToggle
+                  label={t('View')}
+                  value={depthView}
+                  onChange={setDepthView}
+                  options={[
+                    { id: 'time', label: t('Depth over time'), hint: t('The dives’ depth profiles over time') },
+                    { id: 'speed', label: t('Speed by depth'), hint: t('Descent and ascent speed at every depth') },
+                  ]}
+                />
+                {depthView === 'speed' ? (
+                  <PillToggle
+                    label={t('1 m/s band')}
+                    value={speedBand ? 'on' : 'off'}
+                    onChange={(v) => setSpeedBand(v === 'on')}
+                    options={[
+                      { id: 'off', label: t('Off'), hint: t('No band') },
+                      { id: 'on', label: t('On'), hint: t('Shade speeds up to 1 m/s either way') },
+                    ]}
+                  />
+                ) : (
+                  <>
+                <PillToggle
                   label={t('Align')}
                   value={depthAlign}
                   onChange={setDepthAlign}
@@ -252,9 +280,16 @@ export function CompareDives() {
                     ]}
                   />
                 )}
+                  </>
+                )}
               </div>
               <div className="board space-y-2 p-3">
-                {(() => {
+                {depthView === 'speed' ? (
+                  <CompareSpeedDepthChart
+                    dives={depthEntries.map((e) => ({ color: e.color, label: e.label, data: e.data, dive: e.dive }))}
+                    showBand={speedBand}
+                  />
+                ) : (() => {
                   const overlay = depthEntries.map((e) => ({
                     color: e.color,
                     label: e.label,

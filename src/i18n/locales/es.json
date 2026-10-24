@@ -791,5 +791,14 @@
   "slow to fast": "de lento a rápido",
   "belt weight": "cinturón de lastre",
   "neck weight": "lastre de cuello",
-  "neck weight extension": "lastre de cuello con extensión"
+  "neck weight extension": "lastre de cuello con extensión",
+  "View": "Vista",
+  "Depth over time": "Profundidad en el tiempo",
+  "The dives’ depth profiles over time": "Los perfiles de profundidad de las inmersiones en el tiempo",
+  "Descent and ascent speed at every depth": "Velocidad de bajada y subida en cada profundidad",
+  "1 m/s band": "Banda de 1 m/s",
+  "No band": "Sin banda",
+  "Shade speeds up to 1 m/s either way": "Sombrear velocidades de hasta 1 m/s en ambos sentidos",
+  "On": "Sí",
+  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "Discontinua: no se registró perfil de profundidad, dibujada a partir de los tiempos de bajada y subida."
 }
