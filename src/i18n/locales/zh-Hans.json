@@ -807,5 +807,9 @@
   "{s} s faster": "快 {s} 秒",
   "{s} s slower": "慢 {s} 秒",
   "Faster or slower than {ref}": "比 {ref} 快还是慢",
-  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "线上方：快了这么多秒；下方：慢了。下潜从出发算起，上升从离开底部算起。"
+  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "线上方：快了这么多秒；下方：慢了。下潜从出发算起，上升从离开底部算起。",
+  "Compare": "对比",
+  "Seasons": "赛季",
+  "Training periods side by side": "训练周期并排对比",
+  "Single dives and holds overlaid": "单次潜水和闭气叠加对比"
 }

@@ -807,5 +807,9 @@
   "{s} s faster": "{s}초 빠름",
   "{s} s slower": "{s}초 느림",
   "Faster or slower than {ref}": "{ref}보다 빠른지 느린지",
-  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "선 위: 그만큼 초 단위로 빠름, 아래: 느림. 하강은 출발부터, 상승은 바닥을 떠난 순간부터 셉니다."
+  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "선 위: 그만큼 초 단위로 빠름, 아래: 느림. 하강은 출발부터, 상승은 바닥을 떠난 순간부터 셉니다.",
+  "Compare": "비교",
+  "Seasons": "시즌",
+  "Training periods side by side": "훈련 기간 나란히 보기",
+  "Single dives and holds overlaid": "개별 다이브와 홀드 겹쳐 보기"
 }

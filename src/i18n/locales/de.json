@@ -807,5 +807,9 @@
   "{s} s faster": "{s} s schneller",
   "{s} s slower": "{s} s langsamer",
   "Faster or slower than {ref}": "Schneller oder langsamer als {ref}",
-  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "Über der Linie: so viele Sekunden schneller, darunter: langsamer. Abwärts ab dem Start, aufwärts ab dem Verlassen des Grunds."
+  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "Über der Linie: so viele Sekunden schneller, darunter: langsamer. Abwärts ab dem Start, aufwärts ab dem Verlassen des Grunds.",
+  "Compare": "Vergleichen",
+  "Seasons": "Saisons",
+  "Training periods side by side": "Trainingsphasen nebeneinander",
+  "Single dives and holds overlaid": "Einzelne Tauchgänge und Holds übereinander"
 }

@@ -807,5 +807,9 @@
   "{s} s faster": "{s} 秒速い",
   "{s} s slower": "{s} 秒遅い",
   "Faster or slower than {ref}": "{ref} より速いか遅いか",
-  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "線より上：その秒数だけ速い、下：遅い。潜降はスタートから、浮上はボトムを離れてから数えます。"
+  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "線より上：その秒数だけ速い、下：遅い。潜降はスタートから、浮上はボトムを離れてから数えます。",
+  "Compare": "比較",
+  "Seasons": "シーズン",
+  "Training periods side by side": "トレーニング期間を並べて",
+  "Single dives and holds overlaid": "個々のダイブとホールドを重ねて"
 }
