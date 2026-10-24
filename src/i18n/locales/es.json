@@ -800,5 +800,12 @@
   "No band": "Sin banda",
   "Shade speeds up to 1 m/s either way": "Sombrear velocidades de hasta 1 m/s en ambos sentidos",
   "On": "Sí",
-  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "Discontinua: no se registró perfil de profundidad, dibujada a partir de los tiempos de bajada y subida."
+  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "Discontinua: no se registró perfil de profundidad, dibujada a partir de los tiempos de bajada y subida.",
+  "outlined: current best": "con borde: mejor marca actual",
+  "Seconds per band: the longer the bar, the slower. Green is the fastest of the row, red notably slower.": "Segundos por tramo: cuanto más larga la barra, más lento. Verde es el más rápido de la fila, rojo claramente más lento.",
+  "even": "igual",
+  "{s} s faster": "{s} s más rápido",
+  "{s} s slower": "{s} s más lento",
+  "Faster or slower than {ref}": "Más rápido o más lento que {ref}",
+  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "Sobre la línea: tantos segundos más rápido; debajo: más lento. La bajada cuenta desde la salida, la subida desde que deja el fondo."
 }

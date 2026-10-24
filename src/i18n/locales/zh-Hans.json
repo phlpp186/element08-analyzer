@@ -800,5 +800,12 @@
   "No band": "不显示区间",
   "Shade speeds up to 1 m/s either way": "标出双向不超过 1 m/s 的速度",
   "On": "开",
-  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "虚线：未记录深度曲线，按下潜和上升时间绘制。"
+  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "虚线：未记录深度曲线，按下潜和上升时间绘制。",
+  "outlined: current best": "描边：当前最佳",
+  "Seconds per band: the longer the bar, the slower. Green is the fastest of the row, red notably slower.": "每段秒数：条越长越慢。绿色为该行最快，红色明显较慢。",
+  "even": "持平",
+  "{s} s faster": "快 {s} 秒",
+  "{s} s slower": "慢 {s} 秒",
+  "Faster or slower than {ref}": "比 {ref} 快还是慢",
+  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "线上方：快了这么多秒；下方：慢了。下潜从出发算起，上升从离开底部算起。"
 }

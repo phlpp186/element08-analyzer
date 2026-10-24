@@ -8,6 +8,7 @@
  * existed N days ago, and the trajectory is the running maximum over time.
  */
 import type { ParsedSession } from '../../schema/backup';
+import { includeDive } from './diveFilter';
 
 const DAY_MS = 86_400_000;
 
@@ -18,14 +19,23 @@ function ts(s: ParsedSession): number {
   return Number.isFinite(t) ? t : NaN;
 }
 
-/** Longest hold (seconds) recorded in a dry session's block timeline. */
+/** Longest hold (seconds) in a session: a dry session's holds, or a pool
+ *  session's STA dives. Pool statics count as the app's STA PB does, and as
+ *  the season story's "static" does, so the tile and the story agree. */
 function maxHoldSec(s: ParsedSession): number {
-  if (s.mode !== 'dry') return 0;
-  const blocks = (s as { blockTimeline?: { type?: string; seconds?: number }[] }).blockTimeline;
-  if (!Array.isArray(blocks)) return 0;
   let max = 0;
-  for (const b of blocks) {
-    if (b?.type === 'Hold' && typeof b.seconds === 'number' && b.seconds > max) max = b.seconds;
+  if (s.mode === 'dry') {
+    const blocks = (s as { blockTimeline?: { type?: string; seconds?: number }[] }).blockTimeline;
+    if (!Array.isArray(blocks)) return 0;
+    for (const b of blocks) {
+      if (b?.type === 'Hold' && typeof b.seconds === 'number' && b.seconds > max) max = b.seconds;
+    }
+  } else if (s.mode === 'pool') {
+    const dives = (s as { dives?: { discipline?: string; diveTime?: number; diveType?: string | null }[] }).dives;
+    for (const d of dives ?? []) {
+      if (d?.discipline !== 'STA' || !includeDive(d.diveType)) continue;
+      if (typeof d.diveTime === 'number' && d.diveTime > max) max = d.diveTime;
+    }
   }
   return max;
 }

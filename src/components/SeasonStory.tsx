@@ -1,8 +1,10 @@
 /**
  * SeasonStory — the Progress page's season in one line, and every PB of the
- * last 12 months on one timeline (lib/analytics/seasonStory). Badges
- * alternate above and below the line; where two would overlap the later
- * one keeps only its dot, so a busy month stays readable.
+ * last 12 months on one timeline (lib/analytics/seasonStory). Badges go
+ * above or below the line wherever there is room, the most telling first:
+ * each discipline's current best (outlined), then the most recent. A PB that
+ * finds no room keeps only its dot, so a busy month stays readable and the
+ * PBs that matter are the ones labelled.
  */
 import { useMemo } from 'react';
 import type { ParsedSession } from '../schema/backup';
@@ -15,30 +17,48 @@ import { useT } from '../i18n';
 const BADGE_W = 56;
 const BADGE_H = 26;
 const PAD = 12;
-const LINE_Y = 64;
-const H = 132;
+/** Badge rows: next to the line, and a second tier further out. */
+const ROW_GAP = 6;
+const LINE_Y = 14 + 2 * BADGE_H + ROW_GAP + 14;
+const H = 2 * LINE_Y + 4;
 
 function mmss(sec: number): string {
   return `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, '0')}`;
 }
 
-/** Badge rows: 'up' and 'down' in turn, a badge skipped (dot only) when it
- *  would overlap the last one on both rows. */
+type Row = 'up' | 'down' | 'up2' | 'down2';
+
+/** Badge rows, filled in order of importance: current bests, then the most
+ *  recent. A badge takes the first row with no badge within its width: next
+ *  to the line above, then below; a current best may also use the outer
+ *  tier, where a month of new bests in several disciplines would otherwise
+ *  leave some unlabelled. Its connector runs behind any inner badge (all
+ *  connectors are drawn first). */
 function place(events: PbEvent[], x: (t: number) => number) {
-  const lastX = { up: -Infinity, down: -Infinity };
-  let next: 'up' | 'down' = 'up';
-  return events.map((e) => {
-    const px = x(e.t);
-    const other = next === 'up' ? 'down' : 'up';
-    let row: 'up' | 'down' | null = null;
-    if (px - lastX[next] >= BADGE_W + 4) row = next;
-    else if (px - lastX[other] >= BADGE_W + 4) row = other;
+  const xs = events.map((e) => x(e.t));
+  const order = events
+    .map((_, i) => i)
+    .sort((a, b) => Number(events[b].current) - Number(events[a].current) || events[b].t - events[a].t);
+  const taken: Record<Row, number[]> = { up: [], down: [], up2: [], down2: [] };
+  const free = (row: Row, px: number) => taken[row].every((o) => Math.abs(px - o) >= BADGE_W + 4);
+  const rows: (Row | null)[] = events.map(() => null);
+  for (const i of order) {
+    const options: Row[] = events[i].current ? ['up', 'down', 'up2', 'down2'] : ['up', 'down'];
+    const row = options.find((r) => free(r, xs[i])) ?? null;
     if (row) {
-      lastX[row] = px;
-      next = row === 'up' ? 'down' : 'up';
+      taken[row].push(xs[i]);
+      rows[i] = row;
     }
-    return { e, px, row };
-  });
+  }
+  return events.map((e, i) => ({ e, px: xs[i], row: rows[i] }));
+}
+
+/** Top of a badge in its row. */
+function badgeY(row: Row): number {
+  if (row === 'up') return LINE_Y - 14 - BADGE_H;
+  if (row === 'up2') return LINE_Y - 14 - 2 * BADGE_H - ROW_GAP;
+  if (row === 'down') return LINE_Y + 14;
+  return LINE_Y + 14 + BADGE_H + ROW_GAP;
 }
 
 export function SeasonStory({ sessions }: { sessions: ParsedSession[] }) {
@@ -96,7 +116,7 @@ export function SeasonStory({ sessions }: { sessions: ParsedSession[] }) {
 
       <div className="mt-4">
         <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-textDim">
-          {t('PB timeline')} · {story.events.length} {t('PBs')}
+          {t('PB timeline')} · {story.events.length} {t('PBs')} · {t('outlined: current best')}
         </div>
         <div ref={ref}>
           {story.events.length === 0 ? (
@@ -125,24 +145,43 @@ export function SeasonStory({ sessions }: { sessions: ParsedSession[] }) {
                   {tk.label}
                 </text>
               ))}
+              {/* Connectors first, so an outer badge's line runs behind the
+                  inner badges it passes. */}
+              {placed.map(({ e, px, row }, i) => {
+                if (!row) return null;
+                const by = badgeY(row);
+                const above = row === 'up' || row === 'up2';
+                return (
+                  <line
+                    key={`c${i}`}
+                    x1={px}
+                    x2={px}
+                    y1={above ? by + BADGE_H : LINE_Y}
+                    y2={above ? LINE_Y : by}
+                    stroke={e.color}
+                    strokeWidth={2}
+                  />
+                );
+              })}
               {placed.map(({ e, px, row }, i) => {
                 const ink = mixHex(e.color, '#000000', 0.78);
-                const by = row === 'up' ? LINE_Y - 14 - BADGE_H : LINE_Y + 14;
+                const by = row ? badgeY(row) : 0;
                 const bx = Math.min(Math.max(px - BADGE_W / 2, 0), w - BADGE_W);
                 return (
                   <g key={i}>
                     <title>{`${e.discipline} ${e.text} · ${new Date(e.t).toLocaleDateString()}`}</title>
                     {row && (
                       <>
-                        <line
-                          x1={px}
-                          x2={px}
-                          y1={row === 'up' ? by + BADGE_H : LINE_Y}
-                          y2={row === 'up' ? LINE_Y : by}
-                          stroke={e.color}
-                          strokeWidth={2}
+                        <rect
+                          x={bx}
+                          y={by}
+                          width={BADGE_W}
+                          height={BADGE_H}
+                          rx={7}
+                          fill={e.color}
+                          stroke={e.current ? 'rgb(var(--c-text))' : 'none'}
+                          strokeWidth={e.current ? 2 : 0}
                         />
-                        <rect x={bx} y={by} width={BADGE_W} height={BADGE_H} rx={7} fill={e.color} />
                         <text
                           x={bx + BADGE_W / 2}
                           y={by + 10}

@@ -800,5 +800,12 @@
   "No band": "ไม่มีแถบ",
   "Shade speeds up to 1 m/s either way": "แรเงาความเร็วไม่เกิน 1 ม./วิ ทั้งสองทิศ",
   "On": "เปิด",
-  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "เส้นประ: ไม่มีโปรไฟล์ความลึก วาดจากเวลาขาลงและขาขึ้น"
+  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "เส้นประ: ไม่มีโปรไฟล์ความลึก วาดจากเวลาขาลงและขาขึ้น",
+  "outlined: current best": "มีกรอบ: สถิติปัจจุบัน",
+  "Seconds per band: the longer the bar, the slower. Green is the fastest of the row, red notably slower.": "วินาทีต่อช่วง: แท่งยิ่งยาวยิ่งช้า สีเขียวเร็วที่สุดในแถว สีแดงช้ากว่าชัดเจน",
+  "even": "เท่ากัน",
+  "{s} s faster": "เร็วกว่า {s} วิ",
+  "{s} s slower": "ช้ากว่า {s} วิ",
+  "Faster or slower than {ref}": "เร็วหรือช้ากว่า {ref}",
+  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "เหนือเส้น: เร็วกว่าตามจำนวนวินาที ใต้เส้น: ช้ากว่า ขาลงนับจากเริ่ม ขาขึ้นนับจากออกจากจุดลึกสุด"
 }

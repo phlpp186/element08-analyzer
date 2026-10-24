@@ -196,6 +196,10 @@ function SplitTable({
 }) {
   const t = useT();
   const order = Array.from({ length: rows }, (_, i) => (phase === 'descent' ? i : rows - 1 - i));
+  // One scale for the whole table, from zero: a bar's length is its time, so
+  // rows compare with each other too and the gaps are not exaggerated.
+  let scale = 0;
+  for (const sp of splits) for (const b of sp) if ((b[phase] ?? 0) > scale) scale = b[phase] as number;
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-separate border-spacing-1 text-center font-num text-xs">
@@ -227,19 +231,37 @@ function SplitTable({
                   const fastest = v != null && min != null && v === min;
                   // Notably slow: 10% and half a second over the fastest.
                   const slow = v != null && min != null && v > min * 1.1 && v - min >= 0.5;
+                  const fill = fastest
+                    ? TONE_VAR.recover
+                    : slow
+                      ? `color-mix(in srgb, ${TONE_VAR.red} 45%, transparent)`
+                      : // Neutral: a dive colour (orange) read as the red "slower".
+                        'rgb(var(--c-text) / 0.18)';
                   return (
-                    <td
-                      key={i}
-                      className="rounded-md px-2 py-1"
-                      style={
-                        fastest
-                          ? { background: TONE_VAR.recover, color: `color-mix(in srgb, ${TONE_VAR.recover}, #000 78%)`, fontWeight: 700 }
-                          : slow
-                            ? { background: `color-mix(in srgb, ${TONE_VAR.red} 18%, transparent)`, color: TONE_VAR.red }
-                            : { background: 'rgb(var(--c-text) / 0.06)' }
-                      }
-                    >
-                      {v != null ? (Math.round(v * 10) / 10).toFixed(1) : '–'}
+                    <td key={i} className="p-0">
+                      <div
+                        className="relative h-7 overflow-hidden rounded-md"
+                        style={{ background: 'rgb(var(--c-text) / 0.06)' }}
+                      >
+                        {v != null && scale > 0 && (
+                          <div
+                            className="absolute inset-y-0 left-0 rounded-md"
+                            style={{ width: `${(v / scale) * 100}%`, background: fill }}
+                          />
+                        )}
+                        <span
+                          className="relative flex h-full items-center px-2 font-bold"
+                          style={{
+                            color: fastest
+                              ? `color-mix(in srgb, ${TONE_VAR.recover}, #000 78%)`
+                              : slow
+                                ? TONE_VAR.red
+                                : undefined,
+                          }}
+                        >
+                          {v != null ? (Math.round(v * 10) / 10).toFixed(1) : '–'}
+                        </span>
+                      </div>
                     </td>
                   );
                 })}
@@ -248,7 +270,7 @@ function SplitTable({
           })}
         </tbody>
       </table>
-      <p className="mt-1 text-[11px] text-textDim">{t('Seconds per band. Green is the fastest of the row, red notably slower.')}</p>
+      <p className="mt-1 text-[11px] text-textDim">{t('Seconds per band: the longer the bar, the slower. Green is the fastest of the row, red notably slower.')}</p>
     </div>
   );
 }
@@ -271,11 +293,17 @@ function GapChart({ dives }: { dives: SplitDive[] }) {
   for (let d = 1; d <= turn; d++) cats.push({ key: `down${d}`, label: `↓${d}`, depth: d });
   cats.push({ key: 'turn', label: t('turn'), depth: -1 });
   for (let d = turn; d >= 1; d--) cats.push({ key: `up${d}`, label: `↑${d}`, depth: d });
+  // Seconds gained read as "faster", lost as "slower": a signed gap made
+  // readers stop and work out which way "ahead" was.
+  const pace = (v: number, digits: number) =>
+    Math.abs(v) < 0.05
+      ? t('even')
+      : (v > 0 ? t('{s} s faster') : t('{s} s slower')).replace('{s}', Math.abs(v).toFixed(digits));
   const option = {
     grid: { left: 8, right: 16, top: 24, bottom: 4, containLabel: true },
     tooltip: {
       trigger: 'axis',
-      valueFormatter: (v: number) => (typeof v === 'number' ? `${v > 0 ? '+' : ''}${v.toFixed(1)} s` : '–'),
+      valueFormatter: (v: number) => (typeof v === 'number' ? pace(v, 1) : '–'),
     },
     xAxis: {
       type: 'category',
@@ -286,12 +314,14 @@ function GapChart({ dives }: { dives: SplitDive[] }) {
       axisLabel: {
         color: ct.textDim,
         fontSize: 10,
-        interval: (i: number) => cats[i].depth % 10 === 0 || cats[i].key === 'turn',
+        // Depth labels next to the turn would run into its label.
+        interval: (i: number) =>
+          cats[i].key === 'turn' || (cats[i].depth % 10 === 0 && turn - cats[i].depth >= 6),
       },
     },
     yAxis: {
       type: 'value',
-      axisLabel: { color: ct.textDim, fontSize: 10, formatter: (v: number) => `${v > 0 ? '+' : ''}${v} s` },
+      axisLabel: { color: ct.textDim, fontSize: 10, formatter: (v: number) => pace(v, 0) },
       splitLine: { lineStyle: { color: ct.splitLine } },
     },
     series: dives.slice(1).map((d, i) => {
@@ -324,9 +354,9 @@ function GapChart({ dives }: { dives: SplitDive[] }) {
     <div className="border-t border-border/60 pt-3">
       <div className="flex flex-wrap items-baseline gap-x-3">
         <h3 className="font-heading text-sm font-bold text-text">
-          {t('Ahead or behind {ref}').replace('{ref}', ref.title)}
+          {t('Faster or slower than {ref}').replace('{ref}', ref.title)}
         </h3>
-        <span className="text-[11px] text-textDim">{t('Above the line: ahead, below: behind. Down counts from the start, up from leaving the bottom.')}</span>
+        <span className="text-[11px] text-textDim">{t('Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.')}</span>
       </div>
       <ReactECharts option={option} style={{ height: 220 }} notMerge />
     </div>

@@ -6,7 +6,9 @@
  *
  * A PB is a new best for its discipline over the WHOLE logbook, so the
  * running best starts before the window: a dive in the window that only
- * beats this year's earlier dives is not a PB.
+ * beats this year's earlier dives is not a PB. A discipline's first result
+ * sets the bar and is not a PB: a logbook started in May otherwise opened
+ * with a run of trivial "PBs" (a first 1:00 static) that took the badges.
  */
 import type { ParsedSession } from '../../schema/backup';
 import { includeDive } from './diveFilter';
@@ -25,6 +27,8 @@ export interface PbEvent {
   value: number;
   text: string;
   color: string;
+  /** The discipline's best to date: no later PB beat it. */
+  current: boolean;
 }
 
 export interface SeasonStory {
@@ -103,7 +107,7 @@ export function seasonStory(sessions: ParsedSession[], now = new Date()): Season
     if (!inWindow && r.t < from) bestBefore.set(key, Math.max(bestBefore.get(key) ?? 0, r.value));
     if (r.value > prev + margin) {
       best.set(key, r.value);
-      if (inWindow) {
+      if (inWindow && prev > 0) {
         events.push({
           t: r.t,
           kind: r.kind,
@@ -111,6 +115,7 @@ export function seasonStory(sessions: ParsedSession[], now = new Date()): Season
           value: r.value,
           text: r.kind === 'hold' ? mmss(r.value) : `${Math.round(r.value * 10) / 10}m`,
           color: disciplineColor(r.discipline),
+          current: false,
         });
       }
     }
@@ -130,6 +135,16 @@ export function seasonStory(sessions: ParsedSession[], now = new Date()): Season
     const cur = depth ? (depth.gain ?? 0) : -Infinity;
     if (!depth || score > cur || (score === cur && b > depth.best)) {
       depth = { discipline: disc, best: b, gain };
+    }
+  }
+
+  // Each discipline's last PB is its current best.
+  const seen = new Set<string>();
+  for (let i = events.length - 1; i >= 0; i--) {
+    const key = `${events[i].kind}:${events[i].discipline}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      events[i].current = true;
     }
   }
 

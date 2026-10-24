@@ -800,5 +800,12 @@
   "No band": "帯なし",
   "Shade speeds up to 1 m/s either way": "上下とも 1 m/s までの速度を網掛け",
   "On": "オン",
-  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "破線：深度プロフィールの記録がないため、潜降・浮上時間から描画しています。"
+  "Dashed: no depth profile recorded, drawn from the dive’s descent and ascent times.": "破線：深度プロフィールの記録がないため、潜降・浮上時間から描画しています。",
+  "outlined: current best": "枠付き：現在のベスト",
+  "Seconds per band: the longer the bar, the slower. Green is the fastest of the row, red notably slower.": "区間ごとの秒数：バーが長いほど遅い。緑は行で最速、赤は明らかに遅い。",
+  "even": "互角",
+  "{s} s faster": "{s} 秒速い",
+  "{s} s slower": "{s} 秒遅い",
+  "Faster or slower than {ref}": "{ref} より速いか遅いか",
+  "Above the line: that many seconds faster, below: slower. Down counts from the start, up from leaving the bottom.": "線より上：その秒数だけ速い、下：遅い。潜降はスタートから、浮上はボトムを離れてから数えます。"
 }
