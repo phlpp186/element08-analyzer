@@ -8,6 +8,7 @@ import type { TagCount } from '../../lib/analytics/balance';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   data: TagCount[];
@@ -45,7 +46,7 @@ export function SessionTagDistributionChart({ data }: Props) {
       textStyle: { color: ct.text },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
-        return `${p.name}<br/>${p.value} ${p.value === 1 ? t('session') : t('sessions')}`;
+        return `${escapeHtml(p.name)}<br/>${p.value} ${p.value === 1 ? t('session') : t('sessions')}`;
       },
     },
     xAxis: {

@@ -51,6 +51,7 @@ import {
 import { useT, useLangValue } from "../../i18n";
 import { rangeStats } from "../../lib/analytics/rangeStats";
 import { RangeReadout } from "../RangeReadout";
+import { escapeHtml } from "../../lib/safeHtml";
 
 type TFn = (s: string) => string;
 
@@ -1234,7 +1235,7 @@ function buildSpeedByDepthOption(
           typeof first?.axisValue === "number" ? first.axisValue : first?.value?.[1];
         if (typeof d !== "number") return "";
         const row = (name: string, color: string, v: number | null) =>
-          `<span style="color:${color}">●</span> ${name}: ${v == null ? "–" : `${v.toFixed(2)} m/s`}`;
+          `<span style="color:${color}">●</span> ${escapeHtml(name)}: ${v == null ? "–" : `${v.toFixed(2)} m/s`}`;
         return [
           `${d.toFixed(1)} m`,
           row(descName, ct.profile, speedAt(descShown, d)),

@@ -7,6 +7,7 @@ import type { HangTimeStats } from '../../lib/analytics/depthInsights';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   stats: HangTimeStats;
@@ -44,7 +45,7 @@ export function HangTimeDistributionChart({ stats }: Props) {
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const bin = stats.bins[p.dataIndex];
-        return `${bin.label}<br/>${p.value} ${p.value === 1 ? t('dive') : t('dives')}`;
+        return `${escapeHtml(bin.label)}<br/>${p.value} ${p.value === 1 ? t('dive') : t('dives')}`;
       },
     },
     xAxis: {

@@ -20,6 +20,7 @@ import * as echarts from 'echarts/core';
 import ReactECharts from './EChart';
 import type { DepthDiveData, ProfilePoint } from '../../lib/analytics/diveProfile';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
+import { escapeHtml } from '../../lib/safeHtml';
 
 export type OverlayAlign = 'start' | 'maxdepth';
 export type OverlayMetric = 'depth' | 'speed' | 'hr' | 'temp';
@@ -194,7 +195,7 @@ function buildOption(
           .filter((p: any) => p.value && p.value[1] != null)
           .map(
             (p: any) =>
-              `<span style="color:${p.color}">●</span> ${p.seriesName}: ${(
+              `<span style="color:${p.color}">●</span> ${escapeHtml(p.seriesName)}: ${(
                 p.value[1] as number
               ).toFixed(cfg.precision)} ${cfg.unit}`,
           );

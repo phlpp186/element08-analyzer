@@ -49,6 +49,7 @@ import {
   type CompareWith,
   type Takeaway,
 } from '../lib/analytics/playgroundInsight';
+import { escapeHtml } from '../lib/safeHtml';
 
 const PRESETS: { id: string; label: string; days: number | null }[] = [
   { id: 'all',   label: 'All time',     days: null },
@@ -1091,7 +1092,7 @@ function buildBarOption(
         const then = before?.get(b.key);
         const [, q1, q3] = spread[p.dataIndex];
         return (
-          `${b.label}<br/><b>${fmt(b.value, metric.unit)}</b> ${metric.unit}` +
+          `${escapeHtml(b.label)}<br/><b>${fmt(b.value, metric.unit)}</b> ${metric.unit}` +
           (then != null ? ` <span style="opacity:0.7">(${fmt(then, metric.unit)})</span>` : '') +
           (Number.isFinite(q1) ? `<br/><span style="opacity:0.7">${fmt(q1, metric.unit)} – ${fmt(q3, metric.unit)}</span>` : '') +
           `<br/><span style="opacity:0.7">${stat} · n = ${b.n}</span>`
@@ -1300,14 +1301,14 @@ function buildBoxOption(
           // ECharts may hand the box back with its category index in front.
           const v = (Array.isArray(p.value) ? p.value : []) as number[];
           const [min, q1, med, q3, max] = v.length === 6 ? v.slice(1) : v;
-          return `${b.label}<br/>${t('median')} <b>${fmt(med, metric.unit)}</b><br/>` +
+          return `${escapeHtml(b.label)}<br/>${t('median')} <b>${fmt(med, metric.unit)}</b><br/>` +
             `${t('q1')} ${fmt(q1, metric.unit)} · ${t('q3')} ${fmt(q3, metric.unit)}<br/>` +
             `${t('min')} ${fmt(min, metric.unit)} · ${t('max')} ${fmt(max, metric.unit)}<br/>` +
             `<span style="opacity:0.7">n = ${b.n}</span>`;
         }
         // Outlier scatter
         const b = buckets[p.data[0]];
-        return `${b.label}<br/>${t('outlier')} <b>${fmt(p.data[1], metric.unit)}</b>`;
+        return `${escapeHtml(b.label)}<br/>${t('outlier')} <b>${fmt(p.data[1], metric.unit)}</b>`;
       },
     },
     xAxis: {
@@ -1441,7 +1442,7 @@ function buildScatterOption(
       borderColor: cm.axisLine,
       textStyle: { color: cm.text, fontFamily: cm.inter, fontSize: 12 },
       formatter: (p: any) =>
-        `${dim.label}: ${p.data[0]}<br/>${metric.label}: <b>${fmt(p.data[1], metric.unit)}</b> ${metric.unit}`,
+        `${escapeHtml(dim.label)}: ${escapeHtml(p.data[0])}<br/>${escapeHtml(metric.label)}: <b>${fmt(p.data[1], metric.unit)}</b> ${metric.unit}`,
     },
     xAxis: {
       type: 'value',
@@ -1568,8 +1569,8 @@ function buildXyOption(
       borderColor: cm.axisLine,
       textStyle: { color: cm.text, fontFamily: cm.inter, fontSize: 12 },
       formatter: (p: any) =>
-        `${xMetric.label}: <b>${fmt(p.data[0], xMetric.unit)}</b> ${xMetric.unit}<br/>` +
-        `${yMetric.label}: <b>${fmt(p.data[1], yMetric.unit)}</b> ${yMetric.unit}`,
+        `${escapeHtml(xMetric.label)}: <b>${fmt(p.data[0], xMetric.unit)}</b> ${xMetric.unit}<br/>` +
+        `${escapeHtml(yMetric.label)}: <b>${fmt(p.data[1], yMetric.unit)}</b> ${yMetric.unit}`,
     },
     xAxis: {
       type: 'value',
@@ -1637,7 +1638,7 @@ function buildHeatmapOption(
       formatter: (p: any) => {
         const c = heat.cells[p.dataIndex];
         return (
-          `${dim.label}: ${heat.xKeys[c.x]}<br/>${dim2.label}: ${heat.yKeys[c.y]}<br/>` +
+          `${escapeHtml(dim.label)}: ${escapeHtml(heat.xKeys[c.x])}<br/>${escapeHtml(dim2.label)}: ${escapeHtml(heat.yKeys[c.y])}<br/>` +
           `<b>${fmt(c.value, metric.unit)}</b> ${unitLabel}<br/>` +
           `<span style="opacity:0.7">n = ${c.n}</span>`
         );

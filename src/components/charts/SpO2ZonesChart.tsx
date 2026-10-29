@@ -19,6 +19,7 @@ import {
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   data: Spo2TrendData;
@@ -83,7 +84,7 @@ export function SpO2ZonesChart({ data }: Props) {
         const zone = zoneFor(point.lowest);
         return (
           `<span style="color:${zone.color}">●</span> ${t('Min SpO₂')} ${point.lowest}%` +
-          `<br/>${dateStr} · ${point.sessionName}` +
+          `<br/>${dateStr} · ${escapeHtml(point.sessionName)}` +
           `<br/><span style="opacity:0.7">${point.holdCount} ${point.holdCount === 1 ? t('hold') : t('holds')} · ${fmtZoneDuration(point.secBelow89)} ${t('below 89%')}</span>`
         );
       },

@@ -34,6 +34,7 @@ import { sessionDay } from '../lib/sessionDay';
 import { formatDate } from '../lib/format';
 import type { ParsedSession } from '../schema/backup';
 import { useT } from '../i18n';
+import { escapeHtml } from '../lib/safeHtml';
 
 const NO_SESSIONS: ParsedSession[] = [];
 const H = 190;
@@ -205,7 +206,7 @@ function SeriesChart({ chart }: { chart: SeriesChartDirective }) {
     grid: { left: 8, right: 8, top: 12, bottom: 4, containLabel: true },
     tooltip: {
       trigger: 'item',
-      formatter: (p: { name: string; value: number }) => `${p.name}: ${fmt(p.value)}`,
+      formatter: (p: { name: string; value: number }) => `${escapeHtml(p.name)}: ${fmt(p.value)}`,
     },
     xAxis: {
       type: 'category',

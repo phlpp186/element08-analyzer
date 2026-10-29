@@ -18,6 +18,7 @@ import type {
 } from '../../lib/analytics/periodExercises';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   data: ExerciseScatterData;
@@ -138,7 +139,7 @@ export function ExerciseScatter({ data, mode }: Props) {
         const unit = meta.source === 'dry' ? t('Hold') : t('Dive');
         return (
           `<div style="font-weight:600;margin-bottom:2px">${fmtDate(meta.dateMs)}</div>` +
-          `${meta.sessionName}<br/>` +
+          `${escapeHtml(meta.sessionName)}<br/>` +
           `${unit} ${meta.indexInSession}: <b>${fmtValue(mode, meta.value)}</b>`
         );
       },

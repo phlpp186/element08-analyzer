@@ -15,6 +15,7 @@ import { useMemo } from 'react';
 import ReactECharts from './EChart';
 import { useChartTheme, type ChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
+import { escapeHtml } from '../../lib/safeHtml';
 
 export interface OverlayPoolDive {
   color: string;
@@ -146,7 +147,7 @@ function buildHrOption(dives: OverlayPoolDive[], ct: ChartTheme) {
           .filter((p: any) => p.value && p.value[1] != null)
           .map(
             (p: any) =>
-              `<span style="color:${p.color}">●</span> ${p.seriesName}: ${(
+              `<span style="color:${p.color}">●</span> ${escapeHtml(p.seriesName)}: ${(
                 p.value[1] as number
               ).toFixed(0)} bpm`,
           );

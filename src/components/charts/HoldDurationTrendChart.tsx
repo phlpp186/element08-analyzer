@@ -8,6 +8,7 @@ import type { HoldDurationSeries } from '../../lib/analytics/holdTrends';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   series: HoldDurationSeries[];
@@ -48,7 +49,7 @@ export function HoldDurationTrendChart({ series }: Props) {
       formatter: (p: any) => {
         const [date, dur] = p.value as [string, number];
         const dateStr = new Date(date).toLocaleDateString();
-        return `<span style="color:${p.color}">●</span> ${p.seriesName}<br/>${dateStr} · ${fmtSec(dur)}`;
+        return `<span style="color:${p.color}">●</span> ${escapeHtml(p.seriesName)}<br/>${dateStr} · ${fmtSec(dur)}`;
       },
     },
     legend: {

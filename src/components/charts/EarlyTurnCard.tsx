@@ -7,6 +7,7 @@ import type { EarlyTurnStats } from '../../lib/analytics/technique';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   stats: EarlyTurnStats;
@@ -42,7 +43,7 @@ export function EarlyTurnCard({ stats }: Props) {
       textStyle: { color: ct.text },
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
-        return `${p.name}<br/>${p.value} ${p.value === 1 ? t('early turn') : t('early turns')}`;
+        return `${escapeHtml(p.name)}<br/>${p.value} ${p.value === 1 ? t('early turn') : t('early turns')}`;
       },
     },
     xAxis: {

@@ -10,6 +10,7 @@ import ReactECharts from './EChart';
 import type { AggregatedSeries, MetricDef } from '../../lib/analytics/periodCompare';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   series: AggregatedSeries[];
@@ -54,7 +55,7 @@ export function PeriodComparisonChart({ series, xLabels, metric }: Props) {
             const v = metric.format
               ? metric.format(p.value as number)
               : `${typeof p.value === 'number' ? p.value.toFixed(1).replace(/\.0$/, '') : p.value} ${metric.unit}`;
-            return `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>${v}</b>`;
+            return `<span style="color:${p.color}">●</span> ${escapeHtml(p.seriesName)}: <b>${v}</b>`;
           });
         // axisValue is the category-axis STRING ("target" or "-12w"), not a
         // number — so a `=== 0` check would never match. Detect the anchor

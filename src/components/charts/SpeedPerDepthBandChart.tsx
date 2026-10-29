@@ -11,6 +11,7 @@ import type { BandStep, SpeedBand } from '../../lib/analytics/depthInsights';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   bands: SpeedBand[];
@@ -55,7 +56,7 @@ export function SpeedPerDepthBandChart({ bands, step, onStepChange }: Props) {
         }`;
         const lines = arr.map(
           (p: any) =>
-            `<span style="color:${p.color}">●</span> ${p.seriesName}: ${(
+            `<span style="color:${p.color}">●</span> ${escapeHtml(p.seriesName)}: ${(
               p.value as number
             ).toFixed(2)} m/s`,
         );

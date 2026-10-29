@@ -10,6 +10,7 @@
  */
 import type { ChartTheme } from './chartTheme';
 import { withAlpha } from './chartTheme';
+import { sanitizeTooltipHtml } from './safeHtml';
 
 type Obj = Record<string, unknown>;
 
@@ -101,12 +102,28 @@ function styleBar(s: Obj, horizontal: boolean): Obj {
   return out;
 }
 
+type Formatter = (params: unknown, ticket?: string, cb?: (ticket: string, html: string) => void) => unknown;
+
+/** Every function formatter's HTML goes through the sanitizer before ECharts
+ *  writes it with innerHTML (lib/safeHtml). String templates are left alone:
+ *  ECharts escapes the values it puts into those itself. */
+function safeFormatter(tip: Obj): Obj {
+  const f = tip.formatter;
+  if (typeof f !== 'function') return tip;
+  const fn = f as Formatter;
+  const wrapped: Formatter = (params, ticket, cb) => {
+    const out = fn(params, ticket, cb && ((tk, html) => cb(tk, sanitizeTooltipHtml(String(html ?? '')))));
+    return typeof out === 'string' ? sanitizeTooltipHtml(out) : out;
+  };
+  return { ...tip, formatter: wrapped };
+}
+
 export function stylizeOption<T>(option: T, ct: ChartTheme): T {
   if (!isObj(option)) return option;
   const o: Obj = { ...option };
   o.textStyle = { fontFamily: ct.fontFamily, ...(isObj(o.textStyle) ? o.textStyle : {}) };
 
-  const tip = o.tooltip;
+  const tip = isObj(o.tooltip) ? safeFormatter(o.tooltip) : o.tooltip;
   if (isObj(tip)) {
     o.tooltip = {
       backgroundColor: ct.tooltipBg,
@@ -121,8 +138,9 @@ export function stylizeOption<T>(option: T, ct: ChartTheme): T {
   if (series) {
     const glow = series.length <= GLOW_MAX_SERIES;
     const horizontal = horizontalBars(o);
-    const styled = series.map((s) => {
-      if (!isObj(s)) return s;
+    const styled = series.map((raw) => {
+      if (!isObj(raw)) return raw;
+      const s = isObj(raw.tooltip) ? { ...raw, tooltip: safeFormatter(raw.tooltip) } : raw;
       if (s.type === 'line') return styleLine(s, ct, glow);
       if (s.type === 'bar') return styleBar(s, horizontal);
       return s;

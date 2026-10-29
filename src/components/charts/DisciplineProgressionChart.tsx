@@ -13,6 +13,7 @@ import type { DisciplineSeries } from '../../lib/analytics/depthInsights';
 import { mixHex, useChartTheme, withAlpha } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   series: DisciplineSeries[];
@@ -55,7 +56,7 @@ export function DisciplineProgressionChart({ series }: Props) {
       textStyle: { color: ct.text },
       formatter: (p: any) => {
         const [date, depth] = p.value as [string, number];
-        return `<span style="color:${p.color}">●</span> ${p.seriesName}<br/>${date} · ${depth.toFixed(1)}m`;
+        return `<span style="color:${p.color}">●</span> ${escapeHtml(p.seriesName)}<br/>${date} · ${depth.toFixed(1)}m`;
       },
     },
     xAxis: {

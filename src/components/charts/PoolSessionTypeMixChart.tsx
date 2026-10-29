@@ -7,6 +7,7 @@ import type { PoolTypeBucket } from '../../lib/analytics/poolSessionTypes';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   buckets: PoolTypeBucket[];
@@ -44,7 +45,7 @@ export function PoolSessionTypeMixChart({ buckets }: Props) {
       formatter: (p: any) => {
         const b = ordered[p.dataIndex];
         const pct = total > 0 ? Math.round((b.count / total) * 100) : 0;
-        return `<span style="color:${b.color}">●</span> ${b.label}<br/>${b.count} ${b.count === 1 ? t('session') : t('sessions')} · ${pct}%`;
+        return `<span style="color:${b.color}">●</span> ${escapeHtml(b.label)}<br/>${b.count} ${b.count === 1 ? t('session') : t('sessions')} · ${pct}%`;
       },
     },
     xAxis: {

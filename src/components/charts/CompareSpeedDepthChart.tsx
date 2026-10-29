@@ -17,6 +17,7 @@ import {
 } from '../../lib/analytics/speedByDepth';
 import { useChartTheme, withAlpha, type ChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
+import { escapeHtml } from '../../lib/safeHtml';
 
 export interface SpeedDepthDive {
   color: string;
@@ -186,7 +187,7 @@ function buildOption(
           const down = speedAtDepth(curves[i].descent, depth);
           const up = speedAtDepth(curves[i].ascent, depth);
           const v = (x: number | null) => (x == null ? '–' : fmt(x));
-          return `<span style="display:inline-block;width:8px;height:8px;border-radius:4px;background:${d.color};margin-right:6px"></span>${d.label}<br/><span style="opacity:.75;margin-left:14px">↓ ${v(down)} · ↑ ${v(up)} m/s</span>`;
+          return `<span style="display:inline-block;width:8px;height:8px;border-radius:4px;background:${d.color};margin-right:6px"></span>${escapeHtml(d.label)}<br/><span style="opacity:.75;margin-left:14px">↓ ${v(down)} · ↑ ${v(up)} m/s</span>`;
         });
         return `<b>${depth.toFixed(1)} m</b><br/>${rows.join('<br/>')}`;
       },

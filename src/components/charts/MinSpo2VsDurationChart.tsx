@@ -15,6 +15,7 @@ import {
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   points: HoldMinSpo2Point[];
@@ -80,7 +81,7 @@ export function MinSpo2VsDurationChart({ points }: Props) {
         return (
           `<span style="color:${point.color}">●</span> ${t('Min SpO₂')} ${point.minSpo2}%` +
           `<br/>${fmtSec(point.holdSec)} ${t('hold')} · ${lv}` +
-          `<br/><span style="opacity:0.7">${dateStr} · ${point.sessionName}</span>`
+          `<br/><span style="opacity:0.7">${dateStr} · ${escapeHtml(point.sessionName)}</span>`
         );
       },
     },

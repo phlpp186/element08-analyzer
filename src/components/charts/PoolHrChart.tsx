@@ -9,6 +9,7 @@ import type { HrPoint } from '../../lib/analytics/poolHr';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   points: HrPoint[];
@@ -56,7 +57,7 @@ export function PoolHrChart({ points }: Props) {
         const [date, hr, meta] = p.value as [string, number, HrPoint];
         const dateStr = new Date(date).toLocaleDateString();
         const distStr = meta.distance != null ? `${meta.distance}m` : 'STA';
-        return `<span style="color:${p.color}">●</span> ${p.seriesName}<br/>${dateStr} · ${hr} bpm<br/><span style="opacity:0.7">${meta.discipline} · ${distStr}</span>`;
+        return `<span style="color:${p.color}">●</span> ${escapeHtml(p.seriesName)}<br/>${dateStr} · ${hr} bpm<br/><span style="opacity:0.7">${escapeHtml(meta.discipline)} · ${distStr}</span>`;
       },
     },
     legend: {

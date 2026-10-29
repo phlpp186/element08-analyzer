@@ -14,6 +14,7 @@ import { useChartTheme } from '../../lib/chartTheme';
 import { useElementWidth } from '../../lib/divePage';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   dots: DepthDot[];
@@ -94,7 +95,7 @@ export function DepthDistributionChart({ dots }: Props) {
         trigger: 'item',
         formatter: (p: { data: { dot: DepthDot }; color: string }) => {
           const d = p.data.dot;
-          return `<span style="color:${p.color}">●</span> ${d.discipline} · ${d.depth}m<br/>${new Date(d.date).toLocaleDateString()}`;
+          return `<span style="color:${p.color}">●</span> ${escapeHtml(d.discipline)} · ${d.depth}m<br/>${new Date(d.date).toLocaleDateString()}`;
         },
       },
       xAxis: {

@@ -10,6 +10,7 @@ import type { PacePoint, PaceSeries } from '../../lib/analytics/poolPace';
 import { mixHex, useChartTheme, withAlpha } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { escapeHtml } from '../../lib/safeHtml';
 
 interface Props {
   series: PaceSeries[];
@@ -84,7 +85,7 @@ export function PoolPaceChart({ series }: Props) {
       textStyle: { color: ct.text },
       formatter: (p: any) => {
         const dateStr = new Date(p.value[0]).toLocaleDateString();
-        const head = `<span style="color:${p.color}">●</span> ${p.seriesName}<br/>${dateStr} · ${fmtPace(p.value[1])}`;
+        const head = `<span style="color:${p.color}">●</span> ${escapeHtml(p.seriesName)}<br/>${dateStr} · ${fmtPace(p.value[1])}`;
         const meta = p.data?.meta;
         if (meta?.distance != null) {
           return `${head}<br/><span style="opacity:0.7">${meta.distance}m ${t('in')} ${Math.round(meta.diveTime)}s</span>`;
