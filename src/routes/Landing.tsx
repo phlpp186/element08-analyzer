@@ -130,7 +130,7 @@ export function Landing() {
 
       <p className="mt-8 max-w-md text-center text-sm text-textDim">
         {t(
-          'Your data stays in this browser. A dropped file is parsed locally, and signing in only downloads your own cloud backup. Nothing you load here is ever uploaded or shared.',
+          'Your file is read in this browser and never uploaded, and signing in only downloads your own cloud backup. Only when you ask the copilot do your question and the figures it looks up (including the notes and locations of the dives it reads) go to our server and the AI provider, to answer it.',
         )}
       </p>
 

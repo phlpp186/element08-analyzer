@@ -202,7 +202,7 @@ export function AskPanel() {
                 <Link to="/" className="text-accent hover:underline">
                   {t('Sign in on the start page')}
                 </Link>
-                . {t('Your loaded file itself never leaves this browser.')}
+                . {t('Your file is never uploaded; to answer, the copilot sends your question and the figures it looks up (including dive notes and locations) to our server and the AI provider.')}
               </div>
             )}
             {session && turns.length === 0 && (
