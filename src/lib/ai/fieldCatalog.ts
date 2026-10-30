@@ -38,6 +38,8 @@ const FIELDS: Record<Dataset, { field: string; enumerate?: boolean }[]> = {
     { field: 'weightDist.ankle' },
     { field: 'suit.mm' },
     { field: 'mfChargeDepth' },
+    { field: 'mfFactor' },
+    { field: 'mfReach' },
     { field: 'contractionOnset.depth' },
     { field: 'targetDepth' },
     { field: 'earlyTurn' },

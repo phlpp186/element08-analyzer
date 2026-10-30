@@ -14,6 +14,7 @@
  * users only see what makes sense.
  */
 import type { ParsedSession } from '../../schema/backup';
+import { diveMouthfill } from './technique';
 
 export type SessionMode = 'dry' | 'depth' | 'pool';
 export type Stat = 'avg' | 'median' | 'max' | 'min' | 'count';
@@ -229,11 +230,8 @@ const num = (v: unknown): number | null =>
 /** Mouthfill factor + reach from a depth dive's logged charge depth, or null
  *  when the charge depth is missing or not between 0 and max depth. */
 const mfFromDive = (i: PivotItem): { factor: number; reach: number } | null => {
-  const d = i.dive as { depth?: number; mfChargeDepth?: number } | undefined;
-  if (!d || typeof d.depth !== 'number' || typeof d.mfChargeDepth !== 'number') return null;
-  const c = d.mfChargeDepth;
-  if (c <= 0 || c >= d.depth) return null;
-  return { factor: (d.depth / 10 + 1) / (c / 10 + 1), reach: d.depth - c };
+  const r = i.dive ? diveMouthfill(i.dive as Parameters<typeof diveMouthfill>[0]) : null;
+  return r ? { factor: r.factor, reach: r.reachM } : null;
 };
 
 export const PIVOT_METRICS: PivotMetric[] = [

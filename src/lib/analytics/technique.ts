@@ -21,6 +21,7 @@ interface TechDive {
   targetDepth?: number | null;
   earlyTurnReason?: string | null;
   mfChargeDepth?: number | null;
+  mfTopUps?: number[];
   // Legacy location for early-turn fields (pre-promotion), kept as a fallback.
   advanced?: { earlyTurn?: boolean; targetDepth?: number; earlyTurnReason?: string } | null;
 }
@@ -125,6 +126,24 @@ export function calcMouthfillFactor(
   };
 }
 
+/** A dive's mouthfill in absolute pressure, as the app's dive screen shows it
+ *  (src/lib/algorithms/mouthfill.ts there). A top-up re-charges deeper, so the
+ *  deepest top-up is the charge that carries the diver to the bottom. Used by
+ *  every reader here (Technique, Playground, the assistant's tools). */
+export function diveMouthfill(dive: {
+  depth?: number | null;
+  mfChargeDepth?: number | null;
+  mfTopUps?: unknown;
+}): { factor: number; reachM: number; chargeDepthM: number } | null {
+  if (typeof dive.depth !== 'number' || typeof dive.mfChargeDepth !== 'number') return null;
+  const topUps = Array.isArray(dive.mfTopUps)
+    ? dive.mfTopUps.filter((x): x is number => typeof x === 'number' && Number.isFinite(x))
+    : [];
+  const charge = topUps.reduce((m, x) => (x > m ? x : m), dive.mfChargeDepth);
+  const r = calcMouthfillFactor(dive.depth, charge);
+  return r ? { ...r, chargeDepthM: charge } : null;
+}
+
 export interface MouthfillBracket {
   /** Charge depth bracket centre (m), rounded to the nearest 2 m. */
   bracketM: number;
@@ -147,12 +166,11 @@ export function mouthfillStats(sessions: ParsedSession[]): MouthfillStats {
   const byBracket = new Map<number, number[]>();
 
   for (const d of depthDives(sessions)) {
-    if (d.mfChargeDepth == null) continue;
-    const r = calcMouthfillFactor(d.depth, d.mfChargeDepth);
+    const r = diveMouthfill(d);
     if (!r) continue;
     factors.push(r.factor);
     reaches.push(r.reachM);
-    const bracket = Math.round(d.mfChargeDepth / 2) * 2;
+    const bracket = Math.round(r.chargeDepthM / 2) * 2;
     const list = byBracket.get(bracket) ?? [];
     list.push(r.factor);
     byBracket.set(bracket, list);

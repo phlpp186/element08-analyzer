@@ -26,6 +26,7 @@ import type {
   SuitThickness,
 } from "./appTypes";
 import { peakSpeedsFromProfile } from "./support/queryDives";
+import { diveMouthfill } from "../analytics/technique";
 import { extractHoldStats } from "./support/extractHoldStats";
 import { resolveContractionMs } from "./support/resolveContractionMs";
 import { sessionDay } from "../sessionDay";
@@ -274,6 +275,17 @@ function depthField(r: DepthRow, path: string): unknown {
       return diveTempDepth(dive, session);
     case "tempDrop":
       return diveTempDrop(dive, session);
+    // Derived for the same reason: asked to project a depth from a charge
+    // depth, the model divided metres (89.9 / 22 = 4.09) instead of absolute
+    // pressures (9.99 bar / 3.2 bar = 3.12).
+    case "mfFactor": {
+      const mf = diveMouthfill(dive);
+      return mf ? Math.round(mf.factor * 100) / 100 : null;
+    }
+    case "mfReach":
+      return diveMouthfill(dive)?.reachM ?? null;
+    case "mfEffectiveCharge":
+      return diveMouthfill(dive)?.chargeDepthM ?? null;
     case "sessionType":
       return session.sessionType ?? null;
     case "deviceName":

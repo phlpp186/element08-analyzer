@@ -12,6 +12,7 @@
 import type { DrySession, Session } from "./appTypes";
 import type { ToolContext } from "./trainingSummary";
 import { extractHoldStats } from "./support/extractHoldStats";
+import { diveMouthfill } from "../analytics/technique";
 import { sessionDay } from "../sessionDay";
 import {
   diveTempDepth,
@@ -177,8 +178,21 @@ export function getDiveDetail(
         tempSurface: diveTempSurface(dive as never, s as never),
         tempDepth: diveTempDepth(dive as never, s as never),
         tempDrop: diveTempDrop(dive as never, s as never),
+        ...mouthfillFields(dive),
       }),
     },
+  };
+}
+
+/** The factor in absolute pressure, as the dive screen shows it, so the model
+ *  never works it out from metres. Empty for dives without a charge. */
+function mouthfillFields(dive: unknown): Record<string, number> {
+  const mf = diveMouthfill(dive as Parameters<typeof diveMouthfill>[0]);
+  if (!mf) return {};
+  return {
+    mfFactor: Math.round(mf.factor * 100) / 100,
+    mfReach: mf.reachM,
+    mfEffectiveCharge: mf.chargeDepthM,
   };
 }
 
