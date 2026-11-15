@@ -9,6 +9,7 @@
  * deepest sample, ascent everything after it.
  */
 import type { ProfilePoint } from './diveProfile';
+import { MOUTHFILL_TYPE_LABEL, eqOutcomesOf, lungGroupOf, mouthfillTypeOf, partialFillPct } from './diveGroups';
 
 export interface BandSplit {
   from: number;
@@ -191,9 +192,22 @@ function fields(d: DiveLike): Record<string, string | null> {
     // The thickness says it; the kind is how it was entered ("preset").
     suit: d.suit?.kind === 'none' ? 'none' : d.suit?.mm != null ? `${d.suit.mm} mm` : null,
     weight: typeof d.weightKg === 'number' ? `${d.weightKg} kg` : null,
-    mouthfill: typeof d.mfChargeDepth === 'number' && d.mfChargeDepth > 0 ? `${Math.round(d.mfChargeDepth)} m` : null,
+    mouthfill:
+      typeof d.mfChargeDepth === 'number' && d.mfChargeDepth > 0
+        ? [
+            `${Math.round(d.mfChargeDepth)} m`,
+            // Only when it is not a plain full mouthfill, so older dives read as before.
+            mouthfillTypeOf(d) !== 'mouthfill' ? MOUTHFILL_TYPE_LABEL[mouthfillTypeOf(d)] : null,
+            typeof d.mfUsage === 'string' ? d.mfUsage : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')
+        : null,
+    lungs: lungGroupOf(d) === 'PARTIAL' ? `FL ${partialFillPct(d)}%` : lungGroupOf(d),
   };
   for (const k of [...KIT_CHIPS, ...CONDITION_CHIPS]) out[k] = chip(k);
+  // A dive can hold to target and still leak: show every outcome.
+  out.eq = eqOutcomesOf(d).join(' + ') || null;
   return out;
 }
 

@@ -15,6 +15,7 @@
  */
 import type { ParsedSession } from '../../schema/backup';
 import { diveMouthfill } from './technique';
+import { lungGroupOf } from './diveGroups';
 
 export type SessionMode = 'dry' | 'depth' | 'pool';
 export type Stat = 'avg' | 'median' | 'max' | 'min' | 'count';
@@ -345,9 +346,11 @@ export const PIVOT_DIMENSIONS: PivotDimension[] = [
       if (i.mode === 'dry') {
         return (i.session as unknown as { lungVol?: string }).lungVol ?? null;
       }
+      // Depth: a partial inhale is its own group, as in the app's Insights.
+      if (i.mode === 'depth') return lungGroupOf(i.dive as Record<string, unknown> | undefined);
       return (i.dive as { lungVol?: string } | undefined)?.lungVol ?? null;
     },
-    order: ['FL', 'FRC', 'RV'] },
+    order: ['FL', 'PARTIAL', 'FRC', 'RV'] },
   { id: 'mode.poolType', label: 'Pool length', group: 'Mode', modes: ['pool'],
     extract: (i) => (i.session as unknown as { poolType?: string }).poolType ?? null,
     order: ['25m', '50m'] },

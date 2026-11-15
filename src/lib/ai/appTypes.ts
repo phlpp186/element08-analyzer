@@ -206,6 +206,11 @@ export interface Dive {
   contractionOnset?: ContractionOnset | null;
   /** Subjective mouthfill volume self-assessment. */
   mfVolumeFeel?: MouthfillVolumeFeel | null;
+  /** Charge type (mouthfill / half / ncharge) and how it was spent. */
+  mfType?: 'mouthfill' | 'half' | 'ncharge' | null;
+  mfUsage?: 'constant' | 'sequential' | 'mix' | null;
+  /** Inhale level in % on a partial inhale; only read with lungVol 'FL'. */
+  lungFillPct?: number | null;
   /** Wetsuit thickness for the dive. */
   suit?: SuitThickness | null;
   /** Total ballast weight worn (kg). */

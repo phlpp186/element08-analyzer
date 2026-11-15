@@ -13,6 +13,7 @@
  */
 import type { ParsedSession } from '../../schema/backup';
 import { includeDive } from './diveFilter';
+import { MOUTHFILL_TYPES, mouthfillTypeOf, type MouthfillType } from './diveGroups';
 
 interface TechDive {
   depth: number;
@@ -22,6 +23,7 @@ interface TechDive {
   earlyTurnReason?: string | null;
   mfChargeDepth?: number | null;
   mfTopUps?: number[];
+  mfType?: string | null;
   // Legacy location for early-turn fields (pre-promotion), kept as a fallback.
   advanced?: { earlyTurn?: boolean; targetDepth?: number; earlyTurnReason?: string } | null;
 }
@@ -160,12 +162,27 @@ export interface MouthfillStats {
   brackets: MouthfillBracket[];
 }
 
-export function mouthfillStats(sessions: ParsedSession[]): MouthfillStats {
+/** Charge types the diver has usable mouthfill dives for, in app order. */
+export function mouthfillTypesLogged(sessions: ParsedSession[]): MouthfillType[] {
+  const seen = new Set<MouthfillType>();
+  for (const d of depthDives(sessions)) {
+    if (diveMouthfill(d)) seen.add(mouthfillTypeOf(d as unknown as Record<string, unknown>));
+  }
+  return MOUTHFILL_TYPES.filter((ty) => seen.has(ty));
+}
+
+/** One charge type at a time: a half mouthfill or N-charge reaches a different
+ *  depth from the same charge, so pooling them would bend factor and reach. */
+export function mouthfillStats(
+  sessions: ParsedSession[],
+  type: MouthfillType = 'mouthfill',
+): MouthfillStats {
   const factors: number[] = [];
   const reaches: number[] = [];
   const byBracket = new Map<number, number[]>();
 
   for (const d of depthDives(sessions)) {
+    if (mouthfillTypeOf(d as unknown as Record<string, unknown>) !== type) continue;
     const r = diveMouthfill(d);
     if (!r) continue;
     factors.push(r.factor);

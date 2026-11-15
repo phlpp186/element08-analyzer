@@ -33,7 +33,8 @@ import {
   disciplineProgression,
   type BandStep,
 } from '../lib/analytics/depthInsights';
-import { earlyTurnStats, mouthfillStats } from '../lib/analytics/technique';
+import { earlyTurnStats, mouthfillStats, mouthfillTypesLogged } from '../lib/analytics/technique';
+import type { MouthfillType } from '../lib/analytics/diveGroups';
 import { poolPaceProgression } from '../lib/analytics/poolPace';
 import { poolHrPerDive } from '../lib/analytics/poolHr';
 import { poolSessionTypeMix } from '../lib/analytics/poolSessionTypes';
@@ -151,7 +152,11 @@ export function Insights() {
   const hangStats = useMemo(() => hangTimeDistribution(sessions), [sessions]);
   const progression = useMemo(() => disciplineProgression(sessions), [sessions]);
   const earlyTurn = useMemo(() => earlyTurnStats(sessions), [sessions]);
-  const mouthfill = useMemo(() => mouthfillStats(sessions), [sessions]);
+  const mfTypes = useMemo(() => mouthfillTypesLogged(sessions), [sessions]);
+  const [mfTypePick, setMfType] = useState<MouthfillType>('mouthfill');
+  // The period filter can leave the picked type without dives.
+  const mfType = mfTypes.includes(mfTypePick) ? mfTypePick : (mfTypes[0] ?? 'mouthfill');
+  const mouthfill = useMemo(() => mouthfillStats(sessions, mfType), [sessions, mfType]);
   const poolPace = useMemo(() => poolPaceProgression(sessions), [sessions]);
   const poolHr = useMemo(() => poolHrPerDive(sessions), [sessions]);
   const poolTypeMix = useMemo(() => poolSessionTypeMix(sessions), [sessions]);
@@ -280,7 +285,7 @@ export function Insights() {
             />
             <HangTimeDistributionChart stats={hangStats} />
             <EarlyTurnCard stats={earlyTurn} />
-            <MouthfillCard stats={mouthfill} />
+            <MouthfillCard stats={mouthfill} types={mfTypes} type={mfType} onType={setMfType} />
           </>
         )}
 

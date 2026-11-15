@@ -27,6 +27,7 @@ import type {
 } from "./appTypes";
 import { peakSpeedsFromProfile } from "./support/queryDives";
 import { diveMouthfill } from "../analytics/technique";
+import { eqOutcomesOf, lungGroupOf, mouthfillTypeOf, partialFillPct } from "../analytics/diveGroups";
 import { extractHoldStats } from "./support/extractHoldStats";
 import { resolveContractionMs } from "./support/resolveContractionMs";
 import { sessionDay } from "../sessionDay";
@@ -284,6 +285,21 @@ function depthField(r: DepthRow, path: string): unknown {
     }
     case "mfReach":
       return diveMouthfill(dive)?.reachM ?? null;
+    // Only on charged dives; a dive logged before the type existed was a full
+    // mouthfill. Factors of different types must never be pooled.
+    case "mfType":
+      return dive.mfChargeDepth != null ? mouthfillTypeOf(dive as never) : null;
+    // FL / PARTIAL / FRC / RV. `lungVol` alone reads a partial inhale as FL.
+    case "lungGroup":
+      return lungGroupOf(dive as never);
+    case "lungFillPct":
+      return partialFillPct(dive as never);
+    // Every EQ outcome of the dive, e.g. "held+leaking": `advanced.eq` holds
+    // only one of them.
+    case "eqOutcomes": {
+      const all = eqOutcomesOf(dive as never);
+      return all.length ? all.join("+") : null;
+    }
     case "mfEffectiveCharge":
       return diveMouthfill(dive)?.chargeDepthM ?? null;
     case "sessionType":

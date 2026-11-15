@@ -13,6 +13,7 @@ import type { DrySession, Session } from "./appTypes";
 import type { ToolContext } from "./trainingSummary";
 import { extractHoldStats } from "./support/extractHoldStats";
 import { diveMouthfill } from "../analytics/technique";
+import { eqOutcomesOf, lungGroupOf, mouthfillTypeOf } from "../analytics/diveGroups";
 import { sessionDay } from "../sessionDay";
 import {
   diveTempDepth,
@@ -179,6 +180,7 @@ export function getDiveDetail(
         tempDepth: diveTempDepth(dive as never, s as never),
         tempDrop: diveTempDrop(dive as never, s as never),
         ...mouthfillFields(dive),
+        ...techniqueFields(dive as Record<string, unknown>),
       }),
     },
   };
@@ -194,6 +196,18 @@ function mouthfillFields(dive: unknown): Record<string, number> {
     mfReach: mf.reachM,
     mfEffectiveCharge: mf.chargeDepthM,
   };
+}
+
+/** Derived labels the raw record cannot give the model: an untagged charge is
+ *  a full mouthfill, and a partial inhale is not a Full Lungs dive. */
+function techniqueFields(dive: Record<string, unknown>): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (dive.mfChargeDepth != null) out.mfType = mouthfillTypeOf(dive);
+  const lung = lungGroupOf(dive);
+  if (lung) out.lungGroup = lung;
+  const eq = eqOutcomesOf(dive);
+  if (eq.length) out.eqOutcomes = eq.join('+');
+  return out;
 }
 
 /** Drop the multi-KB per-sample arrays; keep every summary/annotation field. */

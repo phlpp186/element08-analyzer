@@ -30,6 +30,7 @@ const DIFF_LABEL: Record<string, string> = {
   suit: 'Suit',
   weight: 'Weight',
   mouthfill: 'Mouthfill',
+  lungs: 'Lung volume',
   monofin: 'Monofin',
   bifin: 'Bifin',
   fimFins: 'FIM fins',

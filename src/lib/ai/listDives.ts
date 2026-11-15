@@ -81,6 +81,10 @@ const ROW_FIELDS: Record<Dataset, string[]> = {
     'mfChargeDepth',
     'mfFactor',
     'mfReach',
+    'mfType',
+    'mfUsage',
+    'lungGroup',
+    'lungFillPct',
     'contractionOnset.depth',
     'location',
     'waterType',
@@ -88,6 +92,7 @@ const ROW_FIELDS: Record<Dataset, string[]> = {
     'advanced.current',
     'advanced.pace',
     'advanced.eq',
+    'eqOutcomes',
   ],
   pool: [
     'discipline',

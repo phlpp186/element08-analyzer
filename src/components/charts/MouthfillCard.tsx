@@ -10,14 +10,38 @@ import type { MouthfillStats } from '../../lib/analytics/technique';
 import { useChartTheme } from '../../lib/chartTheme';
 import { useT } from '../../i18n';
 import { ChartCard } from './ChartCard';
+import { MOUTHFILL_TYPE_LABEL, type MouthfillType } from '../../lib/analytics/diveGroups';
 
 interface Props {
   stats: MouthfillStats;
+  /** Charge types with dives; the selector shows once there is more than one. */
+  types?: MouthfillType[];
+  type?: MouthfillType;
+  onType?: (type: MouthfillType) => void;
 }
 
-export function MouthfillCard({ stats }: Props) {
+export function MouthfillCard({ stats, types = [], type, onType }: Props) {
   const ct = useChartTheme();
   const t = useT();
+
+  const controls =
+    types.length > 1 && onType ? (
+      <div className="flex flex-wrap gap-1">
+        {types.map((ty) => (
+          <button
+            key={ty}
+            type="button"
+            onClick={() => onType(ty)}
+            aria-pressed={ty === type}
+            className={`rounded-full border px-2.5 py-1 text-xs ${
+              ty === type ? 'border-accent text-text' : 'border-border text-textDim'
+            }`}
+          >
+            {t(MOUTHFILL_TYPE_LABEL[ty])}
+          </button>
+        ))}
+      </div>
+    ) : undefined;
 
   if (stats.count === 0) {
     return (
@@ -89,7 +113,7 @@ export function MouthfillCard({ stats }: Props) {
   };
 
   return (
-    <ChartCard title={t('Mouthfill')} description={description}>
+    <ChartCard title={t('Mouthfill')} description={description} controls={controls}>
       <ReactECharts option={option} style={{ height: 300 }} notMerge />
       <p className="mt-2 text-xs text-textDim">
         {t('Factor = bottom pressure ÷ charge pressure. Lower σ within a bracket means a more repeatable charge depth.')}
