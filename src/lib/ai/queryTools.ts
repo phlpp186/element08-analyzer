@@ -12,7 +12,7 @@
  * shape, resolving session-default -> per-dive-override inheritance and always
  * returning `n`.
  *
- * See appstore/ai-assistant-design.md (§4) for the design.
+ * See docs/specs/ai-assistant-design.md (§4) for the design.
  */
 import type {
   Session,
