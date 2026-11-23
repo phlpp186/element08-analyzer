@@ -91,12 +91,16 @@ export function extractDrySessionData(session: DrySessionLike): DrySessionData {
   }
 
   // Time-axis bounds: prefer the block timeline (definitive session length).
-  // If absent, span the oxy series. Falling back to 0 keeps the chart from
-  // crashing on empty data.
+  // If absent, span the last reading of either series: a strength workout
+  // with a heart rate strap has no timeline and no SpO2, and the axis
+  // stopped at 0, so 81 minutes of heart rate showed as a flat second
+  // (Jinseul's gym sessions, 2026-11-23). 0 keeps the chart from crashing
+  // on empty data.
   let startT = 0;
   let endT = cursor;
-  if (endT === 0 && spo2Series.length > 0) {
-    endT = spo2Series[spo2Series.length - 1][0];
+  if (endT === 0) {
+    const last = (series: [number, number][]) => (series.length ? series[series.length - 1][0] : 0);
+    endT = Math.max(last(spo2Series), last(hrSeries));
   }
 
   const contractions = (session.contractions ?? [])
